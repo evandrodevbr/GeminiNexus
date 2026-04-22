@@ -490,6 +490,12 @@ const vi = {
     retry: 'Thử lại',
     allAccounts: 'Tất cả tài khoản',
     noData: 'Không có dữ liệu',
+    emptyStateTitle: 'Chưa có dữ liệu sử dụng',
+    emptyStateDescription: 'Bắt đầu gửi yêu cầu API để xem thống kê sử dụng token tại đây.',
+    promptLabel: 'Prompt',
+    completionLabel: 'Completion',
+    totalLabel: 'Tổng',
+    requestsLabel: 'Yêu cầu',
   },
 };
 

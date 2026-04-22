@@ -1,17 +1,7 @@
+import { useMemo, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
-import { Loader2, TrendingUp, TrendingDown, Activity, Layers } from 'lucide-react';
-import { ipc } from '@/ipc/manager';
 import {
   BarChart,
   Bar,
@@ -25,34 +15,114 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { useMemo, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ipc } from '@/ipc/manager';
 import { useCloudAccounts } from '@/hooks/useCloudAccounts';
+import { StatCard } from '@/components/usage/StatCard';
+import { ChartCard } from '@/components/usage/ChartCard';
+import { CustomTooltip } from '@/components/usage/CustomTooltip';
+import {
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Layers,
+  Loader2,
+  MessageSquare,
+  Zap,
+} from 'lucide-react';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+/* ------------------------------------------------------------------ */
+/*  Color tokens — muted, dark-background-friendly palette               */
+/* ------------------------------------------------------------------ */
+const COLOR_PROMPT = '#5b9bd5';
+const COLOR_COMPLETION = '#70ad47';
+const COLOR_TOTAL = '#a5a5a5';
+const PIE_COLORS = [
+  '#5b9bd5',
+  '#ed7d31',
+  '#70ad47',
+  '#a5a5a5',
+  '#ffc000',
+  '#4472c4',
+  '#91d1c2',
+  '#c55a5a',
+];
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+type TimeRange = '24h' | '7d' | '30d';
+
+interface UsageBucket {
+  bucket: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requests: number;
+}
+
+interface ModelBucket {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requests: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+function getTimeRange(r: TimeRange): { start: number; end: number } {
+  const now = Date.now();
+  if (r === '24h') {
+    return { start: now - 24 * 60 * 60 * 1000, end: now };
+  }
+  if (r === '7d') {
+    return { start: now - 7 * 24 * 60 * 60 * 1000, end: now };
+  }
+  return { start: now - 30 * 24 * 60 * 60 * 1000, end: now };
+}
+
+function formatBucketLabel(bucket: string, range: TimeRange): string {
+  if (range === '24h') {
+    // bucket is "YYYY-MM-DD HH:00"
+    const parts = bucket.split(' ');
+    if (parts.length === 2) {
+      return parts[1]; // "HH:00"
+    }
+  }
+  if (range === '7d') {
+    // bucket is "YYYY-MM-DD"
+    const d = new Date(bucket + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  // 30d
+  const d = new Date(bucket + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main Component                                                     */
+/* ------------------------------------------------------------------ */
 function UsagePage() {
   const { t } = useTranslation();
-  const [range, setRange] = useState<'24h' | '7d' | '30d'>('7d');
+  const [range, setRange] = useState<TimeRange>('7d');
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(undefined);
   const { data: accounts, isLoading: accountsLoading } = useCloudAccounts();
-
-  function getTimeRange(r: '24h' | '7d' | '30d') {
-    const now = Date.now();
-    if (r === '24h') {
-      return { start: now - 24 * 60 * 60 * 1000, end: now };
-    }
-    if (r === '7d') {
-      return { start: now - 7 * 24 * 60 * 60 * 1000, end: now };
-    }
-    return { start: now - 30 * 24 * 60 * 60 * 1000, end: now };
-  }
 
   const {
     data: dailyData,
     isLoading: dailyLoading,
     error: dailyError,
     refetch: refetchDaily,
-  } = useQuery({
+  } = useQuery<UsageBucket[]>({
     queryKey: ['usage', 'day', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
@@ -68,7 +138,7 @@ function UsagePage() {
     isLoading: modelLoading,
     error: modelError,
     refetch: refetchModel,
-  } = useQuery({
+  } = useQuery<ModelBucket[]>({
     queryKey: ['usage', 'model', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
@@ -84,19 +154,19 @@ function UsagePage() {
     isLoading: hourlyLoading,
     error: hourlyError,
     refetch: refetchHourly,
-  } = useQuery({
+  } = useQuery<UsageBucket[]>({
     queryKey: ['usage', 'hour', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
       return ipc.client.usage.getUsageByHour({ accountId: selectedAccountId, start, end });
     },
+    enabled: range === '24h',
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
     staleTime: 60_000,
   });
 
-  const isAllLoading = dailyLoading && modelLoading && hourlyLoading;
-
+  /* -------------------------- Derived data -------------------------- */
   const totals = useMemo(() => {
     const source = dailyData || [];
     return source.reduce(
@@ -110,14 +180,23 @@ function UsagePage() {
     );
   }, [dailyData]);
 
+  const promptRatio = useMemo(() => {
+    if (totals.totalTokens === 0) return 0;
+    return Math.round((totals.promptTokens / totals.totalTokens) * 100);
+  }, [totals]);
+
+  const completionRatio = useMemo(() => {
+    if (totals.totalTokens === 0) return 0;
+    return Math.round((totals.completionTokens / totals.totalTokens) * 100);
+  }, [totals]);
+
   const chartData = useMemo(() => {
     return (dailyData || []).map((d) => ({
-      name: d.bucket,
+      name: formatBucketLabel(d.bucket, range),
       Prompt: d.promptTokens,
       Completion: d.completionTokens,
-      Total: d.totalTokens,
     }));
-  }, [dailyData]);
+  }, [dailyData, range]);
 
   const pieData = useMemo(() => {
     return (modelData || []).map((d) => ({
@@ -128,98 +207,38 @@ function UsagePage() {
 
   const hourlyChartData = useMemo(() => {
     return (hourlyData || []).map((d) => ({
-      name: d.bucket,
+      name: formatBucketLabel(d.bucket, '24h'),
       Prompt: d.promptTokens,
       Completion: d.completionTokens,
       Total: d.totalTokens,
     }));
   }, [hourlyData]);
 
-  if (isAllLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
+  const isDailyEmpty = !dailyLoading && !dailyError && (!dailyData || dailyData.length === 0);
+  const isModelEmpty = !modelLoading && !modelError && (!modelData || modelData.length === 0);
+  const isHourlyEmpty = !hourlyLoading && !hourlyError && (!hourlyData || hourlyData.length === 0);
 
-  const dailyPlaceholder = dailyError ? (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
-        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
-        <button
-          onClick={() => refetchDaily()}
-          className="text-primary text-sm underline"
-        >
-          {t('usage.retry')}
-        </button>
-      </CardContent>
-    </Card>
-  ) : !dailyData ? (
-    <Card>
-      <CardContent className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
-      </CardContent>
-    </Card>
-  ) : null;
-
-  const modelPlaceholder = modelError ? (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
-        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
-        <button
-          onClick={() => refetchModel()}
-          className="text-primary text-sm underline"
-        >
-          {t('usage.retry')}
-        </button>
-      </CardContent>
-    </Card>
-  ) : !modelData ? (
-    <Card>
-      <CardContent className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
-      </CardContent>
-    </Card>
-  ) : null;
-
-  const hourlyPlaceholder = hourlyError ? (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
-        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
-        <button
-          onClick={() => refetchHourly()}
-          className="text-primary text-sm underline"
-        >
-          {t('usage.retry')}
-        </button>
-      </CardContent>
-    </Card>
-  ) : !hourlyData ? (
-    <Card>
-      <CardContent className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
-      </CardContent>
-    </Card>
-  ) : null;
-
+  /* ----------------------------- Render ----------------------------- */
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full flex-col overflow-auto">
+      {/* Header */}
+      <div className="border-border/40 flex flex-col gap-4 border-b px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('usage.title')}</h2>
-          <p className="text-muted-foreground mt-1">{t('usage.description')}</p>
+          <h1 className="text-foreground text-xl font-bold tracking-tight">{t('usage.title')}</h1>
+          <p className="text-muted-foreground mt-0.5 text-sm">{t('usage.description')}</p>
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
+          {/* Account filter */}
           <Select
             value={selectedAccountId || ''}
             onValueChange={(value) => setSelectedAccountId(value || undefined)}
             disabled={accountsLoading}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="h-9 w-[200px] text-xs">
               {accountsLoading ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   {t('common.loading')}
                 </span>
               ) : (
@@ -235,138 +254,211 @@ function UsagePage() {
               ))}
             </SelectContent>
           </Select>
-          <Tabs value={range} onValueChange={(v) => setRange(v as '24h' | '7d' | '30d')}>
-            <TabsList>
-              <TabsTrigger value="24h">{t('usage.range24h')}</TabsTrigger>
-              <TabsTrigger value="7d">{t('usage.range7d')}</TabsTrigger>
-              <TabsTrigger value="30d">{t('usage.range30d')}</TabsTrigger>
+
+          {/* Time range tabs */}
+          <Tabs value={range} onValueChange={(v) => setRange(v as TimeRange)}>
+            <TabsList className="h-9">
+              <TabsTrigger value="24h" className="px-3 text-xs">
+                {t('usage.range24h')}
+              </TabsTrigger>
+              <TabsTrigger value="7d" className="px-3 text-xs">
+                {t('usage.range7d')}
+              </TabsTrigger>
+              <TabsTrigger value="30d" className="px-3 text-xs">
+                {t('usage.range30d')}
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      {dailyPlaceholder || (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('usage.totalTokens')}</CardTitle>
-              <Activity className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totals.totalTokens.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('usage.promptTokens')}</CardTitle>
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totals.promptTokens.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('usage.completionTokens')}</CardTitle>
-              <TrendingDown className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totals.completionTokens.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('usage.totalRequests')}</CardTitle>
-              <Layers className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totals.requests.toLocaleString()}</div>
-            </CardContent>
-          </Card>
+      <div className="flex-1 space-y-5 px-6 py-5">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label={t('usage.totalTokens')}
+            value={totals.totalTokens}
+            icon={Zap}
+            isLoading={dailyLoading}
+            accent="amber"
+          />
+          <StatCard
+            label={t('usage.promptTokens')}
+            value={totals.promptTokens}
+            icon={MessageSquare}
+            isLoading={dailyLoading}
+            accent="blue"
+          />
+          <StatCard
+            label={t('usage.completionTokens')}
+            value={totals.completionTokens}
+            icon={Activity}
+            isLoading={dailyLoading}
+            accent="green"
+          />
+          <StatCard
+            label={t('usage.totalRequests')}
+            value={totals.requests}
+            icon={Layers}
+            isLoading={dailyLoading}
+            accent="slate"
+          />
         </div>
-      )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {dailyPlaceholder || (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('usage.dailyUsage')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Prompt" fill="#3b82f6" />
-                  <Bar dataKey="Completion" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        {/* Trend indicators row */}
+        {!dailyLoading && totals.totalTokens > 0 && (
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs">
+              <ArrowUpRight className="h-3.5 w-3.5 text-blue-400" />
+              <span className="text-muted-foreground">{t('usage.promptLabel')}:</span>
+              <span className="text-foreground font-mono font-medium">{promptRatio}%</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <ArrowDownRight className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-muted-foreground">{t('usage.completionLabel')}:</span>
+              <span className="text-foreground font-mono font-medium">{completionRatio}%</span>
+            </div>
+            <div className="bg-border/40 h-3 w-px" />
+            <div className="text-muted-foreground text-xs">
+              {t('usage.requestsLabel')}:{' '}
+              <span className="text-foreground font-mono font-medium">
+                {totals.requests.toLocaleString()}
+              </span>
+            </div>
+          </div>
         )}
 
-        {modelPlaceholder || (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('usage.byModel')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label
-                  >
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        {/* Charts */}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {/* Daily Usage Bar Chart */}
+          <ChartCard
+            title={t('usage.dailyUsage')}
+            isLoading={dailyLoading}
+            error={dailyError}
+            isEmpty={isDailyEmpty}
+            onRetry={() => refetchDaily()}
+            emptyTitle={t('usage.emptyStateTitle')}
+            emptyDescription={t('usage.emptyStateDescription')}
+            errorMessage={t('usage.loadFailed')}
+            retryLabel={t('usage.retry')}
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={chartData} barCategoryGap="20%">
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.06)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`)}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                  iconType="circle"
+                  iconSize={8}
+                />
+                <Bar dataKey="Prompt" fill={COLOR_PROMPT} radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Completion" fill={COLOR_COMPLETION} radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          {/* Model Usage Donut Chart */}
+          <ChartCard
+            title={t('usage.byModel')}
+            isLoading={modelLoading}
+            error={modelError}
+            isEmpty={isModelEmpty}
+            onRetry={() => refetchModel()}
+            emptyTitle={t('usage.emptyStateTitle')}
+            emptyDescription={t('usage.emptyStateDescription')}
+            errorMessage={t('usage.loadFailed')}
+            retryLabel={t('usage.retry')}
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {pieData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                  iconType="circle"
+                  iconSize={8}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* Hourly Usage — 24h only */}
+        {range === '24h' && (
+          <ChartCard
+            title={t('usage.hourlyUsage')}
+            isLoading={hourlyLoading}
+            error={hourlyError}
+            isEmpty={isHourlyEmpty}
+            onRetry={() => refetchHourly()}
+            emptyTitle={t('usage.emptyStateTitle')}
+            emptyDescription={t('usage.emptyStateDescription')}
+            errorMessage={t('usage.loadFailed')}
+            retryLabel={t('usage.retry')}
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={hourlyChartData} barCategoryGap="20%">
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.06)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                  tickLine={false}
+                  interval={2}
+                />
+                <YAxis
+                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`)}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                  iconType="circle"
+                  iconSize={8}
+                />
+                <Bar dataKey="Prompt" fill={COLOR_PROMPT} radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Completion" fill={COLOR_COMPLETION} radius={[2, 2, 0, 0]} />
+                <Bar dataKey="Total" fill={COLOR_TOTAL} radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         )}
       </div>
-
-      {range === '24h' && (
-        hourlyPlaceholder || (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('usage.hourlyUsage')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={hourlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Prompt" fill="#3b82f6" />
-                  <Bar dataKey="Completion" fill="#10b981" />
-                  <Bar dataKey="Total" fill="#8b5cf6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )
-      )}
     </div>
   );
 }
