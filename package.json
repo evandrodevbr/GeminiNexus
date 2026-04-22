@@ -10,6 +10,7 @@
     "dev": "cross-env DEBUG=electron-forge:* electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:win": "node scripts/build-windows.js",
     "publish": "electron-forge publish",
     "lint": "eslint .",
     "format": "prettier --check .",
