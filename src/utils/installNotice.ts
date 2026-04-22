@@ -1,6 +1,6 @@
 import path from 'path';
 
-export type InstallNoticeLanguage = 'zh-CN' | 'en' | 'ru' | 'vi';
+export type InstallNoticeLanguage = 'zh-CN' | 'en' | 'ru' | 'vi' | 'pt-BR';
 
 const installNoticeText: Record<
   InstallNoticeLanguage,
@@ -39,6 +39,13 @@ const installNoticeText: Record<
     detailPrefix: 'Thư mục cài đặt: ',
     buttons: ['Mở thư mục cài đặt', 'Đã hiểu'],
   },
+  'pt-BR': {
+    title: 'Inicie pelo menu Iniciar',
+    message:
+      'Detectamos que o app está sendo executado fora do local de instalação. Para garantir que as atualizações automáticas funcionem, inicie-o pelo menu Iniciar ou pelo atalho da área de trabalho. Se não houver atalho, execute o instalador novamente.',
+    detailPrefix: 'Local de instalação: ',
+    buttons: ['Abrir pasta de instalação', 'Entendi'],
+  },
 };
 
 export function resolveInstallNoticeLanguage({
@@ -64,6 +71,10 @@ export function resolveInstallNoticeLanguage({
 
   if (normalized.startsWith('vi')) {
     return 'vi';
+  }
+
+  if (normalized.startsWith('pt')) {
+    return 'pt-BR';
   }
 
   return 'en';
