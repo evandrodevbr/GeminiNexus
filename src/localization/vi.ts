@@ -39,6 +39,7 @@ const vi = {
   },
   nav: {
     accounts: 'Tài khoản',
+    usage: 'Sử dụng',
     proxy: 'API Proxy',
     settings: 'Cài đặt',
   },
@@ -471,6 +472,20 @@ const vi = {
       title: 'Ví dụ sử dụng',
       description: 'Ví dụ lệnh để gọi local API proxy.',
     },
+  },
+  usage: {
+    title: 'Token Usage',
+    description: 'Theo dõi mức tiêu thụ API token của bạn.',
+    range24h: '24 giờ',
+    range7d: '7 ngày',
+    range30d: '30 ngày',
+    totalTokens: 'Tổng Token',
+    promptTokens: 'Prompt Token',
+    completionTokens: 'Completion Token',
+    totalRequests: 'Tổng Request',
+    dailyUsage: 'Sử dụng hàng ngày',
+    byModel: 'Theo Model',
+    hourlyUsage: 'Sử dụng theo giờ',
   },
 };
 
