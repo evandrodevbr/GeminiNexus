@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  BarChart3,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,11 @@ export const MainLayout: React.FC = () => {
       to: '/',
       icon: LayoutDashboard,
       label: t('nav.accounts'),
+    },
+    {
+      to: '/usage',
+      icon: BarChart3,
+      label: t('nav.usage'),
     },
     {
       to: '/proxy',
