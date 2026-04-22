@@ -184,6 +184,8 @@ export interface OpenAIChatResponse {
     completion_tokens: number;
     total_tokens: number;
   };
+  /** Optional identifier for the model's configuration snapshot. Included for OpenAI-spec compliance. */
+  system_fingerprint?: string;
 }
 
 export interface OpenAIChoice {
