@@ -126,6 +126,34 @@ function ensureDatabaseInitialized(dbPath: string): void {
         value TEXT NOT NULL
       );
     `);
+
+    // Create token_usage table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS token_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id TEXT NOT NULL,
+        model TEXT NOT NULL,
+        prompt_tokens INTEGER NOT NULL DEFAULT 0,
+        completion_tokens INTEGER NOT NULL DEFAULT 0,
+        total_tokens INTEGER NOT NULL DEFAULT 0,
+        timestamp INTEGER NOT NULL,
+        request_type TEXT
+      );
+    `);
+
+    // Migration: Check if request_type column exists on token_usage
+    const tokenUsageTableInfoRaw = db.pragma('table_info(token_usage)') as any[];
+    const tokenUsageTableInfo = parseRows(TableInfoRowSchema, tokenUsageTableInfoRaw, 'cloud.token_usage.tableInfo');
+    const hasRequestType = tokenUsageTableInfo.some((col) => col.name === 'request_type');
+    if (!hasRequestType) {
+      db.exec('ALTER TABLE token_usage ADD COLUMN request_type TEXT');
+    }
+
+    // Create indexes for token_usage
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_account ON token_usage(account_id);`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_timestamp ON token_usage(timestamp);`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_model ON token_usage(model);`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_account_timestamp ON token_usage(account_id, timestamp);`);
   } catch (error) {
     logger.error('Failed to initialize cloud database schema', error);
     throw error;
@@ -137,7 +165,7 @@ function ensureDatabaseInitialized(dbPath: string): void {
 /**
  * Gets a connection to the cloud accounts database.
  */
-function getCloudDb(): {
+export function getCloudDb(): {
   raw: Database.Database;
   orm: BetterSQLite3Database<typeof drizzleSchema>;
 } {

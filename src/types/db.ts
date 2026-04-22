@@ -70,3 +70,66 @@ export const TableInfoRowSchema = z.object({
 });
 
 export type TableInfoRow = z.infer<typeof TableInfoRowSchema>;
+
+export const TokenUsageRowSchema = z.object({
+  id: z.number(),
+  account_id: z.string(),
+  model: z.string(),
+  prompt_tokens: z.number(),
+  completion_tokens: z.number(),
+  total_tokens: z.number(),
+  timestamp: z.number(),
+  request_type: z.string().nullable(),
+});
+
+export type TokenUsageRow = z.infer<typeof TokenUsageRowSchema>;
+
+export const HourlyUsageSchema = z.object({
+  bucket: z.string(),
+  promptTokens: z.number(),
+  completionTokens: z.number(),
+  totalTokens: z.number(),
+  requests: z.number(),
+});
+
+export type HourlyUsage = z.infer<typeof HourlyUsageSchema>;
+
+export const DailyUsageSchema = z.object({
+  bucket: z.string(),
+  promptTokens: z.number(),
+  completionTokens: z.number(),
+  totalTokens: z.number(),
+  requests: z.number(),
+});
+
+export type DailyUsage = z.infer<typeof DailyUsageSchema>;
+
+export const WeeklyUsageSchema = z.object({
+  bucket: z.string(),
+  promptTokens: z.number(),
+  completionTokens: z.number(),
+  totalTokens: z.number(),
+  requests: z.number(),
+});
+
+export type WeeklyUsage = z.infer<typeof WeeklyUsageSchema>;
+
+export const MonthlyUsageSchema = z.object({
+  bucket: z.string(),
+  promptTokens: z.number(),
+  completionTokens: z.number(),
+  totalTokens: z.number(),
+  requests: z.number(),
+});
+
+export type MonthlyUsage = z.infer<typeof MonthlyUsageSchema>;
+
+export const ModelUsageSchema = z.object({
+  model: z.string(),
+  promptTokens: z.number(),
+  completionTokens: z.number(),
+  totalTokens: z.number(),
+  requests: z.number(),
+});
+
+export type ModelUsage = z.infer<typeof ModelUsageSchema>;

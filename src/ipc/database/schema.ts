@@ -27,3 +27,14 @@ export const itemTable = sqliteTable('ItemTable', {
   key: text('key').primaryKey(),
   value: text('value'),
 });
+
+export const tokenUsage = sqliteTable('token_usage', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  accountId: text('account_id').notNull(),
+  model: text('model').notNull(),
+  promptTokens: integer('prompt_tokens').notNull().default(0),
+  completionTokens: integer('completion_tokens').notNull().default(0),
+  totalTokens: integer('total_tokens').notNull().default(0),
+  timestamp: integer('timestamp').notNull(),
+  requestType: text('request_type'),
+});
