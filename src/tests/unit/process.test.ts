@@ -17,12 +17,12 @@ vi.mock('../../utils/logger', () => ({
 
 // Mock paths module to avoid child_process issues
 vi.mock('../../utils/paths', () => ({
-  getAntigravityExecutablePath: vi.fn(() => '/path/to/antigravity'),
+  getGeminiNexusExecutablePath: vi.fn(() => '/path/to/geminiNexus'),
   isWsl: vi.fn(() => false),
 }));
 
 // Import after mocks are set up
-import { isProcessRunning, closeAntigravity, startAntigravity } from '../../ipc/process/handler';
+import { isProcessRunning, closeGeminiNexus, startGeminiNexus } from '../../ipc/process/handler';
 import findProcess from 'find-process';
 
 describe('Process Handler', () => {
@@ -33,21 +33,21 @@ describe('Process Handler', () => {
   });
 
   describe('isProcessRunning', () => {
-    it('should return true when Antigravity main process is found on macOS', async () => {
+    it('should return true when Gemini Nexus main process is found on macOS', async () => {
       Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
       Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
 
       mockFindProcess.mockResolvedValue([
         {
           pid: 12345,
-          name: 'Antigravity',
-          cmd: '/Applications/Antigravity.app/Contents/MacOS/Antigravity',
+          name: 'Gemini Nexus',
+          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus',
         },
       ]);
 
       const result = await isProcessRunning();
       expect(result).toBe(true);
-      expect(mockFindProcess).toHaveBeenCalledWith('name', 'Antigravity', true);
+      expect(mockFindProcess).toHaveBeenCalledWith('name', 'Gemini Nexus', true);
     });
 
     it('should return false when only helper processes are found', async () => {
@@ -57,13 +57,13 @@ describe('Process Handler', () => {
       mockFindProcess.mockResolvedValue([
         {
           pid: 12346,
-          name: 'Antigravity Helper (Renderer)',
-          cmd: '/Applications/Antigravity.app/Contents/Frameworks/Antigravity Helper (Renderer).app --type=renderer',
+          name: 'Gemini Nexus Helper (Renderer)',
+          cmd: '/Applications/GeminiNexus.app/Contents/Frameworks/Gemini Nexus Helper (Renderer).app --type=renderer',
         },
         {
           pid: 12347,
-          name: 'Antigravity Helper (GPU)',
-          cmd: '/Applications/Antigravity.app/Contents/Frameworks/Antigravity Helper (GPU).app --type=gpu-process',
+          name: 'Gemini Nexus Helper (GPU)',
+          cmd: '/Applications/GeminiNexus.app/Contents/Frameworks/Gemini Nexus Helper (GPU).app --type=gpu-process',
         },
       ]);
 
@@ -78,8 +78,8 @@ describe('Process Handler', () => {
       mockFindProcess.mockResolvedValue([
         {
           pid: 12348,
-          name: 'Antigravity Manager',
-          cmd: '/Applications/Antigravity Manager.app/Contents/MacOS/Antigravity Manager',
+          name: 'Gemini Nexus',
+          cmd: '/Applications/Gemini Nexus.app/Contents/MacOS/Gemini Nexus',
         },
       ]);
 
@@ -104,8 +104,8 @@ describe('Process Handler', () => {
       mockFindProcess.mockResolvedValue([
         {
           pid: 12345, // Same as current PID
-          name: 'Antigravity',
-          cmd: '/Applications/Antigravity.app/Contents/MacOS/Antigravity',
+          name: 'Gemini Nexus',
+          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus',
         },
       ]);
 
@@ -113,15 +113,15 @@ describe('Process Handler', () => {
       expect(result).toBe(false);
     });
 
-    it('should return true when Antigravity.exe is found on Windows', async () => {
+    it('should return true when Gemini Nexus.exe is found on Windows', async () => {
       Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
       Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
 
       mockFindProcess.mockResolvedValue([
         {
           pid: 12345,
-          name: 'Antigravity.exe',
-          cmd: 'C:\\Program Files\\Antigravity\\Antigravity.exe',
+          name: 'GeminiNexus.exe',
+          cmd: 'C:\\Program Files\\GeminiNexus\\GeminiNexus.exe',
         },
       ]);
 
@@ -129,15 +129,15 @@ describe('Process Handler', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true when antigravity is found on Linux', async () => {
+    it('should return true when geminiNexus is found on Linux', async () => {
       Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
       Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
 
       mockFindProcess.mockResolvedValue([
         {
           pid: 12345,
-          name: 'antigravity',
-          cmd: '/usr/bin/antigravity',
+          name: 'geminiNexus',
+          cmd: '/usr/bin/geminiNexus',
         },
       ]);
 
@@ -162,8 +162,8 @@ describe('Process Handler', () => {
       mockFindProcess.mockResolvedValue([
         {
           pid: 12345,
-          name: 'Antigravity',
-          cmd: '/Applications/Antigravity.app/Contents/MacOS/Antigravity --type=utility',
+          name: 'Gemini Nexus',
+          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/Gemini Nexus --type=utility',
         },
       ]);
 
@@ -175,8 +175,8 @@ describe('Process Handler', () => {
   describe('Module exports', () => {
     it('should export all required functions', () => {
       expect(isProcessRunning).toBeDefined();
-      expect(closeAntigravity).toBeDefined();
-      expect(startAntigravity).toBeDefined();
+      expect(closeGeminiNexus).toBeDefined();
+      expect(startGeminiNexus).toBeDefined();
     });
   });
 });

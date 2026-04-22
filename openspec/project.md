@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Antigravity Manager is a comprehensive enhancement tool for Antigravity, designed to remove AI development resource limits. It not only solves the lack of native multi-account switching in Antigravity IDE, but also introduces enterprise-grade AI account pool management. By taking control of app configuration state and cloud API resources, it allows users to switch seamlessly between unlimited local accounts and cloud AI services for an effectively "unlimited" AI usage experience.
+Gemini Nexus is a comprehensive enhancement tool for Gemini Nexus, designed to remove AI development resource limits. It not only solves the lack of native multi-account switching in Gemini Nexus IDE, but also introduces enterprise-grade AI account pool management. By taking control of app configuration state and cloud API resources, it allows users to switch seamlessly between unlimited local accounts and cloud AI services for an effectively "unlimited" AI usage experience.
 
 **Core goals:**
 
-* **Local multi-account switching**: Seamlessly switch Antigravity IDE local user state while protecting data integrity (automatic backup).
+* **Local multi-account switching**: Seamlessly switch Gemini Nexus IDE local user state while protecting data integrity (automatic backup).
 * **AI resource pool management (new)**: Centrally manage account pools for Google Gemini, Claude 3.5, and similar services.
 * **Intelligent quota monitoring (new)**: Monitor API quota and health in real time with a visual dashboard.
 * **Automatic resource scheduling (new)**: Automatically switch to the best available account when the current one runs out of quota (token keepalive + polling).
@@ -88,17 +88,17 @@ src/
 
 ## Domain Context
 
-### 1. Antigravity IDE Data Structure (Local)
+### 1. Gemini Nexus IDE Data Structure (Local)
 
 **Database locations:**
 
-* macOS: `~/Library/Application Support/Antigravity/User/globalStorage/state.vscdb`
-* Windows: `%APPDATA%/Antigravity/User/globalStorage/state.vscdb`
-* Linux: `~/.config/Antigravity/User/globalStorage/state.vscdb`
+* macOS: `~/Library/Application Support/GeminiNexus/User/globalStorage/state.vscdb`
+* Windows: `%APPDATA%/GeminiNexus/User/globalStorage/state.vscdb`
+* Linux: `~/.config/GeminiNexus/User/globalStorage/state.vscdb`
 
 **Key database fields:**
 
-* `antigravityAuthStatus`: Authentication status and user information.
+* `geminiNexusAuthStatus`: Authentication status and user information.
 
 ### 2. AI Service Resource Structure (Cloud / New)
 
@@ -141,7 +141,7 @@ src/
 
 ### System Dependencies
 
-* **Antigravity IDE**: Local target to manage.
+* **Gemini Nexus IDE**: Local target to manage.
 * **SQLite**: Local data reads.
 
 ### Node.js Dependencies (Key)
@@ -159,7 +159,7 @@ src/
 
 ### Filesystem Dependencies
 
-* `~/.antigravity-agent/`
+* `~/.geminiNexus-agent/`
   * `accounts.json`: Local IDE account index.
   * `cloud_accounts.db`: (new) Cloud account pool database (SQLite).
   * `backups/`: Backup files.

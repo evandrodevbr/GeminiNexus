@@ -35,9 +35,6 @@ import {
   getQuotaStatus,
   type QuotaStatus,
 } from '@/utils/quota-display';
-import { useState } from 'react';
-import { useSetAccountProxy } from '@/hooks/useCloudAccounts';
-import { isValidProxyUrl } from '@/utils/url';
 import { getValidationBlockedStatusLabel } from '@/components/accountValidationStatus';
 
 type ModelQuotaEntry = [string, CloudQuotaModelInfo];
@@ -186,9 +183,6 @@ export function CloudAccountCard({
     isProviderCollapsed,
     toggleProviderCollapse,
   } = useProviderGrouping();
-  const setAccountProxy = useSetAccountProxy();
-  const [proxyUrl, setProxyUrl] = useState(account.proxy_url || '');
-  const [proxySaved, setProxySaved] = useState(false);
 
   const getQuotaTextColorClass = (percentage: number) => {
     const quotaStatus = getQuotaStatus(percentage);
@@ -558,45 +552,11 @@ export function CloudAccountCard({
         </div>
       </CardContent>
 
-      <CardFooter className="bg-muted/20 text-muted-foreground justify-between border-t p-2 px-4 text-xs">
+      <CardFooter className="bg-muted/20 text-muted-foreground justify-center border-t p-2 px-4 text-xs">
         <span>
           {t('cloud.card.used')}{' '}
           {formatDistanceToNow(account.last_used * 1000, { addSuffix: true })}
         </span>
-        <div className="flex items-center gap-2">
-          <Input
-            value={proxyUrl}
-            onChange={(e) => {
-              setProxyUrl(e.target.value);
-              setProxySaved(false);
-            }}
-            onBlur={() => {
-              const trimmed = proxyUrl.trim();
-              if (trimmed && !isValidProxyUrl(trimmed)) {
-                setProxyUrl(account.proxy_url || '');
-                return;
-              }
-              if (trimmed !== (account.proxy_url || '')) {
-                setAccountProxy.mutate({
-                  accountId: account.id,
-                  proxyUrl: trimmed || null,
-                });
-                setProxySaved(true);
-                setTimeout(() => setProxySaved(false), 2000);
-              }
-            }}
-            placeholder={t('cloud.card.proxyPlaceholder')}
-            className="h-6 w-40 text-xs"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-          />
-          {proxySaved && (
-            <span className="text-[10px] text-green-500">{t('cloud.card.proxySaved')}</span>
-          )}
-        </div>
       </CardFooter>
     </Card>
   );

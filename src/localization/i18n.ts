@@ -18,7 +18,7 @@ i18n
     resources: {
       en: {
         translation: {
-          appName: 'Antigravity Manager',
+          appName: 'Gemini Nexus',
           common: {
             loading: 'Loading...',
             error: 'Error',
@@ -28,8 +28,8 @@ i18n
           },
           status: {
             checking: 'Checking status...',
-            running: 'Antigravity is running in background',
-            stopped: 'Antigravity service stopped',
+            running: 'Gemini Nexus is running in background',
+            stopped: 'Gemini Nexus service stopped',
           },
           action: {
             stop: 'Stop',
@@ -67,10 +67,10 @@ i18n
           },
           home: {
             title: 'Accounts',
-            description: 'Manage your Antigravity Google Gemini accounts.',
+            description: 'Manage your Gemini Nexus Google Gemini accounts.',
             noBackups: {
               title: 'No backups found',
-              description: 'Create a backup of your current Antigravity account to get started.',
+              description: 'Create a backup of your current Gemini Nexus account to get started.',
               action: 'Backup Current Account',
             },
           },
@@ -82,7 +82,7 @@ i18n
             models: 'Models',
             appearance: {
               title: 'Appearance',
-              description: 'Customize how Antigravity Manager looks on your device.',
+              description: 'Customize how Gemini Nexus looks on your device.',
             },
             darkMode: 'Dark Mode',
             darkModeDescription: 'Enable dark mode for better viewing at night.',
@@ -152,11 +152,15 @@ i18n
               enable: 'Enable Upstream Proxy',
               url: 'Proxy URL',
               timeout: 'Request Timeout (Seconds)',
+              accountProxies: {
+                title: 'Account Proxies',
+                description: 'Configure specific proxies for individual accounts. These will override the global upstream proxy for that specific account.',
+              },
             },
             modelMapping: {
               title: 'Model Mapping',
               description:
-                'Map Claude Code models to Antigravity models. Optimize cost and speed by routing requests intelligently.',
+                'Map Claude Code models to Gemini Nexus models. Optimize cost and speed by routing requests intelligently.',
               claudeKeyword: 'Claude Model (Keyword)',
               targetGemini: 'Target Gemini Model',
               addPlaceholderKey: 'e.g. op-3',
@@ -381,7 +385,7 @@ i18n
               pollFailed: 'Failed to poll quota for all accounts',
               switched: {
                 title: 'Account switched!',
-                description: 'Restarting Antigravity...',
+                description: 'Restarting Gemini Nexus...',
               },
               switchFailed: 'Failed to switch account',
               deleted: 'Account deleted',
@@ -495,7 +499,7 @@ i18n
       },
       'zh-CN': {
         translation: {
-          appName: 'Antigravity 管理器',
+          appName: 'Gemini Nexus 管理器',
           common: {
             loading: '加载中...',
             error: '错误',
@@ -505,8 +509,8 @@ i18n
           },
           status: {
             checking: '正在检查状态...',
-            running: 'Antigravity 正在后台运行',
-            stopped: 'Antigravity 服务已停止',
+            running: 'Gemini Nexus 正在后台运行',
+            stopped: 'Gemini Nexus 服务已停止',
           },
           action: {
             stop: '停止',
@@ -544,10 +548,10 @@ i18n
           },
           home: {
             title: '账号列表',
-            description: '管理您的 Antigravity Google Gemini 账号。',
+            description: '管理您的 Gemini Nexus Google Gemini 账号。',
             noBackups: {
               title: '未找到备份',
-              description: '备份您当前的 Antigravity 账号以开始使用。',
+              description: '备份您当前的 Gemini Nexus 账号以开始使用。',
               action: '备份当前账号',
             },
           },
@@ -559,7 +563,7 @@ i18n
             models: '模型',
             appearance: {
               title: '外观',
-              description: '自定义 Antigravity 管理器在您设备上的显示方式。',
+              description: '自定义 Gemini Nexus 管理器在您设备上的显示方式。',
             },
             darkMode: '深色模式',
             darkModeDescription: '启用深色模式以获得更好的夜间观看体验。',
@@ -627,11 +631,15 @@ i18n
               enable: '启用上游代理',
               url: '代理地址',
               timeout: '请求超时 (秒)',
+              accountProxies: {
+                title: '独立账号代理',
+                description: '为各个独立账号配置特定的代理。这些配置将覆盖该账号的全局上游代理。',
+              },
             },
             modelMapping: {
               title: '模型映射',
               description:
-                '将 Claude Code 模型映射到 Antigravity 模型，智能路由请求以优化成本和速度。',
+                '将 Claude Code 模型映射到 Gemini Nexus 模型，智能路由请求以优化成本和速度。',
               claudeKeyword: 'Claude 模型 (关键词)',
               targetGemini: '目标 Gemini 模型',
               addPlaceholderKey: '例如 op-3',
@@ -853,7 +861,7 @@ i18n
               pollFailed: '轮询所有账号配额失败',
               switched: {
                 title: '账号已切换！',
-                description: '正在重启 Antigravity...',
+                description: '正在重启 Gemini Nexus...',
               },
               switchFailed: '切换账号失败',
               deleted: '账号已删除',
@@ -963,7 +971,7 @@ i18n
       },
       ru: {
         translation: {
-          appName: 'Antigravity Manager',
+          appName: 'Gemini Nexus',
           common: {
             loading: 'Загрузка...',
             error: 'Ошибка',
@@ -973,8 +981,8 @@ i18n
           },
           status: {
             checking: 'Проверка статуса...',
-            running: 'Antigravity работает в фоне',
-            stopped: 'Служба Antigravity остановлена',
+            running: 'Gemini Nexus работает в фоне',
+            stopped: 'Служба Gemini Nexus остановлена',
           },
           action: {
             stop: 'Стоп',
@@ -1012,11 +1020,11 @@ i18n
           },
           home: {
             title: 'Аккаунты',
-            description: 'Управление вашими аккаунтами Antigravity Google Gemini.',
+            description: 'Управление вашими аккаунтами Gemini Nexus Google Gemini.',
             noBackups: {
               title: 'Бэкапы не найдены',
               description:
-                'Создайте резервную копию вашего текущего аккаунта Antigravity, чтобы начать.',
+                'Создайте резервную копию вашего текущего аккаунта Gemini Nexus, чтобы начать.',
               action: 'Создать бэкап текущего аккаунта',
             },
           },
@@ -1028,7 +1036,7 @@ i18n
             models: 'Модели',
             appearance: {
               title: 'Внешний вид',
-              description: 'Настройте внешний вид Antigravity Manager.',
+              description: 'Настройте внешний вид Gemini Nexus.',
             },
             darkMode: 'Темная тема',
             darkModeDescription: 'Включить темную тему для комфортной работы ночью.',
@@ -1099,11 +1107,15 @@ i18n
               enable: 'Включить прокси',
               url: 'URL прокси',
               timeout: 'Тайм-аут запроса (сек)',
+              accountProxies: {
+                title: 'Прокси аккаунтов',
+                description: 'Настройка индивидуальных прокси для каждого аккаунта. Эти настройки переопределят глобальный прокси для данного аккаунта.',
+              },
             },
             modelMapping: {
               title: 'Маппинг моделей',
               description:
-                'Сопоставьте модели Claude Code с моделями Antigravity. Оптимизируйте затраты и скорость, разумно маршрутизируя запросы.',
+                'Сопоставьте модели Claude Code с моделями Gemini Nexus. Оптимизируйте затраты и скорость, разумно маршрутизируя запросы.',
               claudeKeyword: 'Модель Claude (Ключевое слово)',
               targetGemini: 'Целевая модель Gemini',
               addPlaceholderKey: 'например, op-3',
@@ -1327,7 +1339,7 @@ i18n
               pollFailed: 'Не удалось опросить квоты всех аккаунтов',
               switched: {
                 title: 'Аккаунт переключен!',
-                description: 'Перезапуск Antigravity...',
+                description: 'Перезапуск Gemini Nexus...',
               },
               switchFailed: 'Не удалось переключить аккаунт',
               deleted: 'Аккаунт удален',

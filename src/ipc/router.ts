@@ -9,7 +9,7 @@ import { gatewayRouter } from './gateway/router';
 
 import { os } from '@orpc/server';
 import { z } from 'zod';
-import { isProcessRunning, closeAntigravity, startAntigravity } from './process/handler';
+import { isProcessRunning, closeGeminiNexus, startGeminiNexus } from './process/handler';
 import { systemHandler } from './system/handler';
 import { logger } from '../utils/logger';
 
@@ -41,11 +41,11 @@ export const router = os.use(logMiddleware).router({
     isProcessRunning: os.output(z.boolean()).handler(async () => {
       return await isProcessRunning();
     }),
-    closeAntigravity: os.output(z.void()).handler(async () => {
-      await closeAntigravity();
+    closeGeminiNexus: os.output(z.void()).handler(async () => {
+      await closeGeminiNexus();
     }),
-    startAntigravity: os.output(z.void()).handler(async () => {
-      await startAntigravity();
+    startGeminiNexus: os.output(z.void()).handler(async () => {
+      await startGeminiNexus();
     }),
   }),
 

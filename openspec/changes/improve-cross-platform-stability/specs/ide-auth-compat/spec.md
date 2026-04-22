@@ -38,5 +38,5 @@ The system SHALL use a strategy pattern to split new/legacy/dual-write injection
 The system SHALL prefer new-format injection when new-format keys are detected.
 
 #### Scenario: New-format key exists
-- **WHEN** `antigravityUnifiedStateSync.oauthToken` exists
+- **WHEN** `geminiNexusUnifiedStateSync.oauthToken` exists
 - **THEN** injection uses new format with higher priority

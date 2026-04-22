@@ -6,7 +6,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { ipc } from '@/ipc/manager';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { useAppConfig } from '@/hooks/useAppConfig';
 import { ProxyConfig } from '@/types/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,10 @@ import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -25,10 +28,6 @@ import {
   Loader2,
   Copy,
   CheckCircle,
-  Zap,
-  Cpu,
-  Sparkles,
-  BrainCircuit,
   Code,
   Terminal,
   Eye,
@@ -43,28 +42,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import { useCloudAccounts } from '@/hooks/useCloudAccounts';
+import { flatMap, sortBy, uniq } from 'lodash-es';
+
 type ProxyProtocol = 'openai' | 'anthropic';
 
-interface ExampleModel {
-  id: string;
-  name: string;
-  icon: ReactNode;
-}
-
-const EXAMPLE_MODELS: ExampleModel[] = [
-  { id: 'gemini-3-flash', name: 'Gemini 3 Flash', icon: <Zap size={14} /> },
-  { id: 'gemini-3.1-pro-low', name: 'Gemini 3.1 Pro (Low)', icon: <Cpu size={14} /> },
-  { id: 'gemini-3.1-pro-high', name: 'Gemini 3.1 Pro (High)', icon: <Cpu size={14} /> },
-  {
-    id: 'claude-sonnet-4-6-thinking',
-    name: 'Claude Sonnet 4.6 (Thinking)',
-    icon: <Sparkles size={14} />,
-  },
-  {
-    id: 'claude-opus-4-6-thinking',
-    name: 'Claude Opus 4.6 (Thinking)',
-    icon: <BrainCircuit size={14} />,
-  },
+const DEFAULT_MODELS = [
+  'gemini-3-flash',
+  'gemini-3.1-pro-low',
+  'gemini-3.1-pro-high',
+  'claude-sonnet-4-6-thinking',
+  'claude-opus-4-6-thinking',
 ];
 
 const ANTHROPIC_ROUTE_OPTIONS = [
@@ -168,9 +156,52 @@ function ProxyPage() {
   };
 
   // ===== Usage Examples State =====
+  const { data: accounts } = useCloudAccounts();
   const [selectedProtocol, setSelectedProtocol] = useState<ProxyProtocol>('openai');
   const [activeModelTab, setActiveModelTab] = useState('gemini-3.1-pro-high');
   const [copied, setCopied] = useState<string | null>(null);
+
+  const availableModelIds: string[] = useMemo(() => {
+    if (!accounts || accounts.length === 0) {
+      return DEFAULT_MODELS;
+    }
+    const modelNames = flatMap(accounts, (account) => {
+      if (!account.quota?.models) return [];
+      return Object.keys(account.quota.models);
+    });
+    const uniqueModels = sortBy(uniq(modelNames));
+    return uniqueModels.length > 0 ? uniqueModels : DEFAULT_MODELS;
+  }, [accounts]);
+
+  const groupedModels = useMemo(() => {
+    const groups: Record<string, string[]> = {
+      Anthropic: [],
+      Google: [],
+      OpenAI: [],
+      Other: [],
+    };
+    
+    availableModelIds.forEach((id) => {
+      const lower = id.toLowerCase();
+      if (lower.includes('gemini') || lower.includes('learnlm') || lower.includes('gemma')) {
+        groups['Google'].push(id);
+      } else if (lower.includes('claude')) {
+        groups['Anthropic'].push(id);
+      } else if (lower.includes('gpt') || lower.includes('o1') || lower.includes('o3') || lower.includes('dall-e')) {
+        groups['OpenAI'].push(id);
+      } else {
+        groups['Other'].push(id);
+      }
+    });
+
+    return groups;
+  }, [availableModelIds]);
+
+  useEffect(() => {
+    if (!availableModelIds.includes(activeModelTab) && availableModelIds.length > 0) {
+      setActiveModelTab(availableModelIds[0]);
+    }
+  }, [availableModelIds, activeModelTab]);
 
   // Computed values for examples
   const apiKey = proxyConfig?.api_key || 'YOUR_API_KEY';
@@ -599,18 +630,46 @@ print(response.choices[0].message.content)`;
             </div>
           </div>
 
-          {/* Model Tabs */}
-          <div className="flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700">
-            {EXAMPLE_MODELS.map((model) => (
-              <button
-                key={model.id}
-                onClick={() => setActiveModelTab(model.id)}
-                className={`flex items-center gap-1 rounded-t-lg px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${activeModelTab === model.id ? 'border-b-2 border-blue-600 bg-blue-50/50 text-blue-600 dark:border-blue-400 dark:bg-blue-900/10 dark:text-blue-400' : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'}`}
-              >
-                {model.icon}
-                <span>{model.name}</span>
-              </button>
-            ))}
+          {/* Model Selector & Copy API ID */}
+          <div className="flex flex-col gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-medium">
+                Model <span className="text-muted-foreground ml-1 font-normal">({availableModelIds.length} available)</span>
+              </Label>
+              <Select value={activeModelTab} onValueChange={setActiveModelTab}>
+                <SelectTrigger className="h-9 w-[280px] font-mono text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(groupedModels).map(([provider, models]) => {
+                    if (models.length === 0) return null;
+                    return (
+                      <SelectGroup key={provider}>
+                        <SelectLabel className="text-xs font-bold text-muted-foreground">{provider}</SelectLabel>
+                        {models.map((modelId) => (
+                          <SelectItem key={modelId} value={modelId} className="font-mono text-xs">
+                            {modelId}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(activeModelTab, 'model-id')}
+              className="h-9 text-xs"
+            >
+              {copied === 'model-id' ? (
+                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="mr-2 h-4 w-4" />
+              )}
+              Copy API Name
+            </Button>
           </div>
 
           {/* cURL Example */}

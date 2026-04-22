@@ -141,7 +141,7 @@ describe('TokenManagerService parity scheduling replay', () => {
         oauth_client_key: undefined,
         project_id: undefined,
       },
-      'antigravity_enterprise',
+      'geminiNexus_enterprise',
     );
 
     expect(normalized).toBeUndefined();

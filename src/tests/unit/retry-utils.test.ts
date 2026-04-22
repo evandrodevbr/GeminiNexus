@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyJitter, calculateRetryDelay } from '../../lib/antigravity/retry-utils';
+import { applyJitter, calculateRetryDelay } from '../../lib/geminiNexus/retry-utils';
 
 describe('applyJitter', () => {
   it('should return values within ±20% range', () => {

@@ -2,7 +2,7 @@ import { exec, execSync, spawn } from 'child_process';
 import { promisify } from 'util';
 import findProcess, { ProcessInfo } from 'find-process';
 import { isNumber } from 'lodash-es';
-import { getAntigravityExecutablePath, isWsl } from '../../utils/paths';
+import { getGeminiNexusExecutablePath, isWsl } from '../../utils/paths';
 import { logger } from '../../utils/logger';
 
 const execAsync = promisify(exec);
@@ -61,24 +61,24 @@ function isPgrepNoMatchError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  const hasPgrep = message.includes('pgrep') && message.includes('antigravity');
+  const hasPgrep = message.includes('pgrep') && message.includes('geminiNexus');
   const code = (error as { code?: number }).code;
   return hasPgrep && code === 1;
 }
 
 /**
- * Checks if the Antigravity process is running.
+ * Checks if the Gemini Nexus process is running.
  * Uses find-process package for robust cross-platform process detection.
- * @returns {boolean} True if the Antigravity process is running, false otherwise.
+ * @returns {boolean} True if the Gemini Nexus process is running, false otherwise.
  */
 export async function isProcessRunning(): Promise<boolean> {
   try {
     const platform = process.platform;
     const currentPid = process.pid;
 
-    // Use find-process to search for Antigravity processes
+    // Use find-process to search for Gemini Nexus processes
     const allMatches: ProcessInfo[] = [];
-    const searchNames = ['Antigravity', 'antigravity'];
+    const searchNames = ['Gemini Nexus', 'geminiNexus'];
     if (platform === 'linux') {
       searchNames.push('electron');
     }
@@ -106,10 +106,10 @@ export async function isProcessRunning(): Promise<boolean> {
 
     const processes = Array.from(processMap.values());
     if (processes.length === 0 && sawNoMatch) {
-      logger.debug('No Antigravity process found (pgrep returned 1)');
+      logger.debug('No Gemini Nexus process found (pgrep returned 1)');
     }
 
-    logger.debug(`Found ${processes.length} processes matching 'Antigravity/antigravity'`);
+    logger.debug(`Found ${processes.length} processes matching 'GeminiNexus/geminiNexus'`);
 
     for (const proc of processes) {
       // Skip self
@@ -124,7 +124,7 @@ export async function isProcessRunning(): Promise<boolean> {
       if (
         name.includes('manager') ||
         cmd.includes('manager') ||
-        cmd.includes('antigravity-manager')
+        cmd.includes('gemini-nexus')
       ) {
         continue;
       }
@@ -135,22 +135,22 @@ export async function isProcessRunning(): Promise<boolean> {
       }
 
       if (platform === 'darwin') {
-        // macOS: Check for Antigravity.app in path
-        if (cmd.includes('antigravity.app')) {
+        // macOS: Check for Gemini Nexus.app in path
+        if (cmd.includes('geminiNexus.app')) {
           logger.debug(
-            `Found Antigravity process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
+            `Found Gemini Nexus process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
           );
           return true;
         }
-        // Also check if the process name is exactly 'Antigravity' (main process)
-        if (name === 'antigravity' && !isHelperProcess(name, cmd)) {
-          logger.debug(`Found Antigravity process: PID=${proc.pid}, name=${name}`);
+        // Also check if the process name is exactly 'Gemini Nexus' (main process)
+        if (name === 'geminiNexus' && !isHelperProcess(name, cmd)) {
+          logger.debug(`Found Gemini Nexus process: PID=${proc.pid}, name=${name}`);
           return true;
         }
       } else if (platform === 'win32') {
-        // Windows: Check for Antigravity.exe
-        if (name === 'antigravity.exe' || name === 'antigravity') {
-          logger.debug(`Found Antigravity process: PID=${proc.pid}, name=${name}`);
+        // Windows: Check for Gemini Nexus.exe
+        if (name === 'geminiNexus.exe' || name === 'geminiNexus') {
+          logger.debug(`Found Gemini Nexus process: PID=${proc.pid}, name=${name}`);
           return true;
         }
       } else {
@@ -159,28 +159,28 @@ export async function isProcessRunning(): Promise<boolean> {
 
         if (nameLower === 'electron') {
           // Stricter check for AUR/Electron wrapper:
-          // Must include antigravity in command line but NOT manager or tools
-          const isAntigravityApp =
-            (cmdLower.includes('/antigravity') ||
-              cmdLower.includes(' antigravity') ||
-              cmdLower.endsWith('antigravity')) &&
+          // Must include geminiNexus in command line but NOT manager or tools
+          const isGeminiNexusApp =
+            (cmdLower.includes('/geminiNexus') ||
+              cmdLower.includes(' geminiNexus') ||
+              cmdLower.endsWith('geminiNexus')) &&
             !cmdLower.includes('manager') &&
             !cmdLower.includes('tools');
 
-          if (isAntigravityApp) {
+          if (isGeminiNexusApp) {
             logger.debug(
-              `Found Antigravity (AUR/electron) process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
+              `Found Gemini Nexus (AUR/electron) process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
             );
             return true;
           }
         }
 
         if (
-          (name.includes('antigravity') || cmd.includes('/antigravity')) &&
+          (name.includes('geminiNexus') || cmd.includes('/geminiNexus')) &&
           !name.includes('tools')
         ) {
           logger.debug(
-            `Found Antigravity process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
+            `Found Gemini Nexus process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
           );
           return true;
         }
@@ -195,11 +195,11 @@ export async function isProcessRunning(): Promise<boolean> {
 }
 
 /**
- * Closes the Antigravity process.
- * @returns {boolean} True if the Antigravity process is running, false otherwise.
+ * Closes the Gemini Nexus process.
+ * @returns {boolean} True if the Gemini Nexus process is running, false otherwise.
  */
-export async function closeAntigravity(): Promise<void> {
-  logger.info('Closing Antigravity...');
+export async function closeGeminiNexus(): Promise<void> {
+  logger.info('Closing Gemini Nexus...');
   const platform = process.platform;
 
   try {
@@ -208,7 +208,7 @@ export async function closeAntigravity(): Promise<void> {
       // macOS: Use AppleScript to quit gracefully
       try {
         logger.info('Attempting graceful exit via AppleScript...');
-        execSync('osascript -e \'tell application "Antigravity" to quit\'', {
+        execSync('osascript -e \'tell application "Gemini Nexus" to quit\'', {
           stdio: 'ignore',
           timeout: 3000,
         });
@@ -223,7 +223,7 @@ export async function closeAntigravity(): Promise<void> {
         logger.info('Attempting graceful exit via taskkill...');
         // /T = Tree (child processes), /IM = Image Name
         // We do not wait long here.
-        execSync('taskkill /IM "Antigravity.exe" /T', {
+        execSync('taskkill /IM "GeminiNexus.exe" /T', {
           stdio: 'ignore',
           timeout: 2000,
         });
@@ -243,7 +243,7 @@ export async function closeAntigravity(): Promise<void> {
         let output = '';
         if (platform === 'win32') {
           const psCommand = (cmdlet: string) =>
-            `powershell -NoProfile -Command "${cmdlet} Win32_Process -Filter \\"Name like 'Antigravity%'\\" | Select-Object ProcessId, Name, CommandLine | ConvertTo-Csv -NoTypeInformation"`;
+            `powershell -NoProfile -Command "${cmdlet} Win32_Process -Filter \\"Name like 'GeminiNexus%'\\" | Select-Object ProcessId, Name, CommandLine | ConvertTo-Csv -NoTypeInformation"`;
 
           try {
             output = execSync(psCommand('Get-CimInstance'), {
@@ -304,7 +304,7 @@ export async function closeAntigravity(): Promise<void> {
             const pid = parseInt(parts[0]);
             if (isNaN(pid)) continue;
             const rest = parts.slice(1).join(' ');
-            if (rest.includes('Antigravity') || rest.includes('antigravity')) {
+            if (rest.includes('Gemini Nexus') || rest.includes('geminiNexus')) {
               processList.push({ pid, name: parts[1], cmd: rest });
             }
           }
@@ -321,31 +321,31 @@ export async function closeAntigravity(): Promise<void> {
       if (p.pid === currentPid) {
         return false;
       }
-      // Exclude this electron app (if named Antigravity Manager or antigravity-manager)
-      if (p.cmd.includes('Antigravity Manager') || p.cmd.includes('antigravity-manager')) {
+      // Exclude this electron app (if named Gemini Nexus or gemini-nexus)
+      if (p.cmd.includes('Gemini Nexus') || p.cmd.includes('gemini-nexus')) {
         return false;
       }
-      // Match Antigravity (but not manager)
+      // Match Gemini Nexus (but not manager)
       if (platform === 'win32') {
         return (
-          p.cmd.includes('Antigravity.exe') ||
-          (p.cmd.includes('antigravity') && !p.cmd.includes('manager'))
+          p.cmd.includes('GeminiNexus.exe') ||
+          (p.cmd.includes('geminiNexus') && !p.cmd.includes('manager'))
         );
       } else {
         // Explicit !manager check for Linux/macOS to be defensive
         return (
-          (p.cmd.includes('Antigravity') || p.cmd.includes('antigravity')) &&
+          (p.cmd.includes('Gemini Nexus') || p.cmd.includes('geminiNexus')) &&
           !p.cmd.includes('manager')
         );
       }
     });
 
     if (targetProcessList.length === 0) {
-      logger.info('No Antigravity processes found running.');
+      logger.info('No Gemini Nexus processes found running.');
       return;
     }
 
-    logger.info(`Found ${targetProcessList.length} remaining Antigravity processes. Killing...`);
+    logger.info(`Found ${targetProcessList.length} remaining Gemini Nexus processes. Killing...`);
 
     for (const p of targetProcessList) {
       try {
@@ -355,13 +355,13 @@ export async function closeAntigravity(): Promise<void> {
       }
     }
   } catch (error) {
-    logger.error('Error closing Antigravity', error);
+    logger.error('Error closing Gemini Nexus', error);
     // Fallback to simple kill if everything fails
     try {
       if (platform === 'win32') {
-        execSync('taskkill /F /IM "Antigravity.exe" /T', { stdio: 'ignore' });
+        execSync('taskkill /F /IM "GeminiNexus.exe" /T', { stdio: 'ignore' });
       } else {
-        execSync('pkill -9 -f Antigravity', { stdio: 'ignore' });
+        execSync('pkill -9 -f Gemini Nexus', { stdio: 'ignore' });
       }
     } catch {
       // Ignore
@@ -370,7 +370,7 @@ export async function closeAntigravity(): Promise<void> {
 }
 
 /**
- * Waits for the Antigravity process to exit.
+ * Waits for the Gemini Nexus process to exit.
  * @param timeoutMs {number} The timeout in milliseconds.
  * @returns {Promise<void>} A promise that resolves when the process exits.
  */
@@ -385,7 +385,7 @@ export async function _waitForProcessExit(
     }
     await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
-  throw new Error(`Antigravity process did not exit within ${timeoutMs}ms`);
+  throw new Error(`Gemini Nexus process did not exit within ${timeoutMs}ms`);
 }
 
 /**
@@ -418,7 +418,7 @@ async function openUri(uri: string): Promise<boolean> {
   }
 }
 
-async function waitForAntigravityStartup(
+async function waitForGeminiNexusStartup(
   timeoutMs = PROCESS_STARTUP_TIMEOUT_MS,
   pollIntervalMs = PROCESS_STARTUP_POLL_INTERVAL_MS,
 ): Promise<boolean> {
@@ -441,15 +441,15 @@ function shouldUseLinuxGpuSafeLaunchArgs(): boolean {
   return enableLinuxGpuRaw !== '1' && enableLinuxGpuRaw !== 'true';
 }
 
-async function startAntigravityByExecutable(execPath: string): Promise<void> {
+async function startGeminiNexusByExecutable(execPath: string): Promise<void> {
   if (process.platform === 'darwin') {
-    await execAsync(`open -a Antigravity`);
+    await execAsync(`open -a Gemini Nexus`);
     return;
   }
 
   if (process.platform === 'win32') {
     if (!execPath) {
-      throw new Error('Unable to locate Antigravity executable path');
+      throw new Error('Unable to locate Gemini Nexus executable path');
     }
     // Use start command to detach
     await execAsync(`start "" "${execPath}"`);
@@ -458,7 +458,7 @@ async function startAntigravityByExecutable(execPath: string): Promise<void> {
 
   if (isWsl()) {
     if (!execPath) {
-      throw new Error('Unable to locate Antigravity executable path');
+      throw new Error('Unable to locate Gemini Nexus executable path');
     }
     // In WSL, convert path and use cmd.exe
     const winPath = execPath
@@ -470,7 +470,7 @@ async function startAntigravityByExecutable(execPath: string): Promise<void> {
   }
 
   if (!execPath) {
-    throw new Error('Unable to locate Antigravity executable path');
+    throw new Error('Unable to locate Gemini Nexus executable path');
   }
 
   const launchArgs = shouldUseLinuxGpuSafeLaunchArgs() ? [...LINUX_GPU_SAFE_LAUNCH_ARGS] : [];
@@ -486,36 +486,36 @@ async function startAntigravityByExecutable(execPath: string): Promise<void> {
 }
 
 /**
- * Starts the Antigravity process.
- * @param useUri {boolean} Whether to use the URI protocol to start Antigravity.
+ * Starts the Gemini Nexus process.
+ * @param useUri {boolean} Whether to use the URI protocol to start Gemini Nexus.
  * @returns {Promise<void>} A promise that resolves when the process starts.
  */
-export async function startAntigravity(useUri = true): Promise<void> {
-  logger.info('Starting Antigravity...');
+export async function startGeminiNexus(useUri = true): Promise<void> {
+  logger.info('Starting Gemini Nexus...');
 
   if (await isProcessRunning()) {
-    logger.info('Antigravity is already running');
+    logger.info('Gemini Nexus is already running');
     return;
   }
 
   if (useUri) {
     logger.info('Using URI protocol to start...');
-    const uri = 'antigravity://oauth-success';
+    const uri = 'geminiNexus://oauth-success';
 
     if (await openUri(uri)) {
-      logger.info('Antigravity URI launch command sent');
+      logger.info('Gemini Nexus URI launch command sent');
 
       if (process.platform !== 'linux' || isWsl()) {
         return;
       }
 
-      if (await waitForAntigravityStartup()) {
-        logger.info('Antigravity process detected after URI launch');
+      if (await waitForGeminiNexusStartup()) {
+        logger.info('Gemini Nexus process detected after URI launch');
         return;
       }
 
       logger.warn(
-        'URI launch did not keep Antigravity running on Linux. Falling back to executable launch.',
+        'URI launch did not keep Gemini Nexus running on Linux. Falling back to executable launch.',
       );
     } else {
       logger.warn('URI launch failed, trying executable path...');
@@ -524,22 +524,22 @@ export async function startAntigravity(useUri = true): Promise<void> {
 
   // Fallback to executable path
   logger.info('Using executable path to start...');
-  const execPath = getAntigravityExecutablePath();
+  const execPath = getGeminiNexusExecutablePath();
 
   try {
-    await startAntigravityByExecutable(execPath);
-    logger.info('Antigravity launch command sent');
+    await startGeminiNexusByExecutable(execPath);
+    logger.info('Gemini Nexus launch command sent');
 
     if (process.platform === 'linux' && !isWsl()) {
-      const started = await waitForAntigravityStartup();
+      const started = await waitForGeminiNexusStartup();
       if (!started) {
         logger.warn(
-          'Antigravity launch command completed, but process startup could not be confirmed on Linux.',
+          'Gemini Nexus launch command completed, but process startup could not be confirmed on Linux.',
         );
       }
     }
   } catch (error) {
-    logger.error('Failed to start Antigravity via executable', error);
+    logger.error('Failed to start Gemini Nexus via executable', error);
     throw error;
   }
 }

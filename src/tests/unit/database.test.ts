@@ -16,8 +16,8 @@ vi.mock('../../utils/paths', async () => {
   const path = await import('path');
   const tempDbPath = path.join(process.cwd(), 'temp_test.vscdb');
   return {
-    getAntigravityDbPath: () => tempDbPath,
-    getAntigravityDbPaths: () => [tempDbPath],
+    getGeminiNexusDbPath: () => tempDbPath,
+    getGeminiNexusDbPaths: () => [tempDbPath],
     getAgentDir: () => path.join(process.cwd(), 'temp_test_agent'),
   };
 });
@@ -39,7 +39,7 @@ describe.skip('Database Handler', () => {
     const db = new Database(tempDbPath);
     db.exec('CREATE TABLE IF NOT EXISTS ItemTable (key TEXT PRIMARY KEY, value TEXT)');
     db.prepare('INSERT INTO ItemTable (key, value) VALUES (?, ?)').run(
-      'antigravityAuthStatus',
+      'geminiNexusAuthStatus',
       JSON.stringify({
         user: { email: 'test@example.com', name: 'Test User' },
       }),
@@ -76,7 +76,7 @@ describe.skip('Database Handler', () => {
     };
     const backup = backupAccount(account);
     expect(backup.account).toEqual(account);
-    expect(backup.data['antigravityAuthStatus']).toBeDefined();
+    expect(backup.data['geminiNexusAuthStatus']).toBeDefined();
   });
 
   it('should restore account', () => {
@@ -90,7 +90,7 @@ describe.skip('Database Handler', () => {
         last_used: new Date().toISOString(),
       },
       data: {
-        antigravityAuthStatus: JSON.stringify({
+        geminiNexusAuthStatus: JSON.stringify({
           user: { email: 'restored@example.com' },
         }),
         newKey: 'newValue',
@@ -101,7 +101,7 @@ describe.skip('Database Handler', () => {
 
     const db = new Database(tempDbPath);
     const row = db
-      .prepare("SELECT value FROM ItemTable WHERE key = 'antigravityAuthStatus'")
+      .prepare("SELECT value FROM ItemTable WHERE key = 'geminiNexusAuthStatus'")
       .get() as { value: string };
     const value = JSON.parse(row.value);
     expect(value.user.email).toBe('restored@example.com');

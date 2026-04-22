@@ -4,10 +4,10 @@ export function isProcessRunning() {
   return ipc.client.proc.isProcessRunning();
 }
 
-export function closeAntigravity() {
-  return ipc.client.proc.closeAntigravity();
+export function closeGeminiNexus() {
+  return ipc.client.proc.closeGeminiNexus();
 }
 
-export function startAntigravity() {
-  return ipc.client.proc.startAntigravity();
+export function startGeminiNexus() {
+  return ipc.client.proc.startGeminiNexus();
 }

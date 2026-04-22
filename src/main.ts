@@ -55,7 +55,7 @@ app.disableHardwareAcceleration();
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('disable-gpu');
   app.commandLine.appendSwitch('disable-gpu-compositing');
-  logger.info('Applied Linux GPU-safe Chromium switches for Antigravity Manager startup');
+  logger.info('Applied Linux GPU-safe Chromium switches for Gemini Nexus startup');
 }
 
 if (squirrelStartup) {
@@ -167,7 +167,7 @@ function showWindowsInstallNoticeIfNeeded() {
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 if (isDev) {
-  app.setName('Antigravity Manager Dev');
+  app.setName('Gemini Nexus Dev');
 }
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
@@ -365,7 +365,7 @@ function checkForUpdates() {
   updateElectronApp({
     updateSource: {
       type: UpdateSourceType.ElectronPublicUpdateService,
-      repo: 'Draculabo/AntigravityManager',
+      repo: 'Draculabo/GeminiNexusManager',
     },
   });
 }
@@ -417,7 +417,7 @@ app
       // though functionality will be broken.
     }
 
-    logger.info('Step: Initialize Antigravity DB (WAL Mode)');
+    logger.info('Step: Initialize Gemini Nexus DB (WAL Mode)');
     initDatabase();
   })
   .then(() => {

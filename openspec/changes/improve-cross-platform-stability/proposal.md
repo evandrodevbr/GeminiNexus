@@ -20,7 +20,7 @@
 - Affected code:
   - `src/ipc/database/cloudHandler.ts`
   - `src/ipc/database/handler.ts`
-  - `src/utils/antigravityVersion.ts`
+  - `src/utils/geminiNexusVersion.ts`
   - `src/utils/paths.ts` (this stage covers default runtime configuration path only)
   - `src/types/db.ts`
 

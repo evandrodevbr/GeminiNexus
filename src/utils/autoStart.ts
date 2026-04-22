@@ -6,7 +6,7 @@ import { logger } from './logger';
 import { AppConfig } from '../types/config';
 
 export const AUTO_START_ARG = '--autostart';
-const LINUX_AUTOSTART_FILENAME = 'antigravity-manager.desktop';
+const LINUX_AUTOSTART_FILENAME = 'gemini-nexus.desktop';
 
 function getLinuxAutoStartPath() {
   const dir = path.join(os.homedir(), '.config', 'autostart');
@@ -59,8 +59,8 @@ function cleanupLinuxAutoStartEntries(currentPath: string) {
   const legacyNames = [
     `${app.getName()}.desktop`,
     `${app.getName().replace(/\s+/g, '')}.desktop`,
-    'Antigravity Manager.desktop',
-    'AntigravityManager.desktop',
+    'Gemini Nexus.desktop',
+    'GeminiNexusManager.desktop',
   ];
 
   for (const name of legacyNames) {

@@ -130,7 +130,7 @@ export async function addAccountSnapshot(): Promise<Account> {
   const info = getCurrentAccountInfo();
   if (!info.isAuthenticated) {
     const errorMsg =
-      'No authenticated account found. Please ensure Antigravity is running and you are logged in.';
+      'No authenticated account found. Please ensure Gemini Nexus is running and you are logged in.';
     logger.error(errorMsg);
     throw new Error(errorMsg);
   }

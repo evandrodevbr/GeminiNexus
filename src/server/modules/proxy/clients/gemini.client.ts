@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosProxyConfig, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { isEmpty, isFunction, isNil, isObjectLike, isString } from 'lodash-es';
 import { GeminiRequest, GeminiResponse } from '../interfaces/request-interfaces';
-import { GeminiInternalRequest } from '../../../../lib/antigravity/types';
+import { GeminiInternalRequest } from '../../../../lib/geminiNexus/types';
 import { getServerConfig } from '../../../server-config';
 import { resolveRequestUserAgent } from '../request-user-agent';
 import { UpstreamRequestError } from './upstream-error';

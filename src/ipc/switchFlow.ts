@@ -1,6 +1,6 @@
 import { type DeviceProfile } from '../types/account';
 import { logger } from '../utils/logger';
-import { closeAntigravity, startAntigravity, _waitForProcessExit } from './process/handler';
+import { closeGeminiNexus, startGeminiNexus, _waitForProcessExit } from './process/handler';
 import { applyDeviceProfile } from './device/handler';
 import {
   type SwitchFailureReason,
@@ -55,7 +55,7 @@ export async function executeSwitchFlow(options: SwitchFlowOptions): Promise<voi
 
   let stage = 'close';
   try {
-    await closeAntigravity();
+    await closeGeminiNexus();
     try {
       await _waitForProcessExit(processExitTimeoutMs);
     } catch (error) {
@@ -78,7 +78,7 @@ export async function executeSwitchFlow(options: SwitchFlowOptions): Promise<voi
     stage = 'switch';
     await performSwitch();
     stage = 'start';
-    await startAntigravity();
+    await startGeminiNexus();
     recordSwitchSuccess(scope);
   } catch (error) {
     const reason = toSwitchFailureReason(stage, error);

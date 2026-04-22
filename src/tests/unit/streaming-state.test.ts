@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PartProcessor, StreamingState } from '../../lib/antigravity/ClaudeStreamingMapper';
+import { PartProcessor, StreamingState } from '../../lib/geminiNexus/ClaudeStreamingMapper';
 
 describe('StreamingState', () => {
   let state: StreamingState;

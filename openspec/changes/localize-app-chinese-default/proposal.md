@@ -4,7 +4,7 @@
 
 ## Summary
 
-Add multilingual support to Antigravity Manager and automatically set the default UI language based on the user's OS language. If the OS language is unsupported, fall back to English. This includes updating i18n configuration, adding Chinese translation resources, and integrating a language detection plugin.
+Add multilingual support to Gemini Nexus and automatically set the default UI language based on the user's OS language. If the OS language is unsupported, fall back to English. This includes updating i18n configuration, adding Chinese translation resources, and integrating a language detection plugin.
 
 ## Motivation
 

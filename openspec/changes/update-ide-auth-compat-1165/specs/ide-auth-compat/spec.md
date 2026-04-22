@@ -1,6 +1,6 @@
 ## ADDED Requirements
 ### Requirement: New-Format Injection for 1.16.5+
-The system SHALL write only the new format `antigravityUnifiedStateSync.oauthToken` when IDE version is >= 1.16.5.
+The system SHALL write only the new format `geminiNexusUnifiedStateSync.oauthToken` when IDE version is >= 1.16.5.
 
 #### Scenario: New-version injection
 - **WHEN** IDE version is 1.16.5 or above

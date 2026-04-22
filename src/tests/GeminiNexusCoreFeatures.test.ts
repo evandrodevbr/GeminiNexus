@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { transformClaudeRequestIn } from '../lib/antigravity/ClaudeRequestMapper';
-import { ClaudeRequest } from '../lib/antigravity/types';
-import { SignatureStore } from '../lib/antigravity/SignatureStore';
+import { transformClaudeRequestIn } from '../lib/geminiNexus/ClaudeRequestMapper';
+import { ClaudeRequest } from '../lib/geminiNexus/types';
+import { SignatureStore } from '../lib/geminiNexus/SignatureStore';
 
 /**
- * Antigravity Core Features Verification
+ * Gemini Nexus Core Features Verification
  *
- * This test suite verifies the critical "Antigravity" enhancements ported from the Manager project.
+ * This test suite verifies the critical "Gemini Nexus" enhancements ported from the Manager project.
  * Primarily focuses on:
  * 1. Identity Injection (Safety & Branding)
  * 2. Gemini 3 Pro Compatibility (Stability Fixes)
  * 3. Model Routing Logic (Business Rules)
  */
-describe('Antigravity Core Features (Business Logic)', () => {
+describe('Gemini Nexus Core Features (Business Logic)', () => {
   beforeEach(() => {
     // Clear global signature store before each test
     SignatureStore.clear();
@@ -27,22 +27,22 @@ describe('Antigravity Core Features (Business Logic)', () => {
   };
 
   describe('Feature: Identity Injection (Branding & Safety)', () => {
-    it('should inject Antigravity identity when system prompt is missing', () => {
+    it('should inject Gemini Nexus identity when system prompt is missing', () => {
       const result = transformClaudeRequestIn({ ...BASE_REQUEST }, 'test-project');
 
       const parts = result.request.systemInstruction?.parts || [];
-      const identityPart = parts.find((p) => p.text.includes('You are Antigravity'));
+      const identityPart = parts.find((p) => p.text.includes('You are Gemini Nexus'));
 
       expect(identityPart).toBeDefined();
       expect(identityPart?.text).toContain('[IDENTITY_PATCH]');
     });
 
-    it('should NOT inject Antigravity identity if user already provided it', () => {
+    it('should NOT inject Gemini Nexus identity if user already provided it', () => {
       // User explicitly providing the identity string
       const result = transformClaudeRequestIn(
         {
           ...BASE_REQUEST,
-          system: 'You are Antigravity, the best AI.',
+          system: 'You are Gemini Nexus, the best AI.',
         },
         'test-project',
       );
@@ -66,7 +66,7 @@ describe('Antigravity Core Features (Business Logic)', () => {
 
       const parts = result.request.systemInstruction?.parts || [];
       expect(parts.length).toBeGreaterThanOrEqual(2);
-      expect(parts[0].text).toContain('Antigravity');
+      expect(parts[0].text).toContain('Gemini Nexus');
       expect(parts[parts.length - 1].text).toContain('Be concise');
     });
   });

@@ -4,18 +4,18 @@ import { TokenManagerService } from './token-manager.service';
 import { GeminiClient } from './clients/gemini.client';
 import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
-import { transformClaudeRequestIn } from '../../../lib/antigravity/ClaudeRequestMapper';
-import { transformResponse } from '../../../lib/antigravity/ClaudeResponseMapper';
-import { StreamingState, PartProcessor } from '../../../lib/antigravity/ClaudeStreamingMapper';
+import { transformClaudeRequestIn } from '../../../lib/geminiNexus/ClaudeRequestMapper';
+import { transformResponse } from '../../../lib/geminiNexus/ClaudeResponseMapper';
+import { StreamingState, PartProcessor } from '../../../lib/geminiNexus/ClaudeStreamingMapper';
 import {
   ClaudeRequest,
   ClaudeResponse,
   GeminiInternalRequest,
   GeminiPart as InternalGeminiPart,
-} from '../../../lib/antigravity/types';
-import { calculateRetryDelay, sleep } from '../../../lib/antigravity/retry-utils';
-import { normalizeObjectJsonSchema } from '../../../lib/antigravity/JsonSchemaUtils';
-import { classifyStreamError } from '../../../lib/antigravity/stream-error-utils';
+} from '../../../lib/geminiNexus/types';
+import { calculateRetryDelay, sleep } from '../../../lib/geminiNexus/retry-utils';
+import { normalizeObjectJsonSchema } from '../../../lib/geminiNexus/JsonSchemaUtils';
+import { classifyStreamError } from '../../../lib/geminiNexus/stream-error-utils';
 import {
   OpenAIChatRequest,
   AnthropicChatRequest,
@@ -29,8 +29,8 @@ import { getServerConfig } from '../../server-config';
 import {
   normalizeGeminiModelAlias,
   resolveModelRoute,
-} from '../../../lib/antigravity/ModelMapping';
-import { getMaxOutputTokens, getThinkingBudget } from '../../../lib/antigravity/ModelSpecs';
+} from '../../../lib/geminiNexus/ModelMapping';
+import { getMaxOutputTokens, getThinkingBudget } from '../../../lib/geminiNexus/ModelSpecs';
 import { resolveRequestUserAgent } from './request-user-agent';
 import { UpstreamRequestError } from './clients/upstream-error';
 

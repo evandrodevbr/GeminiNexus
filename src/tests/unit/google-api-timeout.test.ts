@@ -114,7 +114,7 @@ describe('GoogleAPIService OAuth clients', () => {
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
     const clients = GoogleAPIService.listOAuthClients();
 
-    expect(clients.find((client) => client.key === 'antigravity_enterprise')).toBeDefined();
+    expect(clients.find((client) => client.key === 'geminiNexus_enterprise')).toBeDefined();
     expect(clients.find((client) => client.key === 'custom_a')?.label).toBe('Custom A');
     expect(clients.find((client) => client.key === 'custom_b')?.is_active).toBe(true);
   });
@@ -272,7 +272,7 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
         metadata: {
           ide_type: 'ANTIGRAVITY',
           ide_version: expectedVersion,
-          ide_name: 'antigravity',
+          ide_name: 'geminiNexus',
         },
       }),
     );
@@ -410,7 +410,7 @@ describe('QuotaService fallback policy', () => {
       isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
     }));
 
-    const { QuotaService } = await import('../../lib/antigravity/QuotaService');
+    const { QuotaService } = await import('../../lib/geminiNexus/QuotaService');
 
     await expect(QuotaService.fetchQuota('access-token', 'user@example.com')).rejects.toThrow(
       'HTTP 400 - {"error":"INVALID_ARGUMENT"}',

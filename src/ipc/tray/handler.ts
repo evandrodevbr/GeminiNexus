@@ -69,7 +69,7 @@ export function initTray(mainWindow: BrowserWindow) {
   }
 
   tray = new Tray(icon);
-  tray.setToolTip('Antigravity Manager');
+  tray.setToolTip('Gemini Nexus');
 
   tray.on('double-click', () => {
     if (globalMainWindow) {

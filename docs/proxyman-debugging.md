@@ -1,9 +1,9 @@
-# Proxyman Debugging Guide for Antigravity and Antigravity Manager
+# Proxyman Debugging Guide for Antigravity and Gemini Nexus
 
 This guide explains how to use Proxyman for two debugging targets:
 
 1. The installed official `Antigravity` desktop client
-2. The `Antigravity Manager` development build from this repository
+2. The `Gemini Nexus` development build from this repository
 
 Before you start, complete [Proxyman Installation and Basic Setup on Windows](./proxyman-install.md).
 
@@ -12,7 +12,7 @@ Before you start, complete [Proxyman Installation and Basic Setup on Windows](./
 Use this guide when you want to:
 
 - inspect login, quota, project context, or model-list requests from `Antigravity`
-- inspect OAuth, quota refresh, or proxy traffic from `Antigravity Manager`
+- inspect OAuth, quota refresh, or proxy traffic from `Gemini Nexus`
 - compare requests from the official client with requests produced by this project
 
 ## Understand the Two Traffic Paths
@@ -24,7 +24,7 @@ Use this guide when you want to:
 - Chromium or renderer-side requests
 - Electron or Node-side requests
 
-### `Antigravity Manager` in This Repository
+### `Gemini Nexus` in This Repository
 
 This project is also an Electron app, but it additionally includes Node, Undici, and internal proxy flows. You may need to inspect:
 
@@ -68,7 +68,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-antigravity-with-proxym
 Notes:
 
 - This script targets the installed official `Antigravity` client.
-- It does not launch this repository's `Antigravity Manager` development build.
+- It does not launch this repository's `Gemini Nexus` development build.
 - Override `-AppPath`, `-CaPath`, `-ProxyHost`, or `-NoProxy` if your local environment differs.
 
 ### Suggested Flow
@@ -111,7 +111,7 @@ If system proxy behavior is unreliable, you can launch the installed client with
 
 Use this as a fallback, not the default path.
 
-## Debug Antigravity Manager From This Repository
+## Debug Gemini Nexus From This Repository
 
 This project has more layers than the official client. The script above is not the general launcher for this repository's development app.
 
@@ -227,7 +227,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-antigravity-with-proxym
 
 4. Trigger login, quota, or model-list traffic.
 
-### Antigravity Manager in This Repository
+### Gemini Nexus in This Repository
 
 1. Complete [Proxyman Installation and Basic Setup on Windows](./proxyman-install.md).
 2. Open PowerShell.

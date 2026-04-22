@@ -38,10 +38,10 @@ export interface AccountBackupData {
   version: string; // Backup format version
   account: Account;
   data: {
-    // Key-value pairs from Antigravity database
-    antigravityAuthStatus?: string;
+    // Key-value pairs from Gemini Nexus database
+    geminiNexusAuthStatus?: string;
     'jetskiStateSync.agentManagerInitState'?: string;
-    'antigravityUnifiedStateSync.oauthToken'?: string;
+    'geminiNexusUnifiedStateSync.oauthToken'?: string;
     [key: string]: unknown;
   };
 }

@@ -1,5 +1,5 @@
 const vi = {
-  appName: 'Antigravity Manager',
+  appName: 'Gemini Nexus',
   common: {
     loading: 'Đang tải...',
     error: 'Lỗi',
@@ -9,8 +9,8 @@ const vi = {
   },
   status: {
     checking: 'Đang kiểm tra trạng thái...',
-    running: 'Antigravity đang chạy nền',
-    stopped: 'Dịch vụ Antigravity đã dừng',
+    running: 'Gemini Nexus đang chạy nền',
+    stopped: 'Dịch vụ Gemini Nexus đã dừng',
   },
   action: {
     stop: 'Dừng',
@@ -48,10 +48,10 @@ const vi = {
   },
   home: {
     title: 'Tài khoản',
-    description: 'Quản lý các tài khoản Antigravity Google Gemini.',
+    description: 'Quản lý các tài khoản Gemini Nexus Google Gemini.',
     noBackups: {
       title: 'Chưa tìm thấy bản sao lưu',
-      description: 'Hãy tạo bản sao lưu cho tài khoản Antigravity hiện tại để bắt đầu.',
+      description: 'Hãy tạo bản sao lưu cho tài khoản Gemini Nexus hiện tại để bắt đầu.',
       action: 'Sao lưu tài khoản hiện tại',
     },
   },
@@ -63,7 +63,7 @@ const vi = {
     models: 'Mô hình',
     appearance: {
       title: 'Giao diện',
-      description: 'Tùy chỉnh giao diện Antigravity Manager trên thiết bị của bạn.',
+      description: 'Tùy chỉnh giao diện Gemini Nexus trên thiết bị của bạn.',
     },
     darkMode: 'Chế độ tối',
     darkModeDescription: 'Bật chế độ tối để dễ nhìn hơn vào ban đêm.',
@@ -132,11 +132,15 @@ const vi = {
       enable: 'Bật proxy trung gian',
       url: 'Địa chỉ proxy',
       timeout: 'Thời gian chờ request (giây)',
+      accountProxies: {
+        title: 'Proxy tài khoản',
+        description: 'Cấu hình proxy riêng cho từng tài khoản. Những cấu hình này sẽ ghi đè proxy trung gian chung cho tài khoản đó.',
+      },
     },
     modelMapping: {
       title: 'Ánh xạ mô hình',
       description:
-        'Ánh xạ các model Claude Code sang model Antigravity để tối ưu chi phí và tốc độ.',
+        'Ánh xạ các model Claude Code sang model Gemini Nexus để tối ưu chi phí và tốc độ.',
       claudeKeyword: 'Từ khóa model Claude',
       targetGemini: 'Model Gemini đích',
       addPlaceholderKey: 'ví dụ: op-3',
@@ -360,7 +364,7 @@ const vi = {
       pollFailed: 'Không thể polling quota của tất cả tài khoản',
       switched: {
         title: 'Đã chuyển tài khoản!',
-        description: 'Đang khởi động lại Antigravity...',
+        description: 'Đang khởi động lại Gemini Nexus...',
       },
       switchFailed: 'Không thể chuyển tài khoản',
       deleted: 'Đã xóa tài khoản',

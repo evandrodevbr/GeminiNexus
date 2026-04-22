@@ -6,15 +6,15 @@ import { isString } from 'lodash-es';
 import { AccountBackupData, AccountInfo } from '../../types/account';
 import { ItemTableValueRowSchema, type ItemTableKey } from '../../types/db';
 import { logger } from '../../utils/logger';
-import { getAntigravityDbPaths } from '../../utils/paths';
+import { getGeminiNexusDbPaths } from '../../utils/paths';
 import { parseRow } from '../../utils/sqlite';
 import { openDrizzleConnection } from './dbConnection';
 import { itemTable } from './schema';
 
 const KEYS_TO_BACKUP: ItemTableKey[] = [
-  'antigravityAuthStatus',
+  'geminiNexusAuthStatus',
   'jetskiStateSync.agentManagerInitState',
-  'antigravityUnifiedStateSync.oauthToken',
+  'geminiNexusUnifiedStateSync.oauthToken',
 ];
 
 function openIdeDb(dbPath: string, readOnly = false): ReturnType<typeof openDrizzleConnection> {
@@ -31,7 +31,7 @@ function openIdeDb(dbPath: string, readOnly = false): ReturnType<typeof openDriz
  */
 export function initDatabase(): void {
   try {
-    const dbPaths = getAntigravityDbPaths();
+    const dbPaths = getGeminiNexusDbPaths();
     if (dbPaths.length === 0) {
       return;
     }
@@ -86,10 +86,10 @@ function ensureDatabaseExists(dbPath: string): void {
  * @returns {ReturnType<typeof openDrizzleConnection>} The database connection.
  */
 export function getDatabaseConnection(dbPath?: string): ReturnType<typeof openDrizzleConnection> {
-  const targetPath = dbPath || getAntigravityDbPaths()[0];
+  const targetPath = dbPath || getGeminiNexusDbPaths()[0];
 
   if (!targetPath) {
-    throw new Error('No Antigravity database path found');
+    throw new Error('No Gemini Nexus database path found');
   }
 
   ensureDatabaseExists(targetPath);
@@ -99,7 +99,7 @@ export function getDatabaseConnection(dbPath?: string): ReturnType<typeof openDr
   } catch (error: unknown) {
     const err = error as { code?: string };
     if (err.code === 'SQLITE_BUSY' || err.code === 'SQLITE_LOCKED') {
-      throw new Error('Database is locked. Please close Antigravity before proceeding.');
+      throw new Error('Database is locked. Please close Gemini Nexus before proceeding.');
     }
     throw error;
   }
@@ -133,8 +133,8 @@ export function getCurrentAccountInfo(): AccountInfo {
     // Query for auth status
     const authValue = readItemValue(
       orm,
-      'antigravityAuthStatus',
-      'ide.itemTable.antigravityAuthStatus',
+      'geminiNexusAuthStatus',
+      'ide.itemTable.geminiNexusAuthStatus',
     );
     let authStatus = null;
     if (authValue) {
@@ -160,11 +160,11 @@ export function getCurrentAccountInfo(): AccountInfo {
       }
     }
 
-    // Query for google.antigravity
+    // Query for google.geminiNexus
     const googleValue = readItemValue(
       orm,
-      'google.antigravity',
-      'ide.itemTable.google.antigravity',
+      'google.geminiNexus',
+      'ide.itemTable.google.geminiNexus',
     );
     let googleState = null;
     if (googleValue) {
@@ -175,11 +175,11 @@ export function getCurrentAccountInfo(): AccountInfo {
       }
     }
 
-    // Query for antigravityUserSettings.allUserSettings
+    // Query for geminiNexusUserSettings.allUserSettings
     const settingsValue = readItemValue(
       orm,
-      'antigravityUserSettings.allUserSettings',
-      'ide.itemTable.antigravityUserSettings.allUserSettings',
+      'geminiNexusUserSettings.allUserSettings',
+      'ide.itemTable.geminiNexusUserSettings.allUserSettings',
     );
     let settingsState = null;
     if (settingsValue) {
@@ -273,9 +273,9 @@ export function backupAccount(account: AccountBackupData['account']): AccountBac
  * @throws {Error} If the backup data cannot be restored.
  */
 export function restoreAccount(backup: AccountBackupData): void {
-  const dbPaths = getAntigravityDbPaths();
+  const dbPaths = getGeminiNexusDbPaths();
   if (dbPaths.length === 0) {
-    throw new Error('No Antigravity database paths found');
+    throw new Error('No Gemini Nexus database paths found');
   }
 
   let successCount = 0;

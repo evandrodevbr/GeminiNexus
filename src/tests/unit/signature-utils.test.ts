@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodeSignature } from '../../lib/antigravity/signature-utils';
+import { decodeSignature } from '../../lib/geminiNexus/signature-utils';
 
 describe('decodeSignature', () => {
   describe('Base64 decoding', () => {

@@ -1,22 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { getAntigravityExecutablePath } from './paths';
+import { getGeminiNexusExecutablePath } from './paths';
 
-export interface AntigravityVersion {
+export interface GeminiNexusVersion {
   shortVersion: string;
   bundleVersion: string;
 }
 
-let cachedVersion: AntigravityVersion | null = null;
+let cachedVersion: GeminiNexusVersion | null = null;
 let cachedError: Error | null = null;
 
-function cacheAndReturn(version: AntigravityVersion): AntigravityVersion {
+function cacheAndReturn(version: GeminiNexusVersion): GeminiNexusVersion {
   cachedVersion = version;
   return version;
 }
 
-function readPackageJsonVersion(execPath: string): AntigravityVersion | null {
+function readPackageJsonVersion(execPath: string): GeminiNexusVersion | null {
   const parentDir = path.dirname(execPath);
   const packageJson = path.join(parentDir, 'resources', 'app', 'package.json');
   if (!fs.existsSync(packageJson)) {
@@ -55,7 +55,7 @@ function parseVersionString(version: string | null): string {
   return trimmed;
 }
 
-export function getAntigravityVersion(): AntigravityVersion {
+export function getGeminiNexusVersion(): GeminiNexusVersion {
   if (cachedVersion) {
     return cachedVersion;
   }
@@ -64,9 +64,9 @@ export function getAntigravityVersion(): AntigravityVersion {
   }
 
   try {
-    const execPath = getAntigravityExecutablePath();
+    const execPath = getGeminiNexusExecutablePath();
     if (!execPath) {
-      throw new Error('Unable to locate Antigravity executable');
+      throw new Error('Unable to locate Gemini Nexus executable');
     }
 
     if (process.platform === 'win32') {
@@ -144,10 +144,10 @@ export function getAntigravityVersion(): AntigravityVersion {
       }
     }
 
-    throw new Error('Unable to determine Antigravity version');
+    throw new Error('Unable to determine Gemini Nexus version');
   } catch (error) {
     const normalized =
-      error instanceof Error ? error : new Error('Unable to determine Antigravity version');
+      error instanceof Error ? error : new Error('Unable to determine Gemini Nexus version');
     cachedError = normalized;
     throw normalized;
   }
@@ -176,6 +176,6 @@ export function compareVersion(v1: string, v2: string): number {
   return 0;
 }
 
-export function isNewVersion(version: AntigravityVersion): boolean {
+export function isNewVersion(version: GeminiNexusVersion): boolean {
   return compareVersion(version.shortVersion, '1.16.5') >= 0;
 }

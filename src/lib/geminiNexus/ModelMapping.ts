@@ -81,7 +81,7 @@ const DYNAMIC_MODEL_FORWARDING_RULES = new Map<string, string>();
 
 export const MODEL_LIST_CREATED_AT = 1770652800;
 
-export const MODEL_LIST_OWNER = 'antigravity';
+export const MODEL_LIST_OWNER = 'geminiNexus';
 
 const GEMINI_MODEL_ALIASES: Record<string, string> = {
   'gemini-3-pro-image-preview': 'gemini-3-pro-image',

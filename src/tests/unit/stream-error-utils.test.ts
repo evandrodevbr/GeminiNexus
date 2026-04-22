@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyStreamError, formatErrorForSSE } from '../../lib/antigravity/stream-error-utils';
+import { classifyStreamError, formatErrorForSSE } from '../../lib/geminiNexus/stream-error-utils';
 
 describe('classifyStreamError', () => {
   it('should identify timeout errors', () => {

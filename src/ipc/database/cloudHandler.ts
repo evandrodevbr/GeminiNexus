@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { desc, eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { isNumber, isObjectLike, isPlainObject, isString } from 'lodash-es';
-import { getCloudAccountsDbPath, getAntigravityDbPaths } from '../../utils/paths';
+import { getCloudAccountsDbPath, getGeminiNexusDbPaths } from '../../utils/paths';
 import { logger } from '../../utils/logger';
 import {
   CloudAccount,
@@ -18,7 +18,7 @@ import { ItemTableValueRowSchema, TableInfoRowSchema } from '../../types/db';
 import { decryptWithMigration, encrypt, type KeySource } from '../../utils/security';
 import { ProtobufUtils } from '../../utils/protobuf';
 import { GoogleAPIService } from '../../services/GoogleAPIService';
-import { getAntigravityVersion, isNewVersion } from '../../utils/antigravityVersion';
+import { getGeminiNexusVersion, isNewVersion } from '../../utils/geminiNexusVersion';
 import { parseRow, parseRows } from '../../utils/sqlite';
 import { configureDatabase, openDrizzleConnection } from './dbConnection';
 import { accounts, itemTable, settings } from './schema';
@@ -1037,9 +1037,9 @@ export class CloudAccountRepo {
       apiKey: account.token.access_token,
     };
 
-    this.upsertItemValue(db, 'antigravityAuthStatus', JSON.stringify(authStatus));
-    this.upsertItemValue(db, 'antigravityOnboarding', 'true');
-    db.delete(itemTable).where(eq(itemTable.key, 'google.antigravity')).run();
+    this.upsertItemValue(db, 'geminiNexusAuthStatus', JSON.stringify(authStatus));
+    this.upsertItemValue(db, 'geminiNexusOnboarding', 'true');
+    db.delete(itemTable).where(eq(itemTable.key, 'google.geminiNexus')).run();
   }
 
   private static getItemValue(db: DrizzleExecutor, key: string, context: string): string | null {
@@ -1070,8 +1070,8 @@ export class CloudAccountRepo {
     const normalizedProjectId = account.token.project_id?.trim();
 
     orm.transaction((tx) => {
-      this.upsertItemValue(tx, 'antigravityUnifiedStateSync.oauthToken', oauthToken);
-      this.upsertItemValue(tx, 'antigravityUnifiedStateSync.userStatus', userStatusEntry);
+      this.upsertItemValue(tx, 'geminiNexusUnifiedStateSync.oauthToken', oauthToken);
+      this.upsertItemValue(tx, 'geminiNexusUnifiedStateSync.userStatus', userStatusEntry);
       if (normalizedProjectId) {
         const projectPayload = ProtobufUtils.createStringValuePayload(normalizedProjectId);
         const projectEntry = ProtobufUtils.createUnifiedStateEntry(
@@ -1080,13 +1080,13 @@ export class CloudAccountRepo {
         );
         this.upsertItemValue(
           tx,
-          'antigravityUnifiedStateSync.enterprisePreferences',
+          'geminiNexusUnifiedStateSync.enterprisePreferences',
           projectEntry,
         );
       } else {
         tx
           .delete(itemTable)
-          .where(eq(itemTable.key, 'antigravityUnifiedStateSync.enterprisePreferences'))
+          .where(eq(itemTable.key, 'geminiNexusUnifiedStateSync.enterprisePreferences'))
           .run();
       }
       this.writeAuthStatusAndCleanup(tx, account);
@@ -1145,8 +1145,8 @@ export class CloudAccountRepo {
   private static detectFormatCapability(db: DrizzleExecutor): 'new' | 'old' | null {
     const unifiedValue = this.getItemValue(
       db,
-      'antigravityUnifiedStateSync.oauthToken',
-      'ide.itemTable.antigravityUnifiedStateSync.oauthToken',
+      'geminiNexusUnifiedStateSync.oauthToken',
+      'ide.itemTable.geminiNexusUnifiedStateSync.oauthToken',
     );
     if (unifiedValue) {
       return 'new';
@@ -1169,7 +1169,7 @@ export class CloudAccountRepo {
     reason: string;
   } {
     try {
-      const version = getAntigravityVersion();
+      const version = getGeminiNexusVersion();
       return {
         name: isNewVersion(version) ? 'new' : 'old',
         reason: `version:${version.shortVersion}`,
@@ -1253,16 +1253,16 @@ export class CloudAccountRepo {
   }
 
   static injectCloudToken(account: CloudAccount): void {
-    const dbPaths = getAntigravityDbPaths();
+    const dbPaths = getGeminiNexusDbPaths();
     const dbPath = dbPaths.find((p) => fs.existsSync(p)) ?? null;
 
     if (!dbPath) {
-      throw new Error(`Antigravity database not found. Checked paths: ${dbPaths.join(', ')}`);
+      throw new Error(`Gemini Nexus database not found. Checked paths: ${dbPaths.join(', ')}`);
     }
 
     const result = this.injectWithRetry(dbPath, account);
     logger.info(
-      `Successfully injected cloud token and identity for ${account.email} into Antigravity database at ${dbPath} (strategy=${result.strategy}, attempts=${result.attempts}).`,
+      `Successfully injected cloud token and identity for ${account.email} into Gemini Nexus database at ${dbPath} (strategy=${result.strategy}, attempts=${result.attempts}).`,
     );
   }
 
@@ -1312,8 +1312,8 @@ export class CloudAccountRepo {
     const enterpriseProjectId = this.readEnterpriseProjectIdFromDb(db);
     const unifiedValue = this.getItemValue(
       db,
-      'antigravityUnifiedStateSync.oauthToken',
-      'ide.itemTable.antigravityUnifiedStateSync.oauthToken',
+      'geminiNexusUnifiedStateSync.oauthToken',
+      'ide.itemTable.geminiNexusUnifiedStateSync.oauthToken',
     );
 
     let tokenInfo: { accessToken: string; refreshToken: string } | null = null;
@@ -1336,7 +1336,7 @@ export class CloudAccountRepo {
 
       if (!value) {
         const errorMsg =
-          'No cloud account found in IDE. Please login to a Google account in Antigravity IDE first.';
+          'No cloud account found in IDE. Please login to a Google account in Gemini Nexus IDE first.';
         logger.warn(`SyncLocal: ${errorMsg}`);
         throw new Error(errorMsg);
       }
@@ -1348,7 +1348,7 @@ export class CloudAccountRepo {
 
     if (!tokenInfo) {
       const errorMsg =
-        'No OAuth token found in IDE state. Please login to a Google account in Antigravity IDE first.';
+        'No OAuth token found in IDE state. Please login to a Google account in Gemini Nexus IDE first.';
       logger.warn(`SyncLocal: ${errorMsg}`);
       throw new Error(errorMsg);
     }
@@ -1387,8 +1387,8 @@ export class CloudAccountRepo {
   private static readEnterpriseProjectIdFromDb(db: DrizzleExecutor): string | undefined {
     const enterprisePreferencesValue = this.getItemValue(
       db,
-      'antigravityUnifiedStateSync.enterprisePreferences',
-      'ide.itemTable.antigravityUnifiedStateSync.enterprisePreferences',
+      'geminiNexusUnifiedStateSync.enterprisePreferences',
+      'ide.itemTable.geminiNexusUnifiedStateSync.enterprisePreferences',
     );
     if (!enterprisePreferencesValue) {
       return undefined;
@@ -1421,7 +1421,7 @@ export class CloudAccountRepo {
 
   static async syncFromIDE(): Promise<CloudAccount | null> {
     // Try all possible database paths
-    const dbPaths = getAntigravityDbPaths();
+    const dbPaths = getGeminiNexusDbPaths();
     logger.info(`SyncLocal: Checking database paths: ${JSON.stringify(dbPaths)}`);
 
     const dbPath =
@@ -1431,12 +1431,12 @@ export class CloudAccountRepo {
       }) ?? null;
 
     if (!dbPath) {
-      const errorMsg = `Antigravity database not found. Please ensure Antigravity IDE is installed. Checked paths: ${dbPaths.join(', ')}`;
+      const errorMsg = `Gemini Nexus database not found. Please ensure Gemini Nexus IDE is installed. Checked paths: ${dbPaths.join(', ')}`;
       logger.error(errorMsg);
       throw new Error(errorMsg);
     }
 
-    logger.info(`SyncLocal: Using Antigravity database at: ${dbPath}`);
+    logger.info(`SyncLocal: Using Gemini Nexus database at: ${dbPath}`);
     try {
       const tokenInfo = this.readTokenInfoWithRetry(dbPath);
 
@@ -1446,7 +1446,7 @@ export class CloudAccountRepo {
       try {
         userInfo = await GoogleAPIService.getUserInfo(tokenInfo.accessToken);
       } catch (apiError: any) {
-        const errorMsg = `Failed to validate token with Google API. The token may be expired. Please re-login in Antigravity IDE. Error: ${apiError.message}`;
+        const errorMsg = `Failed to validate token with Google API. The token may be expired. Please re-login in Gemini Nexus IDE. Error: ${apiError.message}`;
         logger.error(`SyncLocal: ${errorMsg}`, apiError);
         throw new Error(errorMsg);
       }

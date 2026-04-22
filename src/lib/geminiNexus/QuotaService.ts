@@ -10,7 +10,7 @@ const QUOTA_API_ENDPOINTS = [
   'https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels',
 ] as const;
 const CLOUD_CODE_BASE_URL = 'https://cloudcode-pa.googleapis.com';
-const USER_AGENT = 'antigravity/1.11.3 Darwin/arm64'; // Keeping the same UA as source
+const USER_AGENT = 'geminiNexus/1.11.3 Darwin/arm64'; // Keeping the same UA as source
 
 // Service Class
 export class QuotaService {
@@ -41,7 +41,7 @@ export class QuotaService {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'User-Agent': 'antigravity/windows/amd64',
+            'User-Agent': 'geminiNexus/windows/amd64',
           },
         },
       );

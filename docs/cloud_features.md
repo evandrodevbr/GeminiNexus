@@ -1,6 +1,6 @@
 # Cloud Account Management and Intelligent Switching
 
-This document explains the cloud AI account management and switching capabilities in Antigravity Manager. The feature allows users to manage multiple Google accounts, monitor API quotas, and seamlessly switch the active IDE account with one click.
+This document explains the cloud AI account management and switching capabilities in Gemini Nexus. The feature allows users to manage multiple Google accounts, monitor API quotas, and seamlessly switch the active IDE account with one click.
 
 ## 1. Core Features
 

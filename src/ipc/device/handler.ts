@@ -5,7 +5,7 @@ import { createHash, randomBytes } from 'crypto';
 import { isBoolean, isNumber, isObjectLike, isString } from 'lodash-es';
 import { type DeviceProfile } from '../../types/account';
 import { logger } from '../../utils/logger';
-import { getAgentDir, getAntigravityDbPaths, getAntigravityStoragePaths } from '../../utils/paths';
+import { getAgentDir, getGeminiNexusDbPaths, getGeminiNexusStoragePaths } from '../../utils/paths';
 
 const GLOBAL_BASELINE_FILE = 'device_original.json';
 const SQLITE_RETRY_COUNT = 3;
@@ -508,7 +508,7 @@ export function isIdentityProfileApplyEnabled(): boolean {
 }
 
 export function getStoragePath(): string {
-  const storagePath = resolveExistingPath(getAntigravityStoragePaths());
+  const storagePath = resolveExistingPath(getGeminiNexusStoragePaths());
   if (!storagePath) {
     throw new Error('storage_json_not_found');
   }
@@ -594,7 +594,7 @@ export function generateDeviceProfile(): DeviceProfile {
 }
 
 export function syncStateServiceMachineIdValue(serviceMachineId: string, dbPath?: string): void {
-  const targetDbPath = dbPath || resolveExistingPath(getAntigravityDbPaths());
+  const targetDbPath = dbPath || resolveExistingPath(getGeminiNexusDbPaths());
   if (!targetDbPath) {
     throw new Error('state_vscdb_not_found');
   }

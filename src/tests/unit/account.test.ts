@@ -6,7 +6,7 @@ import {
   deleteAccount,
 } from '../../ipc/account/handler';
 import { restoreAccount } from '../../ipc/database/handler';
-import { startAntigravity } from '../../ipc/process/handler';
+import { startGeminiNexus } from '../../ipc/process/handler';
 import fs from 'fs';
 import path from 'path';
 import { applyDeviceProfile, generateDeviceProfile } from '../../ipc/device/handler';
@@ -20,8 +20,8 @@ vi.mock('../../utils/paths', async () => {
     getAgentDir: vi.fn(() => agentDir),
     getAccountsFilePath: vi.fn(() => path.join(agentDir, 'accounts.json')),
     getBackupsDir: vi.fn(() => path.join(agentDir, 'backups')),
-    getAntigravityDbPath: vi.fn(() => path.join(agentDir, 'state.vscdb')),
-    getAntigravityExecutablePath: vi.fn(() => 'mock_exec_path'),
+    getGeminiNexusDbPath: vi.fn(() => path.join(agentDir, 'state.vscdb')),
+    getGeminiNexusExecutablePath: vi.fn(() => 'mock_exec_path'),
   };
 });
 
@@ -37,8 +37,8 @@ vi.mock('../../ipc/database/handler', () => ({
 }));
 
 vi.mock('../../ipc/process/handler', () => ({
-  closeAntigravity: vi.fn(),
-  startAntigravity: vi.fn(),
+  closeGeminiNexus: vi.fn(),
+  startGeminiNexus: vi.fn(),
   _waitForProcessExit: vi.fn(),
   isProcessRunning: vi.fn(() => Promise.resolve(false)),
 }));
@@ -144,13 +144,13 @@ describe('Account Handler', () => {
       devDeviceId: 'dev-device-id',
       sqmId: '{SQM-ID}',
     });
-    expect(startAntigravity).not.toHaveBeenCalled();
+    expect(startGeminiNexus).not.toHaveBeenCalled();
   });
 
   it('should queue switch requests instead of rejecting concurrent calls', async () => {
     const account = await addAccountSnapshot();
 
-    const startMock = vi.mocked(startAntigravity);
+    const startMock = vi.mocked(startGeminiNexus);
     let releaseFirstStart!: () => void;
     const firstStartBlocker = new Promise<void>((resolve) => {
       releaseFirstStart = resolve;

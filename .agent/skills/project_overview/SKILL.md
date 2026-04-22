@@ -1,13 +1,13 @@
 ---
-name: antigravity-manager
-description: Comprehensive guide to Antigravity Manager architecture, workflows, and development. Use this to understand how to work on the project.
+name: geminiNexus-manager
+description: Comprehensive guide to Gemini Nexus Manager architecture, workflows, and development. Use this to understand how to work on the project.
 ---
 
-# Antigravity Manager Developer Guide
+# Gemini Nexus Manager Developer Guide
 
 ## 🏗️ Architecture Overview
 
-Antigravity Manager is a hybrid Desktop Application built with Electron, React, and NestJS. It follows a modular architecture where the frontend (Renderer) communicates with the backend (Main) via type-safe IPC (ORPC).
+Gemini Nexus Manager is a hybrid Desktop Application built with Electron, React, and NestJS. It follows a modular architecture where the frontend (Renderer) communicates with the backend (Main) via type-safe IPC (ORPC).
 
 ```mermaid
 graph TD

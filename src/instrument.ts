@@ -23,7 +23,7 @@ function getQuickConfig() {
 if (getQuickConfig()) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    release: `antigravity-manager@${app.getVersion()}`,
+    release: `gemini-nexus@${app.getVersion()}`,
     beforeSend(event) {
       if (event.exception?.values?.[0]?.value) {
         event.exception.values[0].value = event.exception.values[0].value.replace(

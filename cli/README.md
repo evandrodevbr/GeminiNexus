@@ -1,4 +1,4 @@
-# Antigravity Manager CLI
+# Gemini Nexus CLI
 
 A powerful command-line interface for managing multiple Google Cloud AI accounts in Antigravity IDE. Supports account switching, quota monitoring, token validation, and more.
 
@@ -147,7 +147,7 @@ agm doctor
 
 ## How It Works
 
-The CLI interacts directly with the Antigravity Manager's encrypted database:
+The CLI interacts directly with the Gemini Nexus's encrypted database:
 
 1. **Database Location**: Auto-discovers the database in `%APPDATA%\AntigravityManager` or IDE installation directory
 2. **Encryption**: Uses Windows DPAPI + AES-256-GCM to decrypt account tokens (same as the IDE)
@@ -157,7 +157,7 @@ The CLI interacts directly with the Antigravity Manager's encrypted database:
 ## Troubleshooting
 
 **"Database not found" error:**
-- Ensure Antigravity Manager has been run at least once
+- Ensure Gemini Nexus has been run at least once
 - Check if accounts exist in the GUI first
 
 **"Failed to decrypt" error:**
@@ -175,7 +175,7 @@ The CLI interacts directly with the Antigravity Manager's encrypted database:
 
 - Windows 10/11
 - Python 3.8+
-- Antigravity Manager (for database access)
+- Gemini Nexus (for database access)
 
 ## Development
 

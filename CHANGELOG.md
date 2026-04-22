@@ -301,7 +301,7 @@
 
 ### Added
 
-- Initial release of Antigravity Manager
+- Initial release of Gemini Nexus
 - Multi-account management for Google Gemini and Claude
 - Real-time quota monitoring
 - Intelligent auto-switching capabilities

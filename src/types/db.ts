@@ -40,12 +40,12 @@ export const SettingsValueRowSchema = z.object({
 export type SettingsValueRow = z.infer<typeof SettingsValueRowSchema>;
 
 export const ItemTableKeys = [
-  'antigravityAuthStatus',
-  'antigravityOnboarding',
-  'antigravityUnifiedStateSync.oauthToken',
+  'geminiNexusAuthStatus',
+  'geminiNexusOnboarding',
+  'geminiNexusUnifiedStateSync.oauthToken',
   'jetskiStateSync.agentManagerInitState',
-  'google.antigravity',
-  'antigravityUserSettings.allUserSettings',
+  'google.geminiNexus',
+  'geminiNexusUserSettings.allUserSettings',
 ] as const;
 
 export const ItemTableKeySchema = z.enum(ItemTableKeys);

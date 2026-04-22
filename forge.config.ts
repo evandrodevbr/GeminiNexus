@@ -25,7 +25,7 @@ import { stringify as yamlStringify } from 'yaml';
 const nativeModules = ['better-sqlite3', 'keytar', 'bindings', 'file-uri-to-path'];
 const ResolvedMakerAppImage = MakerAppImage;
 const keepLanguages = new Set(['en', 'en-US', 'zh-CN', 'ru']);
-const windowsExecutableName = 'antigravity-manager';
+const windowsExecutableName = 'gemini-nexus';
 
 const isStartCommand = process.argv.some((arg) => arg.includes('start'));
 
@@ -204,7 +204,7 @@ const config: ForgeConfig = {
     asar: {
       unpack: '**/{better-sqlite3,keytar}/**/*',
     },
-    name: 'Antigravity Manager',
+    name: 'Gemini Nexus',
     executableName: windowsExecutableName,
     icon: 'images/icon', // Electron Forge automatically adds .icns/.ico
     extraResource: ['src/assets'], // Copy assets folder to resources/assets

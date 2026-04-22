@@ -23,6 +23,7 @@ import { ModelVisibilitySettings } from '@/components/ModelVisibilitySettings';
 import { useEffect, useState } from 'react';
 import { ProxyConfig } from '@/types/config';
 import { openLogDirectory } from '@/actions/system';
+import { AccountProxySettings } from '@/components/AccountProxySettings';
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -380,6 +381,8 @@ function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <AccountProxySettings />
         </TabsContent>
       </Tabs>
     </div>

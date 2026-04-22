@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { isProcessRunning, startAntigravity, closeAntigravity } from '@/actions/process';
+import { isProcessRunning, startGeminiNexus, closeGeminiNexus } from '@/actions/process';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Play, Square, Loader2, Power } from 'lucide-react';
@@ -22,14 +22,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({ isCollapsed = false }) => 
   });
 
   const startMutation = useMutation({
-    mutationFn: startAntigravity,
+    mutationFn: startGeminiNexus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['process', 'status'] });
     },
   });
 
   const stopMutation = useMutation({
-    mutationFn: closeAntigravity,
+    mutationFn: closeGeminiNexus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['process', 'status'] });
     },

@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { isString } from 'lodash-es';
-import { getAntigravityVersion } from '../../../utils/antigravityVersion';
+import { getGeminiNexusVersion } from '../../../utils/geminiNexusVersion';
 import { logger } from '../../../utils/logger';
 
-const REMOTE_VERSION_URL = 'https://antigravity-auto-updater-974169037036.us-central1.run.app';
-const CHANGELOG_URL = 'https://antigravity.google/changelog';
+const REMOTE_VERSION_URL = 'https://geminiNexus-auto-updater-974169037036.us-central1.run.app';
+const CHANGELOG_URL = 'https://geminiNexus.google/changelog';
 export const FALLBACK_VERSION = '1.22.2';
 const DEFAULT_REMOTE_TIMEOUT_MS = 2500;
 const VERSION_REGEX = /\d+\.\d+\.\d+/g;
@@ -57,7 +57,7 @@ function getArchTag(): string {
 }
 
 export function buildUserAgent(version: string): string {
-  return `antigravity/${version} ${getPlatformTag()}/${getArchTag()}`;
+  return `geminiNexus/${version} ${getPlatformTag()}/${getArchTag()}`;
 }
 
 function compareSemverVersions(left: string, right: string): number {
@@ -103,7 +103,7 @@ function shouldSkipRemoteVersionLookup(): boolean {
 export function resolveLocalInstalledVersion(): string | null {
   let localVersionString: string;
   try {
-    localVersionString = getAntigravityVersion().shortVersion;
+    localVersionString = getGeminiNexusVersion().shortVersion;
     const rawVersion = normalizeNonEmptyString(localVersionString);
     if (!rawVersion) {
       return null;

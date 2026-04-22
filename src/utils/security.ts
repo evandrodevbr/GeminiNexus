@@ -4,7 +4,7 @@ import { safeStorage, app } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 
-const SERVICE_NAME = 'AntigravityManager';
+const SERVICE_NAME = 'GeminiNexusManager';
 const ACCOUNT_NAME = 'MasterKey';
 const KEYCHAIN_ERROR_CODE = 'ERR_KEYCHAIN_UNAVAILABLE';
 const KEYCHAIN_HINT_TRANSLOCATION = 'HINT_APP_TRANSLOCATION';

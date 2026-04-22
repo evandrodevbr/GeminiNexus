@@ -58,7 +58,7 @@ vi.mock('../../ipc/database/dbConnection', () => ({
 }));
 
 vi.mock('../../utils/paths', () => ({
-  getAntigravityDbPaths: () => ['mock-db'],
+  getGeminiNexusDbPaths: () => ['mock-db'],
   getCloudAccountsDbPath: () => 'mock-cloud-db',
 }));
 
@@ -152,7 +152,7 @@ describe('CloudAccountRepo.syncFromIDE', () => {
       ProtobufUtils.createOAuthTokenInfo('access-old', 'refresh-old', 1700000000),
     ).toString('base64');
 
-    mockData['antigravityUnifiedStateSync.oauthToken'] = unifiedB64;
+    mockData['geminiNexusUnifiedStateSync.oauthToken'] = unifiedB64;
     mockData['jetskiStateSync.agentManagerInitState'] = oldB64;
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
@@ -179,8 +179,8 @@ describe('CloudAccountRepo.syncFromIDE', () => {
       projectPayload,
     );
 
-    mockData['antigravityUnifiedStateSync.oauthToken'] = unifiedB64;
-    mockData['antigravityUnifiedStateSync.enterprisePreferences'] = enterprisePreferenceB64;
+    mockData['geminiNexusUnifiedStateSync.oauthToken'] = unifiedB64;
+    mockData['geminiNexusUnifiedStateSync.enterprisePreferences'] = enterprisePreferenceB64;
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
     vi.mocked(GoogleAPIService.getUserInfo).mockResolvedValue(
@@ -302,8 +302,8 @@ describe('CloudAccountRepo.syncFromIDE', () => {
       ProtobufUtils.createStringValuePayload('enterprise-project-recovered'),
     );
 
-    mockData['antigravityUnifiedStateSync.oauthToken'] = unifiedB64;
-    mockData['antigravityUnifiedStateSync.enterprisePreferences'] = enterprisePreferenceB64;
+    mockData['geminiNexusUnifiedStateSync.oauthToken'] = unifiedB64;
+    mockData['geminiNexusUnifiedStateSync.enterprisePreferences'] = enterprisePreferenceB64;
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
     vi.mocked(GoogleAPIService.getUserInfo).mockResolvedValue(
@@ -431,8 +431,8 @@ describe('CloudAccountRepo.syncFromIDE', () => {
 
   it('should prefer new format when capability detection finds unified key', async () => {
     vi.resetModules();
-    vi.doMock('../../utils/antigravityVersion', () => ({
-      getAntigravityVersion: () => {
+    vi.doMock('../../utils/geminiNexusVersion', () => ({
+      getGeminiNexusVersion: () => {
         throw new Error('version detection failed');
       },
       isNewVersion: () => false,
@@ -442,7 +442,7 @@ describe('CloudAccountRepo.syncFromIDE', () => {
     const accessToken = 'access-new';
     const refreshToken = 'refresh-new';
 
-    mockData['antigravityUnifiedStateSync.oauthToken'] = 'exists';
+    mockData['geminiNexusUnifiedStateSync.oauthToken'] = 'exists';
     mockData['jetskiStateSync.agentManagerInitState'] = 'exists-old';
 
     RepoWithMock.injectCloudToken({
@@ -474,7 +474,7 @@ describe('CloudAccountRepo.syncFromIDE', () => {
     const wroteUnifiedKey = runCalls.some(
       (call) =>
         call.sql === 'insert' &&
-        (call.args[0] as { key?: string })?.key === 'antigravityUnifiedStateSync.oauthToken',
+        (call.args[0] as { key?: string })?.key === 'geminiNexusUnifiedStateSync.oauthToken',
     );
 
     expect(wroteUnifiedKey).toBe(true);
@@ -486,13 +486,13 @@ describe('syncLocalAccount ORPC error mapping', () => {
   it('preserves re-login guidance as an actionable unauthorized error', () => {
     const error = toSyncLocalAccountORPCError(
       new Error(
-        'Failed to validate token with Google API. The token may be expired. Please re-login in Antigravity IDE.',
+        'Failed to validate token with Google API. The token may be expired. Please re-login in Gemini Nexus IDE.',
       ),
     );
 
     expect(error.code).toBe('UNAUTHORIZED');
     expect(error.status).toBe(401);
-    expect(error.message).toContain('Please re-login in Antigravity IDE');
+    expect(error.message).toContain('Please re-login in Gemini Nexus IDE');
   });
 });
 
@@ -506,7 +506,7 @@ describe('cloud switch fail-fast path', () => {
     vi.resetModules();
 
     const applyDeviceProfileMock = vi.fn();
-    const startAntigravityMock = vi.fn(async () => undefined);
+    const startGeminiNexusMock = vi.fn(async () => undefined);
     const recordSwitchFailureMock = vi.fn();
     const recordSwitchSuccessMock = vi.fn();
 
@@ -561,8 +561,8 @@ describe('cloud switch fail-fast path', () => {
     }));
 
     vi.doMock('../../ipc/process/handler', () => ({
-      closeAntigravity: vi.fn(async () => undefined),
-      startAntigravity: startAntigravityMock,
+      closeGeminiNexus: vi.fn(async () => undefined),
+      startGeminiNexus: startGeminiNexusMock,
       _waitForProcessExit: vi.fn(async () => undefined),
     }));
 
@@ -576,7 +576,7 @@ describe('cloud switch fail-fast path', () => {
     }));
 
     vi.doMock('../../utils/paths', () => ({
-      getAntigravityDbPaths: () => [],
+      getGeminiNexusDbPaths: () => [],
     }));
 
     vi.doMock('../../utils/logger', () => ({
@@ -605,7 +605,7 @@ describe('cloud switch fail-fast path', () => {
 
     expect(applyDeviceProfileMock).toHaveBeenCalledTimes(1);
     expect(applyDeviceProfileMock).toHaveBeenCalledWith(account.device_profile);
-    expect(startAntigravityMock).not.toHaveBeenCalled();
+    expect(startGeminiNexusMock).not.toHaveBeenCalled();
     expect(recordSwitchFailureMock).toHaveBeenCalledWith(
       'cloud',
       'perform_switch_failed',
@@ -686,7 +686,7 @@ describe('cloud oauth client key backfill', () => {
       readCurrentDeviceProfile: vi.fn(),
       saveGlobalOriginalProfile: vi.fn(),
     }));
-    vi.doMock('../../utils/paths', () => ({ getAntigravityDbPaths: () => [] }));
+    vi.doMock('../../utils/paths', () => ({ getGeminiNexusDbPaths: () => [] }));
     vi.doMock('../../ipc/switchGuard', () => ({
       runWithSwitchGuard: async (_owner: string, fn: () => Promise<void>) => fn(),
     }));
@@ -736,7 +736,7 @@ describe('cloud oauth client key backfill', () => {
             return false;
           }
           if (key === 'active_oauth_client_key') {
-            return 'antigravity_enterprise';
+            return 'geminiNexus_enterprise';
           }
           return defaultValue;
         }),
@@ -747,7 +747,7 @@ describe('cloud oauth client key backfill', () => {
     vi.doMock('../../services/GoogleAPIService', () => ({
       GoogleAPIService: {
         setActiveOAuthClientKey: vi.fn(),
-        getActiveOAuthClientKey: vi.fn(() => 'antigravity_enterprise'),
+        getActiveOAuthClientKey: vi.fn(() => 'geminiNexus_enterprise'),
       },
     }));
 
@@ -769,7 +769,7 @@ describe('cloud oauth client key backfill', () => {
       readCurrentDeviceProfile: vi.fn(),
       saveGlobalOriginalProfile: vi.fn(),
     }));
-    vi.doMock('../../utils/paths', () => ({ getAntigravityDbPaths: () => [] }));
+    vi.doMock('../../utils/paths', () => ({ getGeminiNexusDbPaths: () => [] }));
     vi.doMock('../../ipc/switchGuard', () => ({
       runWithSwitchGuard: async (_owner: string, fn: () => Promise<void>) => fn(),
     }));

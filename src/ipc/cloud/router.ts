@@ -86,7 +86,7 @@ export function toSyncLocalAccountORPCError(error: unknown): ORPCError<string, u
     normalized.includes('unauthenticated') ||
     normalized.includes('unauthorized') ||
     normalized.includes('token may be expired') ||
-    normalized.includes('re-login in antigravity ide')
+    normalized.includes('re-login in geminiNexus ide')
   ) {
     return new ORPCError('UNAUTHORIZED', { message });
   }
@@ -94,7 +94,7 @@ export function toSyncLocalAccountORPCError(error: unknown): ORPCError<string, u
   if (
     normalized.includes('no cloud account found in ide') ||
     normalized.includes('no oauth token found in ide state') ||
-    normalized.includes('antigravity database not found')
+    normalized.includes('geminiNexus database not found')
   ) {
     return new ORPCError('BAD_REQUEST', { message });
   }

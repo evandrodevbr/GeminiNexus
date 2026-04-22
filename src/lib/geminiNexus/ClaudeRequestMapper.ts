@@ -397,11 +397,11 @@ function buildSystemInstruction(
   system: ClaudeRequest['system'],
 ): { parts: { text: string }[] } | null {
   const assistantIdentityDirective =
-    'You are Antigravity, a powerful agentic AI coding assistant designed by the Google Deepmind team working on Advanced Agentic Coding.\n' +
+    'You are Gemini Nexus, a powerful agentic AI coding assistant designed by the Google Deepmind team working on Advanced Agentic Coding.\n' +
     'You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question.\n' +
     '**Absolute paths only**\n' +
     '**Proactiveness**';
-  const identityMarker = 'You are Antigravity';
+  const identityMarker = 'You are Gemini Nexus';
 
   const parts: { text: string }[] = [];
 

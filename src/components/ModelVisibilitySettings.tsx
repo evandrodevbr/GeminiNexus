@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Loader2, Search, RotateCcw, Save } from 'lucide-react';
+import { Loader2, Search, RotateCcw, Save, Copy, CheckCircle } from 'lucide-react';
 import { filter, flatMap, includes, size, sortBy, sumBy, uniq, values } from 'lodash-es';
 import type { CloudAccount } from '@/types/cloudAccount';
 
@@ -44,6 +44,7 @@ export function ModelVisibilitySettings() {
   const [modelVisibilityMap, setModelVisibilityMap] = useState<Record<string, boolean>>({});
   const [providerGroupingEnabled, setProviderGroupingEnabled] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [copiedModel, setCopiedModel] = useState<string | null>(null);
 
   // Initialize model visibility and provider groupings from config
   useEffect(() => {
@@ -112,6 +113,14 @@ export function ModelVisibilitySettings() {
       ...prev,
       [modelId]: checked,
     }));
+  };
+
+  const copyModelId = (modelId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(modelId);
+    setCopiedModel(modelId);
+    setTimeout(() => setCopiedModel(null), 2000);
   };
 
   if (accountsLoading) {
@@ -188,12 +197,25 @@ export function ModelVisibilitySettings() {
                       handleModelVisibilityChange(modelId, checked as boolean)
                     }
                   />
-                  <label
-                    htmlFor={`model-${modelId}`}
-                    className="flex-1 cursor-pointer text-sm font-medium"
-                  >
-                    {modelId}
-                  </label>
+                  <div className="flex flex-1 items-center gap-2">
+                    <label
+                      htmlFor={`model-${modelId}`}
+                      className="cursor-pointer text-sm font-medium"
+                    >
+                      {modelId}
+                    </label>
+                    <button
+                      onClick={(e) => copyModelId(modelId, e)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      title={t('proxy.copy')}
+                    >
+                      {copiedModel === modelId ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                   {!isVisible && (
                     <Badge variant="secondary" className="text-xs">
                       {t('settings.modelVisibility.hidden')}

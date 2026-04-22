@@ -61,7 +61,7 @@ const injectCloudAccountsFailureScript = `
 })();
 `;
 
-test.describe('Antigravity Manager', () => {
+test.describe('Gemini Nexus', () => {
   let electronApp: ElectronApplication;
   const electronMainPath = path.join(__dirname, '../../../.vite/build/main.js');
 
@@ -81,7 +81,7 @@ test.describe('Antigravity Manager', () => {
     await window.waitForLoadState('domcontentloaded');
 
     const title = await window.title();
-    expect(title).toBe('Antigravity Manager');
+    expect(title).toBe('Gemini Nexus');
 
     await expect(window.getByRole('main')).toBeVisible();
     await expect(window.locator('a[href="/settings"]').first()).toBeVisible();

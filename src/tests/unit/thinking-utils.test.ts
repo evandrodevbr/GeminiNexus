@@ -3,7 +3,7 @@ import {
   hasValidSignature,
   gracefulDegradeThinking,
   processThinkingBlocks,
-} from '../../lib/antigravity/thinking-utils';
+} from '../../lib/geminiNexus/thinking-utils';
 
 describe('hasValidSignature', () => {
   it('should return true for empty thinking + valid signature', () => {

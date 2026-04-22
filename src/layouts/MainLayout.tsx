@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Settings,
   Network,
-  Rocket,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -78,8 +77,8 @@ export const MainLayout: React.FC = () => {
 
           <div className={cn('flex flex-col', isCollapsed ? 'items-center p-4' : 'p-6')}>
             <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-              <div className="bg-primary text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded">
-                <Rocket className="h-4 w-4" />
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded bg-transparent">
+                <img src="/src/assets/icon.png" alt="Gemini Nexus Logo" className="h-full w-full object-contain" />
               </div>
               <div
                 className={cn(
@@ -87,16 +86,8 @@ export const MainLayout: React.FC = () => {
                   isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
                 )}
               >
-                <h1 className="text-xl font-bold tracking-tight">Antigravity</h1>
+                <h1 className="text-xl font-bold tracking-tight">Gemini Nexus</h1>
               </div>
-            </div>
-            <div
-              className={cn(
-                'text-muted-foreground mt-1 overflow-hidden text-xs whitespace-nowrap transition-all duration-300',
-                isCollapsed ? 'h-0 opacity-0' : 'h-auto opacity-100',
-              )}
-            >
-              Manager
             </div>
           </div>
 

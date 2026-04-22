@@ -22,7 +22,7 @@ vi.mock('../../ipc/database/dbConnection', () => ({
 }));
 
 vi.mock('../../utils/paths', () => ({
-  getAntigravityDbPaths: () => ['mock-db'],
+  getGeminiNexusDbPaths: () => ['mock-db'],
 }));
 
 vi.mock('../../utils/logger', () => ({
@@ -73,12 +73,12 @@ describe('database backup keys', () => {
         last_used: new Date().toISOString(),
       },
       data: {
-        antigravityAuthStatus: '{"email":"test@example.com"}',
+        geminiNexusAuthStatus: '{"email":"test@example.com"}',
         'jetskiStateSync.agentManagerInitState': 'old',
-        'antigravityUnifiedStateSync.oauthToken': 'unified',
+        'geminiNexusUnifiedStateSync.oauthToken': 'unified',
       },
     });
 
-    expect(writes['antigravityUnifiedStateSync.oauthToken']).toBe('unified');
+    expect(writes['geminiNexusUnifiedStateSync.oauthToken']).toBe('unified');
   });
 });

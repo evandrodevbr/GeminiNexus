@@ -78,27 +78,27 @@ export function getAppDataDir(): string {
 
   if (isWsl()) {
     const winUser = getWindowsUser();
-    return `/mnt/c/Users/${winUser}/AppData/Roaming/Antigravity`;
+    return `/mnt/c/Users/${winUser}/AppData/Roaming/GeminiNexus`;
   }
 
   switch (process.platform) {
     case 'darwin':
-      return path.join(home, 'Library', 'Application Support', 'Antigravity');
+      return path.join(home, 'Library', 'Application Support', 'Gemini Nexus');
     case 'win32':
-      return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Antigravity');
+      return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Gemini Nexus');
     case 'linux':
-      return path.join(home, '.config', 'Antigravity');
+      return path.join(home, '.config', 'Gemini Nexus');
     default:
-      return path.join(home, '.antigravity');
+      return path.join(home, '.geminiNexus');
   }
 }
 
 export function getAgentDir(): string {
-  return path.join(os.homedir(), '.antigravity-agent');
+  return path.join(os.homedir(), '.geminiNexus-agent');
 }
 
 export function getAccountsFilePath(): string {
-  return path.join(getAgentDir(), 'antigravity_accounts.json');
+  return path.join(getAgentDir(), 'geminiNexus_accounts.json');
 }
 
 export function getBackupsDir(): string {
@@ -109,14 +109,14 @@ export function getCloudAccountsDbPath(): string {
   return path.join(getAgentDir(), 'cloud_accounts.db');
 }
 
-export function getAntigravityDbPaths(): string[] {
+export function getGeminiNexusDbPaths(): string[] {
   const appData = getAppDataDir();
   const paths: string[] = [];
   const home = os.homedir();
 
   if (isWsl()) {
-    // Assume standard structure: AppData/Roaming/Antigravity/User/globalStorage/state.vscdb
-    // appData is already resolved to Roaming/Antigravity in getAppDataDir()
+    // Assume standard structure: AppData/Roaming/GeminiNexus/User/globalStorage/state.vscdb
+    // appData is already resolved to Roaming/Gemini Nexus in getAppDataDir()
     paths.push(path.join(appData, 'User', 'globalStorage', 'state.vscdb'));
     paths.push(path.join(appData, 'User', 'state.vscdb'));
     paths.push(path.join(appData, 'state.vscdb'));
@@ -137,14 +137,14 @@ export function getAntigravityDbPaths(): string[] {
         home,
         'Library',
         'Application Support',
-        'Antigravity',
+        'Gemini Nexus',
         'User',
         'globalStorage',
         'state.vscdb',
       ),
     );
     // Fallback path
-    paths.push(path.join(home, 'Library', 'Application Support', 'Antigravity', 'state.vscdb'));
+    paths.push(path.join(home, 'Library', 'Application Support', 'Gemini Nexus', 'state.vscdb'));
     return paths;
   }
 
@@ -158,7 +158,7 @@ export function getAntigravityDbPaths(): string[] {
   return paths;
 }
 
-export function getAntigravityStoragePaths(): string[] {
+export function getGeminiNexusStoragePaths(): string[] {
   const appData = getAppDataDir();
   const paths: string[] = [];
   const home = os.homedir();
@@ -183,13 +183,13 @@ export function getAntigravityStoragePaths(): string[] {
         home,
         'Library',
         'Application Support',
-        'Antigravity',
+        'Gemini Nexus',
         'User',
         'globalStorage',
         'storage.json',
       ),
     );
-    paths.push(path.join(home, 'Library', 'Application Support', 'Antigravity', 'storage.json'));
+    paths.push(path.join(home, 'Library', 'Application Support', 'Gemini Nexus', 'storage.json'));
     return paths;
   }
 
@@ -199,35 +199,35 @@ export function getAntigravityStoragePaths(): string[] {
   return paths;
 }
 
-export function getAntigravityStoragePath(): string {
-  const paths = getAntigravityStoragePaths();
+export function getGeminiNexusStoragePath(): string {
+  const paths = getGeminiNexusStoragePaths();
   return paths.length > 0 ? paths[0] : '';
 }
 
-// Keep for backward compatibility if needed, but prefer getAntigravityDbPaths
-export function getAntigravityDbPath(): string {
-  const paths = getAntigravityDbPaths();
+// Keep for backward compatibility if needed, but prefer getGeminiNexusDbPaths
+export function getGeminiNexusDbPath(): string {
+  const paths = getGeminiNexusDbPaths();
   return paths.length > 0 ? paths[0] : '';
 }
 
-export function getAntigravityExecutablePath(): string {
+export function getGeminiNexusExecutablePath(): string {
   if (isWsl()) {
     const winUser = getWindowsUser();
-    return `/mnt/c/Users/${winUser}/AppData/Local/Programs/Antigravity/Antigravity.exe`;
+    return `/mnt/c/Users/${winUser}/AppData/Local/Programs/GeminiNexus/GeminiNexus.exe`;
   }
 
   switch (process.platform) {
     case 'darwin':
-      return '/Applications/Antigravity.app/Contents/MacOS/Antigravity';
+      return '/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus';
     case 'win32': {
       const localAppData = process.env.LOCALAPPDATA || '';
       const programFiles = process.env.ProgramFiles || 'C:\\Program Files';
       const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
 
       const possiblePaths = [
-        path.join(localAppData, 'Programs', 'Antigravity', 'Antigravity.exe'),
-        path.join(programFiles, 'Antigravity', 'Antigravity.exe'),
-        path.join(programFilesX86, 'Antigravity', 'Antigravity.exe'),
+        path.join(localAppData, 'Programs', 'Gemini Nexus', 'GeminiNexus.exe'),
+        path.join(programFiles, 'Gemini Nexus', 'GeminiNexus.exe'),
+        path.join(programFilesX86, 'Gemini Nexus', 'GeminiNexus.exe'),
       ];
 
       for (const p of possiblePaths) {
@@ -241,12 +241,12 @@ export function getAntigravityExecutablePath(): string {
     }
     case 'linux': {
       const possibleLinuxPaths = [
-        '/usr/bin/antigravity',
-        '/usr/local/bin/antigravity',
-        '/usr/share/antigravity/antigravity',
-        '/opt/Antigravity/antigravity',
-        '/opt/antigravity/antigravity',
-        path.join(os.homedir(), '.local', 'share', 'antigravity', 'antigravity'),
+        '/usr/bin/geminiNexus',
+        '/usr/local/bin/geminiNexus',
+        '/usr/share/geminiNexus/geminiNexus',
+        '/opt/GeminiNexus/geminiNexus',
+        '/opt/geminiNexus/geminiNexus',
+        path.join(os.homedir(), '.local', 'share', 'geminiNexus', 'geminiNexus'),
       ];
 
       for (const p of possibleLinuxPaths) {
@@ -255,9 +255,9 @@ export function getAntigravityExecutablePath(): string {
         }
       }
 
-      // Fallback: try `which antigravity` via path lookup
+      // Fallback: try `which geminiNexus` via path lookup
       const fromPath = process.env.PATH?.split(':')
-        .map((dir) => path.join(dir, 'antigravity'))
+        .map((dir) => path.join(dir, 'geminiNexus'))
         .find((p) => fs.existsSync(p));
       if (fromPath) {
         return fromPath;

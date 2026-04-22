@@ -24,9 +24,9 @@ async function isProcessRunning(): Promise<boolean> {
 
     if (platform === 'win32' || isWsl()) {
       const cmd = isWsl() ? '/mnt/c/Windows/System32/tasklist.exe' : 'tasklist';
-      command = `${cmd} /FI "IMAGENAME eq Antigravity.exe" /NH`;
+      command = `${cmd} /FI "IMAGENAME eq Gemini Nexus.exe" /NH`;
     } else {
-      command = 'pgrep -x Antigravity';
+      command = 'pgrep -x Gemini Nexus';
     }
 
     console.log('Command:', command);
@@ -34,7 +34,7 @@ async function isProcessRunning(): Promise<boolean> {
     console.log('Stdout:', stdout);
 
     if (platform === 'win32' || isWsl()) {
-      return stdout.includes('Antigravity.exe');
+      return stdout.includes('GeminiNexus.exe');
     } else {
       return stdout.trim().length > 0;
     }

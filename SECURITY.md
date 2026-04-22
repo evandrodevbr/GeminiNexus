@@ -2,7 +2,7 @@
 
 ## 🔒 Security Features
 
-Antigravity Manager takes security seriously. Here are the security measures we've implemented:
+Gemini Nexus takes security seriously. Here are the security measures we've implemented:
 
 ### Encryption
 
@@ -35,7 +35,7 @@ We only provide security updates for the latest version. Please ensure you're ru
 
 ## 🚨 Reporting a Vulnerability
 
-We take all security vulnerabilities seriously. Thank you for helping to improve the security of Antigravity Manager.
+We take all security vulnerabilities seriously. Thank you for helping to improve the security of Gemini Nexus.
 
 ### How to Report
 
@@ -75,7 +75,7 @@ Please include the following information in your report:
 
 To ensure the security of your data:
 
-1. **Keep Updated**: Always use the latest version of Antigravity Manager
+1. **Keep Updated**: Always use the latest version of Gemini Nexus
 2. **System Security**: Keep your operating system updated
 3. **Secure Environment**: Use the application on trusted devices only
 4. **Backup**: Regularly backup your account data using the built-in backup feature
@@ -90,4 +90,4 @@ When we receive a security bug report, we will:
 3. Prepare fixes for all supported versions
 4. Release new versions as soon as possible
 
-Thank you for helping keep Antigravity Manager and its users safe!
+Thank you for helping keep Gemini Nexus and its users safe!

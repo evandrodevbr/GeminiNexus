@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { compareVersion, isNewVersion } from '../../utils/antigravityVersion';
+import { compareVersion, isNewVersion } from '../../utils/geminiNexusVersion';
 
-describe('antigravityVersion', () => {
+describe('geminiNexusVersion', () => {
   it('should compare versions correctly', () => {
     expect(compareVersion('1.16.5', '1.16.4')).toBe(1);
     expect(compareVersion('1.16.5', '1.16.5')).toBe(0);
@@ -43,12 +43,12 @@ describe('antigravityVersion', () => {
       },
     }));
     vi.doMock('../../utils/paths', () => ({
-      getAntigravityExecutablePath: () => 'C:\\Program Files\\Antigravity\\Antigravity.exe',
+      getGeminiNexusExecutablePath: () => 'C:\\Program Files\\GeminiNexus\\GeminiNexus.exe',
     }));
 
-    const { getAntigravityVersion } = await import('../../utils/antigravityVersion');
-    const version = getAntigravityVersion();
-    const cached = getAntigravityVersion();
+    const { getGeminiNexusVersion } = await import('../../utils/geminiNexusVersion');
+    const version = getGeminiNexusVersion();
+    const cached = getGeminiNexusVersion();
 
     expect(version.shortVersion).toBe('1.16.6');
     expect(cached.shortVersion).toBe('1.16.6');

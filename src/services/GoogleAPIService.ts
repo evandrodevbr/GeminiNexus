@@ -16,7 +16,7 @@ const CLIENT_ID = '1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleuse
 const CLIENT_SECRET = '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';
 const OAUTH_CLIENTS_ENV = 'ANTIGRAVITY_OAUTH_CLIENTS';
 const ACTIVE_OAUTH_CLIENT_ENV = 'ANTIGRAVITY_OAUTH_CLIENT_KEY';
-const DEFAULT_OAUTH_CLIENT_KEY = 'antigravity_enterprise';
+const DEFAULT_OAUTH_CLIENT_KEY = 'geminiNexus_enterprise';
 
 const URLS = {
   TOKEN: 'https://oauth2.googleapis.com/token',
@@ -70,7 +70,7 @@ function buildOAuthClientRegistry(): OAuthClientRegistry {
   const clients: OAuthClientConfig[] = [
     {
       key: normalizeClientKey(DEFAULT_OAUTH_CLIENT_KEY),
-      label: 'Antigravity Enterprise',
+      label: 'Gemini Nexus Enterprise',
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       is_builtin: true,
@@ -882,7 +882,7 @@ export class GoogleAPIService {
           metadata: {
             ide_type: 'ANTIGRAVITY',
             ide_version: discoveryVersion,
-            ide_name: 'antigravity',
+            ide_name: 'geminiNexus',
           },
         }),
         signal: createTimeoutSignal(REQUEST_TIMEOUT_MS),

@@ -5,7 +5,7 @@ import { CloudAccount, CloudQuotaData } from '../../../types/cloudAccount';
 import { GoogleAPIService } from '../../../services/GoogleAPIService';
 import { getServerConfig } from '../../server-config';
 import { RateLimitReason, RateLimitTracker } from './rate-limit-tracker';
-import { updateDynamicForwardingRules } from '../../../lib/antigravity/ModelMapping';
+import { updateDynamicForwardingRules } from '../../../lib/geminiNexus/ModelMapping';
 
 interface TokenData {
   email: string;

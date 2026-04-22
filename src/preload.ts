@@ -14,12 +14,12 @@ try {
   if (process.platform === 'win32') {
     appDataPath = path.join(
       process.env.APPDATA || path.join(home, 'AppData', 'Roaming'),
-      'Antigravity',
+      'Gemini Nexus',
     );
   } else if (process.platform === 'darwin') {
-    appDataPath = path.join(home, 'Library', 'Application Support', 'Antigravity');
+    appDataPath = path.join(home, 'Library', 'Application Support', 'Gemini Nexus');
   } else {
-    appDataPath = path.join(home, '.config', 'Antigravity');
+    appDataPath = path.join(home, '.config', 'Gemini Nexus');
   }
 
   const configPath = path.join(appDataPath, 'gui_config.json');

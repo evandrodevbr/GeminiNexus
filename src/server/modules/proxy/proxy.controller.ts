@@ -28,7 +28,7 @@ import {
   getAllDynamicModels,
   MODEL_LIST_CREATED_AT,
   MODEL_LIST_OWNER,
-} from '../../../lib/antigravity/ModelMapping';
+} from '../../../lib/geminiNexus/ModelMapping';
 import { getServerConfig } from '../../server-config';
 import { TokenManagerService } from './token-manager.service';
 

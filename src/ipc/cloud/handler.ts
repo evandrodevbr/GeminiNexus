@@ -17,7 +17,7 @@ import {
   readCurrentDeviceProfile,
   saveGlobalOriginalProfile,
 } from '../../ipc/device/handler';
-import { getAntigravityDbPaths } from '../../utils/paths';
+import { getGeminiNexusDbPaths } from '../../utils/paths';
 import { runWithSwitchGuard } from '../../ipc/switchGuard';
 import { executeSwitchFlow } from '../../ipc/switchFlow';
 import type { DeviceProfile, DeviceProfilesSnapshot } from '../../types/account';
@@ -37,7 +37,7 @@ function notifyTrayUpdate(account: CloudAccount) {
 
 const ACTIVE_OAUTH_CLIENT_KEY_SETTING = 'active_oauth_client_key';
 const OAUTH_CLIENT_KEY_BACKFILL_DONE_SETTING = 'oauth_client_key_backfill_v1_done';
-const ENTERPRISE_OAUTH_CLIENT_KEY = 'antigravity_enterprise';
+const ENTERPRISE_OAUTH_CLIENT_KEY = 'geminiNexus_enterprise';
 
 function isEnterpriseClient(clientKey?: string): boolean {
   if (!clientKey) {
@@ -548,7 +548,7 @@ export async function switchCloudAccount(accountId: string): Promise<void> {
         processExitTimeoutMs: 10000,
         performSwitch: async () => {
           // 3. Backup Database (Optimized to avoid race conditions)
-          const dbPaths = getAntigravityDbPaths();
+          const dbPaths = getGeminiNexusDbPaths();
           for (const dbPath of dbPaths) {
             try {
               const backupPath = `${dbPath}.backup`;

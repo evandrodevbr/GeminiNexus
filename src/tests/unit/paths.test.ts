@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   getAppDataDir,
-  getAntigravityDbPath,
-  getAntigravityStoragePath,
-  getAntigravityExecutablePath,
+  getGeminiNexusDbPath,
+  getGeminiNexusStoragePath,
+  getGeminiNexusExecutablePath,
 } from '../../utils/paths';
 
 describe('Path Utilities', () => {
@@ -14,21 +14,21 @@ describe('Path Utilities', () => {
   });
 
   it('should get correct DB path', () => {
-    const dbPath = getAntigravityDbPath();
+    const dbPath = getGeminiNexusDbPath();
     expect(dbPath).toContain('state.vscdb');
   });
 
   it('should get correct storage path', () => {
-    const storagePath = getAntigravityStoragePath();
+    const storagePath = getGeminiNexusStoragePath();
     expect(storagePath).toContain('storage.json');
   });
 
   it('should get correct executable path', () => {
-    const execPath = getAntigravityExecutablePath();
+    const execPath = getGeminiNexusExecutablePath();
     if (process.platform === 'linux') {
-      expect(execPath).toBe('/usr/share/antigravity/antigravity');
+      expect(execPath).toBe('/usr/share/geminiNexus/geminiNexus');
     } else if (process.platform === 'darwin') {
-      expect(execPath).toBe('/Applications/Antigravity.app/Contents/MacOS/Antigravity');
+      expect(execPath).toBe('/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus');
     }
     // Windows path depends on env vars, harder to test strictly without mocking
   });
