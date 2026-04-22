@@ -84,8 +84,26 @@ export class ProxyController {
   }
 
   @Post('chat/completions')
-  async chatCompletions(@Body() body: OpenAIChatRequest, @Res() res: FastifyReply) {
-    await this.respondOpenAIChatCompletions(body, res);
+  async chatCompletions(
+    @Body() body: OpenAIChatRequest,
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ) {
+    await this.respondOpenAIChatCompletions(body, res, req);
+  }
+
+  /**
+   * Alias route: some clients (e.g. OpenCode configured with baseURL ending in /v1/messages)
+   * send requests to /v1/messages/chat/completions. Forward to the same handler so those
+   * clients do not receive a 404.
+   */
+  @Post('messages/chat/completions')
+  async messagesCompletionsAlias(
+    @Body() body: OpenAIChatRequest,
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ) {
+    await this.respondOpenAIChatCompletions(body, res, req);
   }
 
   @Post('completions')
@@ -303,13 +321,23 @@ export class ProxyController {
     }
   }
 
-  private async respondOpenAIChatCompletions(body: OpenAIChatRequest, res: FastifyReply) {
+  private async respondOpenAIChatCompletions(
+    body: OpenAIChatRequest,
+    res: FastifyReply,
+    req?: FastifyRequest,
+  ) {
     const requestId = uuidv4();
     const startTime = Date.now();
     trafficLogger.logInbound(requestId, '/v1/chat/completions', body, undefined, { stream: body.stream });
 
+    // Extract x-session-affinity header so OpenCode session stickiness works even when
+    // the request body does not carry an explicit session_id field.
+    const headerSessionKey = req
+      ? (req.headers['x-session-affinity'] as string | undefined)
+      : undefined;
+
     try {
-      const result = await this.proxyService.handleChatCompletions(body, requestId);
+      const result = await this.proxyService.handleChatCompletions(body, requestId, headerSessionKey);
 
       if (body.stream && this.isObservableLike(result)) {
         this.writeSseResponse(res, result, requestId, '/v1/chat/completions', startTime);

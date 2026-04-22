@@ -691,8 +691,13 @@ export class ProxyService {
 
   async handleChatCompletions(
     request: OpenAIChatRequest,
+    _requestId?: string,
+    headerSessionKey?: string,
   ): Promise<OpenAIChatResponse | Observable<string>> {
-    const sessionKey = this.extractOpenAISessionKey(request);
+    // Prefer the x-session-affinity header value (sent by OpenCode) over body-level session ids.
+    const sessionKey =
+      (headerSessionKey ? `openai:${headerSessionKey}` : undefined) ??
+      this.extractOpenAISessionKey(request);
 
     const targetModel = this.resolveTargetModel(request.model);
     const extraHeaders = this.createModelSpecificHeaders(request.model);
@@ -1126,6 +1131,13 @@ export class ProxyService {
                 pushChunk(closingChunk);
               }
 
+              // Per the OpenAI spec, finish_reason must be "tool_calls" when the
+              // response contains function calls, even though Gemini always sends "STOP".
+              const mappedFinishReason =
+                toolCallIndex > 0
+                  ? 'tool_calls'
+                  : this.mapGeminiFinishReasonToOpenAIFinishReason(candidate.finishReason);
+
               const finishChunk = {
                 id: streamId,
                 object: 'chat.completion.chunk',
@@ -1135,9 +1147,7 @@ export class ProxyService {
                   {
                     index: 0,
                     delta: {},
-                    finish_reason: this.mapGeminiFinishReasonToOpenAIFinishReason(
-                      candidate.finishReason,
-                    ),
+                    finish_reason: mappedFinishReason,
                   },
                 ],
               };
@@ -1177,10 +1187,13 @@ export class ProxyService {
             choices: [],
             usage: {
               prompt_tokens: lastUsageMetadata.promptTokenCount || 0,
-              completion_tokens: lastUsageMetadata.candidatesTokenCount || 0,
+              completion_tokens:
+                (lastUsageMetadata.candidatesTokenCount || 0) +
+                (lastUsageMetadata.thoughtsTokenCount || 0),
               total_tokens:
                 (lastUsageMetadata.promptTokenCount || 0) +
-                (lastUsageMetadata.candidatesTokenCount || 0),
+                (lastUsageMetadata.candidatesTokenCount || 0) +
+                (lastUsageMetadata.thoughtsTokenCount || 0),
             },
           };
           pushChunk(usageChunk);
@@ -1213,9 +1226,41 @@ export class ProxyService {
       const model = response.model;
       const choice = response.choices?.[0];
       const finishReason = choice?.finish_reason ?? 'stop';
+      const toolCalls = choice?.message?.tool_calls;
       const content =
         choice?.message && isString(choice.message.content) ? choice.message.content : '';
       const chunkSize = 80;
+
+      // Emit tool_call deltas first when the fallback non-streaming response contains tool calls.
+      // Without this, tool calls are silently dropped when the primary stream path fails.
+      if (toolCalls && toolCalls.length > 0) {
+        for (let tcIndex = 0; tcIndex < toolCalls.length; tcIndex++) {
+          const tc = toolCalls[tcIndex];
+          const tcChunk = {
+            id: streamId,
+            object: 'chat.completion.chunk',
+            created,
+            model,
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  tool_calls: [
+                    {
+                      index: tcIndex,
+                      id: tc.id,
+                      type: tc.type,
+                      function: tc.function,
+                    },
+                  ],
+                },
+                finish_reason: null,
+              },
+            ],
+          };
+          subscriber.next(`data: ${JSON.stringify(tcChunk)}\n\n`);
+        }
+      }
 
       if (content.length === 0) {
         const finishChunk = {
@@ -1623,12 +1668,14 @@ export class ProxyService {
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
       model: model,
+      system_fingerprint: 'fp_gemininexus',
       choices: [
         {
           index: 0,
           message: {
             role: 'assistant',
-            content: finalContent ? finalContent : toolCalls.length > 0 ? null : '',
+            // When tool_calls are present, content must be null per OpenAI spec.
+            content: toolCalls.length > 0 ? null : (finalContent || ''),
             tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
           },
           finish_reason: this.mapAnthropicStopReasonToOpenAIFinishReason(
