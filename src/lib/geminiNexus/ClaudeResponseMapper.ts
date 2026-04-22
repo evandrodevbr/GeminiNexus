@@ -23,7 +23,7 @@ class NonStreamingProcessor {
 
   constructor() {}
 
-  public process(geminiResponse: GeminiResponse): ClaudeResponse {
+  public process(geminiResponse: GeminiResponse, modelName?: string): ClaudeResponse {
     const candidate = geminiResponse.candidates?.[0];
     const parts = candidate?.content?.parts || [];
 
@@ -52,7 +52,7 @@ class NonStreamingProcessor {
     }
 
     // 5. Build response
-    return this.buildResponse(geminiResponse);
+    return this.buildResponse(geminiResponse, modelName);
   }
 
   private processPart(part: GeminiPart) {
@@ -213,7 +213,7 @@ class NonStreamingProcessor {
     this.thinkingSignature = null;
   }
 
-  private buildResponse(geminiResponse: GeminiResponse): ClaudeResponse {
+  private buildResponse(geminiResponse: GeminiResponse, modelName?: string): ClaudeResponse {
     const finishReason = geminiResponse.candidates?.[0]?.finishReason;
 
     let stopReason = 'end_turn';
@@ -221,6 +221,15 @@ class NonStreamingProcessor {
       stopReason = 'tool_use';
     } else if (finishReason === 'MAX_TOKENS') {
       stopReason = 'max_tokens';
+    } else if (
+      finishReason === 'SAFETY' ||
+      finishReason === 'RECITATION' ||
+      finishReason === 'OTHER' ||
+      finishReason === 'IMAGE_SAFETY' ||
+      finishReason === 'PROHIBITED_CONTENT' ||
+      finishReason === 'SPII'
+    ) {
+      stopReason = 'stop_sequence';
     }
 
     const usage: Usage = {
@@ -234,7 +243,7 @@ class NonStreamingProcessor {
       id: geminiResponse.responseId || `msg_${uuidv4()}`,
       type: 'message',
       role: 'assistant',
-      model: geminiResponse.modelVersion || '',
+      model: geminiResponse.modelVersion || modelName || '',
       content: this.contentBlocks,
       stop_reason: stopReason,
       usage: usage,
@@ -245,7 +254,7 @@ class NonStreamingProcessor {
 /**
  * Public API: Transform Gemini Response to Claude Response
  */
-export function transformResponse(geminiResponse: GeminiResponse): ClaudeResponse {
+export function transformResponse(geminiResponse: GeminiResponse, modelName?: string): ClaudeResponse {
   const processor = new NonStreamingProcessor();
-  return processor.process(geminiResponse);
+  return processor.process(geminiResponse, modelName);
 }

@@ -182,11 +182,7 @@ function getTelemetryField(storage: Record<string, unknown>, key: string): strin
 }
 
 function ensureTelemetryObject(storage: Record<string, unknown>): Record<string, unknown> {
-  if (
-    !storage.telemetry ||
-    !isObjectLike(storage.telemetry) ||
-    Array.isArray(storage.telemetry)
-  ) {
+  if (!storage.telemetry || !isObjectLike(storage.telemetry) || Array.isArray(storage.telemetry)) {
     storage.telemetry = {};
   }
   return storage.telemetry as Record<string, unknown>;

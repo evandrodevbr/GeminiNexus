@@ -13,8 +13,10 @@ import {
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { isEmpty, isFunction, isNil, isObjectLike, isPlainObject, isString } from 'lodash-es';
+import { v4 as uuidv4 } from 'uuid';
 import { ProxyService } from './proxy.service';
 import { Observable } from 'rxjs';
+import { trafficLogger } from '../../../utils/traffic-logger';
 import {
   OpenAIChatRequest,
   AnthropicChatRequest,
@@ -66,11 +68,17 @@ export class ProxyController {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to list models';
       this.logger.error(message, error instanceof Error ? error.stack : undefined);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-        error: {
-          message,
-          type: 'server_error',
-        },
+      const status = HttpStatus.INTERNAL_SERVER_ERROR;
+      const { type, code } = this.resolveOpenAIErrorTypeAndCode(status, message);
+      const errorPayload: Record<string, unknown> = {
+        message,
+        type,
+      };
+      if (code) {
+        errorPayload.code = code;
+      }
+      res.status(status).send({
+        error: errorPayload,
       });
     }
   }
@@ -296,16 +304,23 @@ export class ProxyController {
   }
 
   private async respondOpenAIChatCompletions(body: OpenAIChatRequest, res: FastifyReply) {
+    const requestId = uuidv4();
+    const startTime = Date.now();
+    trafficLogger.logInbound(requestId, '/v1/chat/completions', body, undefined, { stream: body.stream });
+
     try {
-      const result = await this.proxyService.handleChatCompletions(body);
+      const result = await this.proxyService.handleChatCompletions(body, requestId);
 
       if (body.stream && this.isObservableLike(result)) {
-        this.writeSseResponse(res, result);
+        this.writeSseResponse(res, result, requestId, '/v1/chat/completions', startTime);
         return;
       } else {
+        const duration = Date.now() - startTime;
+        trafficLogger.logOutbound(requestId, '/v1/chat/completions', HttpStatus.OK, result, duration);
         res.status(HttpStatus.OK).send(result);
       }
     } catch (error) {
+      trafficLogger.logError(requestId, '/v1/chat/completions', error);
       this.sendOpenAIErrorResponse(res, '/v1/chat/completions', error);
     }
   }
@@ -719,12 +734,14 @@ export class ProxyController {
     return isObjectLike(value) && isFunction((value as { subscribe?: unknown }).subscribe);
   }
 
-  private writeSseResponse(res: FastifyReply, stream: Observable<unknown>): void {
-    if (
-      !res.raw ||
-      !isFunction(res.raw.writeHead) ||
-      !isFunction(res.raw.write)
-    ) {
+  private writeSseResponse(
+    res: FastifyReply,
+    stream: Observable<unknown>,
+    requestId?: string,
+    endpoint?: string,
+    startTime?: number,
+  ): void {
+    if (!res.raw || !isFunction(res.raw.writeHead) || !isFunction(res.raw.write)) {
       res.header('Content-Type', 'text/event-stream');
       res.header('Cache-Control', 'no-cache');
       res.header('Connection', 'keep-alive');
@@ -742,6 +759,10 @@ export class ProxyController {
       Connection: 'keep-alive',
     });
 
+    if (isFunction(res.raw.flushHeaders)) {
+      res.raw.flushHeaders();
+    }
+
     const subscription = stream.subscribe({
       next: (chunk) => {
         if (res.raw.writableEnded) {
@@ -749,19 +770,32 @@ export class ProxyController {
         }
         const payload = isString(chunk) ? chunk : String(chunk ?? '');
         res.raw.write(payload);
+        if (requestId && endpoint) {
+          trafficLogger.logSseChunk(requestId, endpoint, chunk);
+        }
+        if (isFunction((res.raw as any).flush)) {
+          (res.raw as any).flush();
+        }
       },
       error: (error) => {
         if (res.raw.writableEnded) {
           return;
         }
         const message = error instanceof Error ? error.message : String(error);
+        const status = this.resolveErrorHttpStatus(message);
+        const { type, code } = this.resolveOpenAIErrorTypeAndCode(status, message);
+        const errorPayload: Record<string, unknown> = {
+          message,
+          type,
+        };
+        if (code) {
+          errorPayload.code = code;
+        }
         res.raw.write(
           `data: ${JSON.stringify({
-            error: {
-              message,
-              type: 'server_error',
-            },
-          })}\n\n`,
+            error: errorPayload,
+          })}
+\n\n`,
         );
         res.raw.end();
       },
@@ -981,11 +1015,16 @@ export class ProxyController {
     const message = overrideMessage ?? this.resolveErrorMessageText(error);
     const status = this.resolveErrorHttpStatus(message);
     this.logProxyEndpointError(endpoint, status, message, error);
+    const { type, code } = this.resolveOpenAIErrorTypeAndCode(status, message);
+    const errorPayload: Record<string, unknown> = {
+      message,
+      type,
+    };
+    if (code) {
+      errorPayload.code = code;
+    }
     res.status(status).send({
-      error: {
-        message,
-        type: 'server_error',
-      },
+      error: errorPayload,
     });
   }
 
@@ -1043,6 +1082,32 @@ export class ProxyController {
       return HttpStatus.GATEWAY_TIMEOUT;
     }
     return HttpStatus.INTERNAL_SERVER_ERROR;
+  }
+
+  private resolveOpenAIErrorTypeAndCode(
+    status: HttpStatus,
+    message: string,
+  ): { type: string; code?: string } {
+    const lowered = message.toLowerCase();
+    if (status === HttpStatus.UNAUTHORIZED) {
+      return { type: 'invalid_request_error', code: 'invalid_api_key' };
+    }
+    if (status === HttpStatus.FORBIDDEN) {
+      return { type: 'invalid_request_error', code: 'permission_denied' };
+    }
+    if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      return { type: 'rate_limit_error', code: 'rate_limit_exceeded' };
+    }
+    if (status === HttpStatus.BAD_GATEWAY || status === HttpStatus.GATEWAY_TIMEOUT) {
+      return { type: 'server_error', code: 'bad_gateway' };
+    }
+    if (status === HttpStatus.SERVICE_UNAVAILABLE) {
+      return { type: 'server_error', code: 'temporarily_unavailable' };
+    }
+    if (lowered.includes('invalid') || lowered.includes('malformed') || lowered.includes('bad request')) {
+      return { type: 'invalid_request_error', code: 'invalid_request_error' };
+    }
+    return { type: 'server_error', code: 'internal_error' };
   }
 
   private logProxyEndpointError(

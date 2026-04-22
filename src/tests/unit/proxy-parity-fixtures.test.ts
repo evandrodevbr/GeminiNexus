@@ -10,6 +10,7 @@ const mockTokenManager = {
   getNextToken: vi.fn(),
   markAsRateLimited: vi.fn(),
   markAsForbidden: vi.fn(),
+  forceRefreshToken: vi.fn(),
   markFromUpstreamError: vi.fn(),
   recordParityError: vi.fn(),
 };
@@ -97,5 +98,4 @@ describe('Proxy Parity Fixtures', () => {
       expect(output).toContain(token);
     }
   });
-
 });

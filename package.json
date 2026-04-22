@@ -6,7 +6,8 @@
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
-    "start": "electron-forge start",
+    "start": "cross-env DEBUG=electron-forge:* electron-forge start",
+    "dev": "cross-env DEBUG=electron-forge:* electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -62,6 +63,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "code-inspector-plugin": "^1.3.3",
     "conventional-changelog-conventionalcommits": "^9.1.0",
+    "cross-env": "^10.1.0",
     "electron": "^37.3.1",
     "electron-devtools-installer": "^4.0.0",
     "electron-packager-languages": "^0.6.0",

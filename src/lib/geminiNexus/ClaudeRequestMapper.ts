@@ -82,21 +82,9 @@ export function transformClaudeRequestIn(
   let isThinkingEnabled =
     thinkingType === 'enabled' || thinkingType === 'adaptive' || autoThinkingEnabled;
 
-  if (isThinkingEnabled) {
-    const globalSig = SignatureStore.get();
-    const hasFunctionCalls = claudeReq.messages.some((m) => {
-      if (Array.isArray(m.content)) {
-        return m.content.some((b) => b.type === 'tool_use');
-      }
-      return false;
-    });
-
-    if (hasFunctionCalls && !hasValidSignatureForFunctionCalls(claudeReq.messages, globalSig)) {
-      if (!isGeminiFlashModel(config.finalModel)) {
-        isThinkingEnabled = false;
-      }
-    }
-  }
+  // Thinking is always kept enabled for thinking-capable models.
+  // All functionCall/functionResponse/thinking parts get unconditional
+  // thoughtSignature injection in buildContents(), so no guard is needed here.
 
   const generationConfig = buildGenerationConfig(
     claudeReq,
@@ -137,7 +125,7 @@ export function transformClaudeRequestIn(
     systemInstruction?: { parts: { text: string }[] };
     generationConfig?: GenerationConfig;
     tools?: GeminiToolDeclaration[];
-    toolConfig?: { functionCallingConfig: { mode: string } };
+    toolConfig?: { functionCallingConfig: { mode: string; allowedFunctionNames?: string[] } };
   } = {
     contents,
     safetySettings,
@@ -155,7 +143,27 @@ export function transformClaudeRequestIn(
 
   if (tools) {
     innerRequest.tools = tools;
-    innerRequest.toolConfig = { functionCallingConfig: { mode: 'VALIDATED' } };
+    const toolChoice = claudeReq.tool_choice;
+    if (toolChoice === 'none') {
+      innerRequest.toolConfig = { functionCallingConfig: { mode: 'NONE' } };
+    } else if (toolChoice === 'auto' || toolChoice === undefined) {
+      innerRequest.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+    } else if (
+      typeof toolChoice === 'object' &&
+      toolChoice.type === 'function' &&
+      toolChoice.function?.name
+    ) {
+      innerRequest.toolConfig = {
+        functionCallingConfig: {
+          mode: 'ANY',
+          allowedFunctionNames: [toolChoice.function.name],
+        },
+      };
+    } else {
+      innerRequest.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+    }
+  } else if (claudeReq.tool_choice === 'none') {
+    innerRequest.toolConfig = { functionCallingConfig: { mode: 'NONE' } };
   }
 
   // Inject googleSearch tool if needed (and not already done by buildTools)
@@ -396,35 +404,7 @@ function injectGoogleSearchTool(body: { tools?: GeminiToolDeclaration[] }, mappe
 function buildSystemInstruction(
   system: ClaudeRequest['system'],
 ): { parts: { text: string }[] } | null {
-  const assistantIdentityDirective =
-    'You are Gemini Nexus, a powerful agentic AI coding assistant designed by the Google Deepmind team working on Advanced Agentic Coding.\n' +
-    'You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question.\n' +
-    '**Absolute paths only**\n' +
-    '**Proactiveness**';
-  const identityMarker = 'You are Gemini Nexus';
-
   const parts: { text: string }[] = [];
-
-  let hasIdentityDirective = false;
-
-  if (system) {
-    if (isString(system)) {
-      if (system.includes(identityMarker)) {
-        hasIdentityDirective = true;
-      }
-    } else if (Array.isArray(system)) {
-      for (const block of system) {
-        if (block.type === 'text' && block.text.includes(identityMarker)) {
-          hasIdentityDirective = true;
-          break;
-        }
-      }
-    }
-  }
-
-  if (!hasIdentityDirective) {
-    parts.push({ text: assistantIdentityDirective });
-  }
 
   if (system) {
     if (isString(system)) {
@@ -436,7 +416,6 @@ function buildSystemInstruction(
     }
   }
 
-  // If we pushed at least something
   if (parts.length > 0) {
     return { parts };
   }
@@ -501,7 +480,10 @@ function buildContents(
 
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i];
-    const role = msg.role === 'assistant' ? 'model' : msg.role;
+    let role = msg.role === 'assistant' ? 'model' : msg.role;
+    if (role === 'function') {
+      role = 'user';
+    }
     const parts: {
       text?: string;
       inlineData?: {
@@ -518,14 +500,25 @@ function buildContents(
 
     for (const block of contentBlocks) {
       if (block.type === 'text') {
-        if (block.text && block.text !== '(no content)' && !isEmpty(block.text.trim()))
-          parts.push({ text: block.text.trim() });
+        if (block.text && block.text !== '(no content)' && !isEmpty(block.text.trim())) {
+          let text = block.text.trim();
+          if (msg.role === 'function' && msg.name) {
+            text = `Function result (${msg.name}):\n${text}`;
+          } else if (msg.name) {
+            text = `[${msg.name}]: ${text}`;
+          }
+          parts.push({ text });
+        }
       } else if (block.type === 'thinking') {
         const part: any = { text: block.thinking, thought: true };
         cleanJsonSchema(part);
         if (block.signature) {
           lastThoughtSignature = block.signature;
           part.thoughtSignature = block.signature;
+        } else {
+          // Inject fallback signature for thinking blocks without one
+          const fallbackSig = SignatureStore.get() || 'skip_thought_signature_validator';
+          part.thoughtSignature = fallbackSig;
         }
         parts.push(part);
       } else if (block.type === 'image') {
@@ -537,12 +530,10 @@ function buildContents(
         const part: any = { functionCall: { name: block.name, args: block.input, id: block.id } };
         cleanJsonSchema(part);
         toolIdToName.set(block.id, block.name);
+        // Always inject thoughtSignature on functionCall parts.
+        // The v1internal API rejects functionCalls without signatures when thinking is enabled.
         const finalSig = block.signature || lastThoughtSignature || SignatureStore.get();
-        if (finalSig) {
-          part.thoughtSignature = finalSig;
-        } else if (isThinkingEnabled && isGeminiFlashModel(mappedModel)) {
-          part.thoughtSignature = 'skip_thought_signature_validator';
-        }
+        part.thoughtSignature = finalSig || 'skip_thought_signature_validator';
         parts.push(part);
       } else if (block.type === 'tool_result') {
         const funcName = toolIdToName.get(block.tool_use_id) || block.tool_use_id;
@@ -560,11 +551,13 @@ function buildContents(
         const part: any = {
           functionResponse: {
             name: funcName,
-            response: { result: mergedContent },
+            response: block.is_error ? { error: mergedContent } : { result: mergedContent },
             id: block.tool_use_id,
           },
         };
-        if (lastThoughtSignature) part.thoughtSignature = lastThoughtSignature;
+        // Always inject thoughtSignature on functionResponse parts for v1internal compatibility
+        part.thoughtSignature =
+          lastThoughtSignature || SignatureStore.get() || 'skip_thought_signature_validator';
         parts.push(part);
       } else if (block.type === 'redacted_thinking') {
         parts.push({ text: `[Redacted Thinking: ${block.data}]`, thought: true });
@@ -669,11 +662,13 @@ function buildGenerationConfig(
     return thinkingConfig;
   };
 
+  const maxTokens = claudeReq.max_completion_tokens ?? claudeReq.max_tokens;
+
   if (isOpenAIPath) {
     config.temperature = claudeReq.temperature ?? 1.0;
     config.topP = claudeReq.top_p ?? 0.95;
-    if (claudeReq.max_tokens !== undefined) {
-      config.maxOutputTokens = claudeReq.max_tokens;
+    if (maxTokens !== undefined) {
+      config.maxOutputTokens = maxTokens;
     } else {
       config.maxOutputTokens = getMaxOutputTokens(mappedModel);
     }
@@ -683,25 +678,39 @@ function buildGenerationConfig(
     if (isThinkingEnabled) {
       config.thinkingConfig = buildThinkingConfig();
     }
-    return config;
+  } else {
+    if (isThinkingEnabled) {
+      config.thinkingConfig = buildThinkingConfig();
+    }
+    if (claudeReq.temperature !== undefined) {
+      config.temperature = claudeReq.temperature;
+    }
+    if (claudeReq.top_p !== undefined) {
+      config.topP = claudeReq.top_p;
+    }
+    if (claudeReq.top_k !== undefined) {
+      config.topK = claudeReq.top_k;
+    }
+    if (maxTokens !== undefined) {
+      config.maxOutputTokens = maxTokens;
+    }
+    const defaultStopSequences = ['<|user|>', '<|endoftext|>', '<|end_of_turn|>', '[DONE]', '\n\nHuman:'];
+    if (claudeReq.stop_sequences && claudeReq.stop_sequences.length > 0) {
+      config.stopSequences = [...new Set([...claudeReq.stop_sequences, ...defaultStopSequences])];
+    } else {
+      config.stopSequences = defaultStopSequences;
+    }
   }
 
-  if (isThinkingEnabled) {
-    config.thinkingConfig = buildThinkingConfig();
+  if (claudeReq.response_format) {
+    if (claudeReq.response_format.type === 'json_object') {
+      config.responseMimeType = 'application/json';
+    } else if (claudeReq.response_format.type === 'json_schema' && claudeReq.response_format.json_schema) {
+      config.responseMimeType = 'application/json';
+      config.responseSchema = cleanJsonSchema(claudeReq.response_format.json_schema);
+    }
   }
-  if (claudeReq.temperature !== undefined) {
-    config.temperature = claudeReq.temperature;
-  }
-  if (claudeReq.top_p !== undefined) {
-    config.topP = claudeReq.top_p;
-  }
-  if (claudeReq.top_k !== undefined) {
-    config.topK = claudeReq.top_k;
-  }
-  if (claudeReq.max_tokens !== undefined) {
-    config.maxOutputTokens = claudeReq.max_tokens;
-  }
-  config.stopSequences = ['<|user|>', '<|endoftext|>', '<|end_of_turn|>', '[DONE]', '\n\nHuman:'];
+
   return config;
 }
 

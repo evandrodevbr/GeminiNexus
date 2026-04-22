@@ -190,6 +190,12 @@ export class ProxyService {
 
         lastError = error;
         await this.applyUpstreamPenalty(token.id, effectiveTargetModel, error);
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const penaltyDecision = this.classifyUpstreamFailure(errorMessage);
+        if (!penaltyDecision.retry) {
+          throw error;
+        }
       }
     }
     throw lastError || new Error('Request failed after retries');
@@ -363,6 +369,12 @@ export class ProxyService {
         }
 
         await this.applyUpstreamPenalty(token.id, effectiveTargetModel, lastError);
+
+        const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
+        const penaltyDecision = this.classifyUpstreamFailure(errorMessage);
+        if (!penaltyDecision.retry) {
+          throw lastError;
+        }
       }
     }
 
@@ -452,6 +464,12 @@ export class ProxyService {
         }
 
         await this.applyUpstreamPenalty(token.id, effectiveTargetModel, lastError);
+
+        const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
+        const penaltyDecision = this.classifyUpstreamFailure(errorMessage);
+        if (!penaltyDecision.retry) {
+          throw lastError;
+        }
       }
     }
 
@@ -728,7 +746,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            return this.processStreamResponse(stream, request.model);
+            return this.processStreamResponse(stream, request.model, request.stream_options);
           } catch (streamError) {
             this.logger.warn(
               `Stream path failed for model=${request.model}; falling back to non-stream generation: ${
@@ -787,7 +805,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processStreamResponse(stream, request.model);
+              return this.processStreamResponse(stream, request.model, request.stream_options);
             }
 
             const response = await this.generateInternalWithStreamFallback(
@@ -806,6 +824,12 @@ export class ProxyService {
         }
 
         await this.applyUpstreamPenalty(token.id, effectiveTargetModel, lastError);
+
+        const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
+        const penaltyDecision = this.classifyUpstreamFailure(errorMessage);
+        if (!penaltyDecision.retry) {
+          throw lastError;
+        }
       }
     }
     throw lastError || new Error('Request failed after retries');
@@ -928,18 +952,38 @@ export class ProxyService {
   private processStreamResponse(
     upstreamStream: NodeJS.ReadableStream,
     model: string,
+    streamOptions?: { include_usage?: boolean },
   ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
       let buffer = '';
       let hasEmittedChunk = false;
       let hasSentDone = false;
+      let isThinking = false;
+      let toolCallIndex = 0;
+      let lastUsageMetadata: GeminiResponse['usageMetadata'];
 
       const streamId = `chatcmpl-${uuidv4()}`;
       const created = Math.floor(Date.now() / 1000);
 
+      // Emit initial role chunk immediately to prevent strict clients (like Hermes) from timing out during long TTFT
+      const initialChunk = {
+        id: streamId,
+        object: 'chat.completion.chunk',
+        created: created,
+        model: model,
+        choices: [
+          {
+            index: 0,
+            delta: { role: 'assistant', content: '' },
+            finish_reason: null,
+          },
+        ],
+      };
+      subscriber.next(`data: ${JSON.stringify(initialChunk)}\n\n`);
+      hasEmittedChunk = true;
+
       const pushChunk = (payload: Record<string, unknown>): void => {
-        hasEmittedChunk = true;
         subscriber.next(`data: ${JSON.stringify(payload)}\n\n`);
       };
 
@@ -960,8 +1004,17 @@ export class ProxyService {
             const candidate = json.candidates?.[0];
             const parts = candidate?.content?.parts || [];
 
+            if (json.usageMetadata) {
+              lastUsageMetadata = json.usageMetadata;
+            }
+
             for (const part of parts) {
               if (part.thought && part.text) {
+                let textToEmit = part.text;
+                if (!isThinking) {
+                  isThinking = true;
+                  textToEmit = `<think>\n${textToEmit}`;
+                }
                 const reasoningChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',
@@ -970,7 +1023,7 @@ export class ProxyService {
                   choices: [
                     {
                       index: 0,
-                      delta: { reasoning_content: part.text },
+                      delta: { content: textToEmit },
                       finish_reason: null,
                     },
                   ],
@@ -980,6 +1033,7 @@ export class ProxyService {
               }
 
               if (part.functionCall) {
+                const currentToolIndex = toolCallIndex++;
                 const toolCallChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',
@@ -991,7 +1045,7 @@ export class ProxyService {
                       delta: {
                         tool_calls: [
                           {
-                            index: 0,
+                            index: currentToolIndex,
                             id: part.functionCall.id || `${part.functionCall.name}-${uuidv4()}`,
                             type: 'function',
                             function: {
@@ -1031,6 +1085,11 @@ export class ProxyService {
               }
 
               if (part.text) {
+                let textToEmit = part.text;
+                if (isThinking && !part.thought) {
+                  isThinking = false;
+                  textToEmit = `\n</think>\n\n${textToEmit}`;
+                }
                 const contentChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',
@@ -1039,7 +1098,7 @@ export class ProxyService {
                   choices: [
                     {
                       index: 0,
-                      delta: { content: part.text },
+                      delta: { content: textToEmit },
                       finish_reason: null,
                     },
                   ],
@@ -1049,6 +1108,24 @@ export class ProxyService {
             }
 
             if (candidate?.finishReason) {
+              if (isThinking) {
+                isThinking = false;
+                const closingChunk = {
+                  id: streamId,
+                  object: 'chat.completion.chunk',
+                  created: created,
+                  model: model,
+                  choices: [
+                    {
+                      index: 0,
+                      delta: { content: '\n</think>\n\n' },
+                      finish_reason: null,
+                    },
+                  ],
+                };
+                pushChunk(closingChunk);
+              }
+
               const finishChunk = {
                 id: streamId,
                 object: 'chat.completion.chunk',
@@ -1091,6 +1168,23 @@ export class ProxyService {
             ],
           });
         }
+        if (streamOptions?.include_usage && lastUsageMetadata) {
+          const usageChunk = {
+            id: streamId,
+            object: 'chat.completion.chunk',
+            created,
+            model,
+            choices: [],
+            usage: {
+              prompt_tokens: lastUsageMetadata.promptTokenCount || 0,
+              completion_tokens: lastUsageMetadata.candidatesTokenCount || 0,
+              total_tokens:
+                (lastUsageMetadata.promptTokenCount || 0) +
+                (lastUsageMetadata.candidatesTokenCount || 0),
+            },
+          };
+          pushChunk(usageChunk);
+        }
         if (!hasSentDone) {
           subscriber.next('data: [DONE]\n\n');
           hasSentDone = true;
@@ -1098,12 +1192,17 @@ export class ProxyService {
         subscriber.complete();
       });
 
-      upstreamStream.on('error', (err: unknown) => {
-        // Convert to clean Error to avoid circular reference issues (socket objects)
+      upstreamStream.on('error', (err) => {
+        this.logger.error('OpenAI-compatible stream error:', err);
         const cleanError = err instanceof Error ? new Error(err.message) : new Error(String(err));
-        this.logger.error(`OpenAI-compatible stream error: ${cleanError.message}`);
         subscriber.error(cleanError);
       });
+
+      return () => {
+        if (typeof (upstreamStream as any).destroy === 'function') {
+          (upstreamStream as any).destroy();
+        }
+      };
     });
   }
 
@@ -1420,7 +1519,14 @@ export class ProxyService {
     if (normalized === 'MAX_TOKENS') {
       return 'length';
     }
-    if (normalized === 'SAFETY' || normalized === 'RECITATION') {
+    if (
+      normalized === 'SAFETY' ||
+      normalized === 'RECITATION' ||
+      normalized === 'OTHER' ||
+      normalized === 'IMAGE_SAFETY' ||
+      normalized === 'PROHIBITED_CONTENT' ||
+      normalized === 'SPII'
+    ) {
       return 'content_filter';
     }
 
@@ -1507,6 +1613,11 @@ export class ProxyService {
         },
       }));
 
+    let finalContent = textContent;
+    if (reasoningContent) {
+      finalContent = `<think>\n${reasoningContent}\n</think>\n\n${textContent}`;
+    }
+
     return {
       id: `chatcmpl-${uuidv4()}`,
       object: 'chat.completion',
@@ -1517,9 +1628,8 @@ export class ProxyService {
           index: 0,
           message: {
             role: 'assistant',
-            content: textContent || null,
+            content: finalContent ? finalContent : toolCalls.length > 0 ? null : '',
             tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
-            reasoning_content: reasoningContent || undefined,
           },
           finish_reason: this.mapAnthropicStopReasonToOpenAIFinishReason(
             claudeResponse.stop_reason,
@@ -1585,7 +1695,19 @@ export class ProxyService {
 
     if (error instanceof UpstreamRequestError) {
       const status = error.status;
-      if (status === 401 || status === 403) {
+      if (status === 401) {
+        this.logger.warn(`Upstream returned 401 for account ${accountId}; attempting token refresh`);
+        const refreshed = await this.tokenManager.forceRefreshToken(accountId);
+        if (refreshed) {
+          this.logger.log(`Token refreshed successfully for account ${accountId}; retry permitted`);
+          return;
+        }
+        this.logger.warn(`Token refresh failed for account ${accountId}; marking as forbidden`);
+        this.tokenManager.markAsForbidden(accountId);
+        return;
+      }
+
+      if (status === 403) {
         this.tokenManager.markAsForbidden(accountId);
         return;
       }

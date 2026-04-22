@@ -134,7 +134,8 @@ const vi = {
       timeout: 'Thời gian chờ request (giây)',
       accountProxies: {
         title: 'Proxy tài khoản',
-        description: 'Cấu hình proxy riêng cho từng tài khoản. Những cấu hình này sẽ ghi đè proxy trung gian chung cho tài khoản đó.',
+        description:
+          'Cấu hình proxy riêng cho từng tài khoản. Những cấu hình này sẽ ghi đè proxy trung gian chung cho tài khoản đó.',
       },
     },
     modelMapping: {

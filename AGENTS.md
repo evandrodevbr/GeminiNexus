@@ -345,7 +345,6 @@ Documentation/usage lookup:
 
 - Use `context7` for latest dependency usage.
 
-
 ## 🚨 Local Quality Checks (Optional Flow)
 
 After a set of changes, run these three checks in parallel instead of full lint immediately:

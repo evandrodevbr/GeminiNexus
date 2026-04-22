@@ -121,11 +121,7 @@ export async function isProcessRunning(): Promise<boolean> {
       const cmd = proc.cmd?.toLowerCase() || '';
 
       // Skip manager process
-      if (
-        name.includes('manager') ||
-        cmd.includes('manager') ||
-        cmd.includes('gemini-nexus')
-      ) {
+      if (name.includes('manager') || cmd.includes('manager') || cmd.includes('gemini-nexus')) {
         continue;
       }
 

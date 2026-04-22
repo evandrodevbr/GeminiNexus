@@ -85,7 +85,10 @@ export function getAppDataDir(): string {
     case 'darwin':
       return path.join(home, 'Library', 'Application Support', 'Gemini Nexus');
     case 'win32':
-      return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Gemini Nexus');
+      return path.join(
+        process.env.APPDATA || path.join(home, 'AppData', 'Roaming'),
+        'Gemini Nexus',
+      );
     case 'linux':
       return path.join(home, '.config', 'Gemini Nexus');
     default:

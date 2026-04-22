@@ -7,8 +7,28 @@ const projectRoot = process.cwd();
 const allowedExtensions = /\.(ts|tsx|js|jsx|json|md|html|jsonc|yml|yaml|css)$/;
 
 // Arquivos/Pastas a ignorar (já curados ou irrelevantes)
-const ignoreDirs = ['node_modules', '.git', '.gemini', 'dist', 'out', 'build', 'images', 'docs', '.planning'];
-const ignoreFiles = ['README.md', 'README.pt-BR.md', 'CHANGELOG.md', 'forge.config.ts', 'package.json', 'rename.js', 'rename-deep.js', 'task.md', 'walkthrough.md'];
+const ignoreDirs = [
+  'node_modules',
+  '.git',
+  '.gemini',
+  'dist',
+  'out',
+  'build',
+  'images',
+  'docs',
+  '.planning',
+];
+const ignoreFiles = [
+  'README.md',
+  'README.pt-BR.md',
+  'CHANGELOG.md',
+  'forge.config.ts',
+  'package.json',
+  'rename.js',
+  'rename-deep.js',
+  'task.md',
+  'walkthrough.md',
+];
 
 function walkAndReplace(dir) {
   const files = fs.readdirSync(dir);
@@ -21,7 +41,7 @@ function walkAndReplace(dir) {
 
     if (stat.isDirectory()) {
       walkAndReplace(fullPath);
-      
+
       // Rename directory if it contains 'antigravity'
       if (file.toLowerCase().includes('antigravity')) {
         const newName = file.replace(/antigravity/gi, (match) => {
@@ -52,7 +72,7 @@ function walkAndReplace(dir) {
 
         // 2. String "Antigravity " -> "Gemini Nexus "
         content = content.replace(/Antigravity /g, 'Gemini Nexus ');
-        
+
         // 3. String " Antigravity" -> " Gemini Nexus"
         content = content.replace(/ Antigravity/g, ' Gemini Nexus');
 
@@ -63,7 +83,10 @@ function walkAndReplace(dir) {
         content = content.replace(/antigravity/g, 'geminiNexus');
 
         // Restore GitHub links
-        content = content.replace(new RegExp(tempUrlMarker, 'g'), 'github.com/Draculabo/AntigravityManager');
+        content = content.replace(
+          new RegExp(tempUrlMarker, 'g'),
+          'github.com/Draculabo/AntigravityManager',
+        );
 
         // Cleanup any double replacements
         content = content.replace(/GeminiNexus Nexus/g, 'Gemini Nexus');
@@ -72,7 +95,7 @@ function walkAndReplace(dir) {
           fs.writeFileSync(fullPath, content, 'utf-8');
           console.log(`Updated file content: ${fullPath}`);
         }
-        
+
         // Rename file if it contains 'antigravity'
         if (file.toLowerCase().includes('antigravity')) {
           const newName = file.replace(/antigravity/gi, (match) => {
