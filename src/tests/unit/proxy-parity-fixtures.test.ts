@@ -15,10 +15,11 @@ const mockTokenManager = {
   recordParityError: vi.fn(),
 };
 const mockGeminiClient = { streamGenerateInternal: vi.fn(), generateInternal: vi.fn() };
+const mockTokenUsageService = { recordUsage: vi.fn() };
 
 class TestableProxyService extends ProxyService {
   constructor() {
-    super(mockTokenManager as any, mockGeminiClient as any);
+    super(mockTokenManager as any, mockGeminiClient as any, mockTokenUsageService as any);
   }
 
   public toAnthropic(request: any): any {

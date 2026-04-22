@@ -16,16 +16,17 @@ const mockTokenManager = {
   resolveDynamicModelForAccount: vi.fn((_token: unknown, model: string) => model),
 };
 const mockGeminiClient = { streamGenerateInternal: vi.fn(), generateInternal: vi.fn() };
+const mockTokenUsageService = { recordUsage: vi.fn() };
 
 // Subclass to access private method
 class TestableProxyService extends ProxyService {
   constructor() {
-    super(mockTokenManager as any, mockGeminiClient as any);
+    super(mockTokenManager as any, mockGeminiClient as any, mockTokenUsageService as any);
   }
 
   public testProcessStream(stream: any, model: string = 'model'): Observable<string> {
     // Access private method using type assertion
-    return (this as any).processAnthropicInternalStream(stream, model);
+    return (this as any).processAnthropicInternalStream(stream, model, 'acc-test');
   }
 
   public testPassthroughStream(stream: any): Observable<string> {

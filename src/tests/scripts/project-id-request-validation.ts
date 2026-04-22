@@ -19,9 +19,13 @@ const mockGeminiClient: any = {
   generateInternal: async () => undefined,
 };
 
+const mockTokenUsageService: any = {
+  recordUsage: () => undefined,
+};
+
 class TestableProxyService extends ProxyService {
   constructor() {
-    super(mockTokenManager, mockGeminiClient);
+    super(mockTokenManager, mockGeminiClient, mockTokenUsageService);
   }
 
   public createGeminiInternal(
@@ -255,7 +259,7 @@ async function validateRuntimeAnthropicRequestFromRealTokenManager(): Promise<vo
   };
 
   try {
-    const service = new ProxyService(tokenManagerProxy as any, mockGeminiClient as any);
+    const service = new ProxyService(tokenManagerProxy as any, mockGeminiClient as any, mockTokenUsageService as any);
     await service.handleAnthropicMessages({
       model: 'claude-sonnet-4-5',
       stream: false,

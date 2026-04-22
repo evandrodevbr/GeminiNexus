@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { isEmpty, isNil, isNumber, isPlainObject, isString } from 'lodash-es';
 import { TokenManagerService } from './token-manager.service';
 import { GeminiClient } from './clients/gemini.client';
+import { TokenUsageService } from '../usage/token-usage.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Observable } from 'rxjs';
 import { transformClaudeRequestIn } from '../../../lib/geminiNexus/ClaudeRequestMapper';
@@ -42,7 +43,28 @@ export class ProxyService {
   constructor(
     @Inject(TokenManagerService) private readonly tokenManager: TokenManagerService,
     @Inject(GeminiClient) private readonly geminiClient: GeminiClient,
+    @Inject(TokenUsageService) private readonly tokenUsageService: TokenUsageService,
   ) {}
+
+  private recordUsage(
+    accountId: string,
+    model: string,
+    usage: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined | null,
+    requestType: string,
+  ): void {
+    if (!usage) {
+      return;
+    }
+    this.tokenUsageService.recordUsage({
+      accountId,
+      model,
+      promptTokens: usage.promptTokenCount ?? 0,
+      completionTokens: usage.candidatesTokenCount ?? 0,
+      totalTokens: usage.totalTokenCount ?? 0,
+      timestamp: Date.now(),
+      requestType,
+    });
+  }
 
   // --- Anthropic Handlers ---
 
@@ -101,7 +123,7 @@ export class ProxyService {
             token.token.upstream_proxy_url,
             extraHeaders,
           );
-          return this.processAnthropicInternalStream(stream, geminiBody.model);
+          return this.processAnthropicInternalStream(stream, geminiBody.model, token.id);
         } else {
           const response = await this.generateInternalWithStreamFallback(
             geminiBody,
@@ -109,6 +131,7 @@ export class ProxyService {
             token.token.upstream_proxy_url,
             extraHeaders,
           );
+          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
           return this.toAnthropicChatResponse(transformResponse(response));
         }
       } catch (error) {
@@ -132,7 +155,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processAnthropicInternalStream(stream, fallbackBody.model);
+              return this.processAnthropicInternalStream(stream, fallbackBody.model, token.id);
             } else {
               const response = await this.generateInternalWithStreamFallback(
                 fallbackBody,
@@ -140,6 +163,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
+              this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
               return this.toAnthropicChatResponse(transformResponse(response));
             }
           } catch (fallbackErr) {
@@ -170,7 +194,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processAnthropicInternalStream(stream, downgradedBody.model);
+              return this.processAnthropicInternalStream(stream, downgradedBody.model, token.id);
             } else {
               const response = await this.generateInternalWithStreamFallback(
                 downgradedBody,
@@ -178,6 +202,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
+              this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
               const transformed = this.toAnthropicChatResponse(transformResponse(response));
               return {
                 ...transformed,
@@ -205,6 +230,7 @@ export class ProxyService {
   private processAnthropicInternalStream(
     upstreamStream: NodeJS.ReadableStream,
     _model: string,
+    accountId: string,
   ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
@@ -272,6 +298,12 @@ export class ProxyService {
 
         const finishChunks = state.emitFinish(lastFinishReason, lastUsageMetadata);
         finishChunks.forEach((c) => subscriber.next(c));
+        this.recordUsage(
+          accountId,
+          _model,
+          lastUsageMetadata as { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number },
+          'anthropic',
+        );
         subscriber.complete();
       });
 
@@ -339,6 +371,7 @@ export class ProxyService {
           extraHeaders,
         );
 
+        this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
         return this.normalizeGeminiGenerateResponse(response);
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
@@ -361,6 +394,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
             return this.normalizeGeminiGenerateResponse(response);
           } catch (fallbackErr) {
             lastError = fallbackErr;
@@ -769,6 +803,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             this.logger.log(
               `Upstream response snippet after stream fallback: ${JSON.stringify(response).substring(0, 500)}`,
             );
@@ -789,6 +824,7 @@ export class ProxyService {
           this.logger.log(
             `Upstream response snippet (non-stream): ${JSON.stringify(response).substring(0, 500)}`,
           );
+          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
           // Transform Gemini response to OpenAI format
           const claudeResponse = transformResponse(response);
           this.logger.log(
@@ -826,6 +862,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
             return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
           } catch (fallbackErr) {
