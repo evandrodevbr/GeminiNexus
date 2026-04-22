@@ -521,12 +521,20 @@ export class CloudAccountRepo {
     try {
       const rows = orm.select().from(accounts).orderBy(desc(accounts.lastUsed)).all();
 
-      // DEBUG LOGS
       const activeRows = rows.filter((r) => r.isActive);
-      logger.info(
-        `[DEBUG] getAccounts: Found ${rows.length} accounts, ${activeRows.length} active.`,
+      logger.debug(
+        `getAccounts: Found ${rows.length} accounts, ${activeRows.length} active.`,
       );
-      activeRows.forEach((r) => logger.info(`[DEBUG] Active Account: ${r.email} (${r.id})`));
+
+      // Auto-activate the single account if none are active
+      if (rows.length > 0 && activeRows.length === 0) {
+        const targetRow = rows[0];
+        logger.info(
+          `No active account found. Auto-activating account: ${targetRow.email} (${targetRow.id})`,
+        );
+        orm.update(accounts).set({ isActive: 1 }).where(eq(accounts.id, targetRow.id)).run();
+        targetRow.isActive = 1;
+      }
 
       const cloudAccounts: CloudAccount[] = [];
       for (const normalizedRow of rows) {

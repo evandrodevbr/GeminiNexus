@@ -848,6 +848,34 @@ export class GoogleAPIService {
   ): Promise<{ credits: number; expiryDate: string } | null> {
     try {
       const fetchOptions = this.getFetchOptions(proxyUrl);
+
+      // Try loadCodeAssist first — fetchCredits returns 404 for many accounts
+      // and loadCodeAssist provides the same paid tier credit data.
+      const discoveryVersion = resolveLocalInstalledVersion() ?? FALLBACK_VERSION;
+      const loadAssistResponse = await fetch(URLS.DAILY_LOAD_PROJECT, {
+        method: 'POST',
+        headers: buildInternalApiHeaders(accessToken),
+        body: JSON.stringify({
+          metadata: {
+            ide_type: 'ANTIGRAVITY',
+            ide_version: discoveryVersion,
+            ide_name: 'geminiNexus',
+          },
+        }),
+        signal: createTimeoutSignal(REQUEST_TIMEOUT_MS),
+        ...fetchOptions,
+      });
+
+      if (loadAssistResponse.ok) {
+        const loadAssistData = (await loadAssistResponse.json()) as LoadProjectResponse;
+        const credits = extractAiCreditsFromProjectContext(loadAssistData);
+        if (credits) {
+          return credits;
+        }
+      }
+
+      // Fallback to the legacy fetchCredits endpoint if loadCodeAssist
+      // did not return usable credit data.
       const response = await fetch(URLS.FETCH_CREDITS, {
         method: 'POST',
         headers: buildInternalApiHeaders(accessToken),
@@ -867,34 +895,7 @@ export class GoogleAPIService {
         return toAiCredits(data);
       }
 
-      if (response.status !== 404) {
-        return null;
-      }
-
-      // `fetchCredits` has started returning 404 for some accounts. Reuse the
-      // internal `loadCodeAssist` payload, which also exposes paid tier credits.
-      logger.warn('[GoogleAPIService] fetchCredits returned 404, falling back to loadCodeAssist');
-      const discoveryVersion = resolveLocalInstalledVersion() ?? FALLBACK_VERSION;
-      const fallbackResponse = await fetch(URLS.DAILY_LOAD_PROJECT, {
-        method: 'POST',
-        headers: buildInternalApiHeaders(accessToken),
-        body: JSON.stringify({
-          metadata: {
-            ide_type: 'ANTIGRAVITY',
-            ide_version: discoveryVersion,
-            ide_name: 'geminiNexus',
-          },
-        }),
-        signal: createTimeoutSignal(REQUEST_TIMEOUT_MS),
-        ...fetchOptions,
-      });
-
-      if (!fallbackResponse.ok) {
-        return null;
-      }
-
-      const fallbackData = (await fallbackResponse.json()) as LoadProjectResponse;
-      return extractAiCreditsFromProjectContext(fallbackData);
+      return null;
     } catch {
       return null;
     }
