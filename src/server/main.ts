@@ -7,6 +7,7 @@ import { TokenManagerService } from './modules/proxy/token-manager.service';
 
 import { ProxyConfig } from '../types/config';
 import { setServerConfig } from './server-config';
+import { registerApiLogging } from './logging/api-logging.plugin';
 
 let app: NestFastifyApplication | null = null;
 let currentPort: number = 0;
@@ -27,6 +28,10 @@ export async function bootstrapNestServer(config: ProxyConfig): Promise<boolean>
 
     // Enable CORS
     app.enableCors();
+
+    // Register detailed API request/response logging
+    const fastifyInstance = app.getHttpAdapter().getInstance();
+    await registerApiLogging(fastifyInstance);
 
     await app.listen(port, '0.0.0.0');
     currentPort = port;
