@@ -59,7 +59,7 @@ function sleepSync(ms: number): void {
  * Ensures that the cloud database file and schema exist.
  * @param dbPath {string} The path to the database file.
  */
-function ensureDatabaseInitialized(dbPath: string): void {
+export function ensureDatabaseInitialized(dbPath: string): void {
   const dir = path.dirname(dbPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -68,6 +68,7 @@ function ensureDatabaseInitialized(dbPath: string): void {
   let db: Database.Database | null = null;
   try {
     db = new Database(dbPath);
+    db.pragma('journal_mode = WAL');
     configureDatabase(db, { busyTimeoutMs: SQLITE_BUSY_TIMEOUT_MS });
 
     // Create accounts table

@@ -19,12 +19,15 @@ import {
   Legend,
 } from 'recharts';
 import { useMemo, useState } from 'react';
+import { useCloudAccounts } from '@/hooks/useCloudAccounts';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
 function UsagePage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<'24h' | '7d' | '30d'>('7d');
+  const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(undefined);
+  const { data: accounts } = useCloudAccounts();
 
   function getTimeRange(r: '24h' | '7d' | '30d') {
     const now = Date.now();
@@ -37,31 +40,50 @@ function UsagePage() {
     return { start: now - 30 * 24 * 60 * 60 * 1000, end: now };
   }
 
-  const { data: dailyData, isLoading: dailyLoading } = useQuery({
-    queryKey: ['usage', 'day', range],
+  const {
+    data: dailyData,
+    isLoading: dailyLoading,
+    error: dailyError,
+    refetch: refetchDaily,
+  } = useQuery({
+    queryKey: ['usage', 'day', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByDay({ start, end });
+      return ipc.client.usage.getUsageByDay({ accountId: selectedAccountId, start, end });
     },
+    refetchInterval: 30000,
   });
 
-  const { data: modelData, isLoading: modelLoading } = useQuery({
-    queryKey: ['usage', 'model', range],
+  const {
+    data: modelData,
+    isLoading: modelLoading,
+    error: modelError,
+    refetch: refetchModel,
+  } = useQuery({
+    queryKey: ['usage', 'model', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByModel({ start, end });
+      return ipc.client.usage.getUsageByModel({ accountId: selectedAccountId, start, end });
     },
+    refetchInterval: 30000,
   });
 
-  const { data: hourlyData, isLoading: hourlyLoading } = useQuery({
-    queryKey: ['usage', 'hour', range],
+  const {
+    data: hourlyData,
+    isLoading: hourlyLoading,
+    error: hourlyError,
+    refetch: refetchHourly,
+  } = useQuery({
+    queryKey: ['usage', 'hour', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByHour({ start, end });
+      return ipc.client.usage.getUsageByHour({ accountId: selectedAccountId, start, end });
     },
+    refetchInterval: 30000,
   });
 
   const isLoading = dailyLoading || modelLoading || hourlyLoading;
+  const anyError = dailyError || modelError || hourlyError;
 
   const totals = useMemo(() => {
     const source = dailyData || [];
@@ -95,6 +117,8 @@ function UsagePage() {
   const hourlyChartData = useMemo(() => {
     return (hourlyData || []).map((d) => ({
       name: d.bucket,
+      Prompt: d.promptTokens,
+      Completion: d.completionTokens,
       Total: d.totalTokens,
     }));
   }, [hourlyData]);
@@ -107,6 +131,24 @@ function UsagePage() {
     );
   }
 
+  if (anyError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{t('usage.loadFailed')}</p>
+        <button
+          onClick={() => {
+            refetchDaily();
+            refetchModel();
+            refetchHourly();
+          }}
+          className="text-primary underline"
+        >
+          {t('usage.retry')}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-6xl space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -114,13 +156,27 @@ function UsagePage() {
           <h2 className="text-3xl font-bold tracking-tight">{t('usage.title')}</h2>
           <p className="text-muted-foreground mt-1">{t('usage.description')}</p>
         </div>
-        <Tabs value={range} onValueChange={(v) => setRange(v as '24h' | '7d' | '30d')}>
-          <TabsList>
-            <TabsTrigger value="24h">{t('usage.range24h')}</TabsTrigger>
-            <TabsTrigger value="7d">{t('usage.range7d')}</TabsTrigger>
-            <TabsTrigger value="30d">{t('usage.range30d')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-4">
+          <select
+            value={selectedAccountId || ''}
+            onChange={(e) => setSelectedAccountId(e.target.value || undefined)}
+            className="border rounded px-2 py-1"
+          >
+            <option value="">{t('usage.allAccounts')}</option>
+            {accounts?.map((acc) => (
+              <option key={acc.id} value={acc.id}>
+                {acc.email}
+              </option>
+            ))}
+          </select>
+          <Tabs value={range} onValueChange={(v) => setRange(v as '24h' | '7d' | '30d')}>
+            <TabsList>
+              <TabsTrigger value="24h">{t('usage.range24h')}</TabsTrigger>
+              <TabsTrigger value="7d">{t('usage.range7d')}</TabsTrigger>
+              <TabsTrigger value="30d">{t('usage.range30d')}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -228,6 +284,9 @@ function UsagePage() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
+                <Legend />
+                <Bar dataKey="Prompt" fill="#3b82f6" />
+                <Bar dataKey="Completion" fill="#10b981" />
                 <Bar dataKey="Total" fill="#8b5cf6" />
               </BarChart>
             </ResponsiveContainer>

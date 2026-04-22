@@ -1,5 +1,9 @@
 import { logger } from '../../utils/logger';
-import { getCloudDb } from './cloudHandler';
+import Database from 'better-sqlite3';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { openDrizzleConnection } from './dbConnection';
+import { getCloudAccountsDbPath } from '../../utils/paths';
+import { ensureDatabaseInitialized } from './cloudHandler';
 import { tokenUsage } from './schema';
 import {
   HourlyUsageSchema,
@@ -19,24 +23,47 @@ export interface RecordUsageParams {
   requestType?: string;
 }
 
-function buildDateFilter(start?: number, end?: number): string {
-  const conditions: string[] = [];
-  if (start !== undefined) {
-    conditions.push(`timestamp >= ${start}`);
+let usageDbConnection: { raw: Database.Database; orm: BetterSQLite3Database<typeof import('./schema')> } | null = null;
+
+function getUsageDb() {
+  if (!usageDbConnection) {
+    const dbPath = getCloudAccountsDbPath();
+    ensureDatabaseInitialized(dbPath);
+    usageDbConnection = openDrizzleConnection(
+      dbPath,
+      { readonly: false, fileMustExist: false },
+      { busyTimeoutMs: 3000 },
+    );
   }
-  if (end !== undefined) {
-    conditions.push(`timestamp <= ${end}`);
-  }
-  return conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
+  return usageDbConnection;
 }
 
-function buildAccountFilter(accountId?: string): string {
-  return accountId ? `AND account_id = '${accountId}'` : '';
+function buildDateFilter(start?: number, end?: number): { sql: string; params: number[] } {
+  const conditions: string[] = [];
+  const params: number[] = [];
+  if (start !== undefined) {
+    conditions.push(`timestamp >= ?`);
+    params.push(start);
+  }
+  if (end !== undefined) {
+    conditions.push(`timestamp <= ?`);
+    params.push(end);
+  }
+  return {
+    sql: conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '',
+    params,
+  };
+}
+
+function buildAccountFilter(accountId?: string): { sql: string; params: unknown[] } {
+  return accountId
+    ? { sql: 'AND account_id = ?', params: [accountId] }
+    : { sql: '', params: [] };
 }
 
 export class TokenUsageRepo {
-  static recordUsage(params: RecordUsageParams): void {
-    const { raw, orm } = getCloudDb();
+  static recordUsage(params: RecordUsageParams): boolean {
+    const { orm } = getUsageDb();
     try {
       orm
         .insert(tokenUsage)
@@ -50,10 +77,10 @@ export class TokenUsageRepo {
           requestType: params.requestType ?? null,
         })
         .run();
+      return true;
     } catch (error) {
       logger.error('Failed to record token usage', error);
-    } finally {
-      raw.close();
+      return false;
     }
   }
 
@@ -68,8 +95,10 @@ export class TokenUsageRepo {
     totalTokens: number;
     requests: number;
   }> {
-    const { raw } = getCloudDb();
+    const { raw } = getUsageDb();
     try {
+      const accountFilter = buildAccountFilter(accountId);
+      const dateFilter = buildDateFilter(start, end);
       const sql = `
         SELECT
           strftime('%Y-%m-%d %H:00', timestamp / 1000, 'unixepoch', 'localtime') as bucket,
@@ -79,18 +108,16 @@ export class TokenUsageRepo {
           COUNT(*) as requests
         FROM token_usage
         WHERE 1=1
-        ${buildAccountFilter(accountId)}
-        ${buildDateFilter(start, end)}
+        ${accountFilter.sql}
+        ${dateFilter.sql}
         GROUP BY bucket
         ORDER BY bucket
       `;
-      const rows = raw.prepare(sql).all() as unknown[];
+      const rows = raw.prepare(sql).all(...accountFilter.params, ...dateFilter.params) as unknown[];
       return rows.map((row) => HourlyUsageSchema.parse(row));
     } catch (error) {
       logger.error('Failed to get hourly usage', error);
       return [];
-    } finally {
-      raw.close();
     }
   }
 
@@ -105,8 +132,10 @@ export class TokenUsageRepo {
     totalTokens: number;
     requests: number;
   }> {
-    const { raw } = getCloudDb();
+    const { raw } = getUsageDb();
     try {
+      const accountFilter = buildAccountFilter(accountId);
+      const dateFilter = buildDateFilter(start, end);
       const sql = `
         SELECT
           strftime('%Y-%m-%d', timestamp / 1000, 'unixepoch', 'localtime') as bucket,
@@ -116,18 +145,16 @@ export class TokenUsageRepo {
           COUNT(*) as requests
         FROM token_usage
         WHERE 1=1
-        ${buildAccountFilter(accountId)}
-        ${buildDateFilter(start, end)}
+        ${accountFilter.sql}
+        ${dateFilter.sql}
         GROUP BY bucket
         ORDER BY bucket
       `;
-      const rows = raw.prepare(sql).all() as unknown[];
+      const rows = raw.prepare(sql).all(...accountFilter.params, ...dateFilter.params) as unknown[];
       return rows.map((row) => DailyUsageSchema.parse(row));
     } catch (error) {
       logger.error('Failed to get daily usage', error);
       return [];
-    } finally {
-      raw.close();
     }
   }
 
@@ -142,8 +169,10 @@ export class TokenUsageRepo {
     totalTokens: number;
     requests: number;
   }> {
-    const { raw } = getCloudDb();
+    const { raw } = getUsageDb();
     try {
+      const accountFilter = buildAccountFilter(accountId);
+      const dateFilter = buildDateFilter(start, end);
       const sql = `
         SELECT
           strftime('%Y-%W', timestamp / 1000, 'unixepoch', 'localtime') as bucket,
@@ -153,18 +182,16 @@ export class TokenUsageRepo {
           COUNT(*) as requests
         FROM token_usage
         WHERE 1=1
-        ${buildAccountFilter(accountId)}
-        ${buildDateFilter(start, end)}
+        ${accountFilter.sql}
+        ${dateFilter.sql}
         GROUP BY bucket
         ORDER BY bucket
       `;
-      const rows = raw.prepare(sql).all() as unknown[];
+      const rows = raw.prepare(sql).all(...accountFilter.params, ...dateFilter.params) as unknown[];
       return rows.map((row) => WeeklyUsageSchema.parse(row));
     } catch (error) {
       logger.error('Failed to get weekly usage', error);
       return [];
-    } finally {
-      raw.close();
     }
   }
 
@@ -179,8 +206,10 @@ export class TokenUsageRepo {
     totalTokens: number;
     requests: number;
   }> {
-    const { raw } = getCloudDb();
+    const { raw } = getUsageDb();
     try {
+      const accountFilter = buildAccountFilter(accountId);
+      const dateFilter = buildDateFilter(start, end);
       const sql = `
         SELECT
           strftime('%Y-%m', timestamp / 1000, 'unixepoch', 'localtime') as bucket,
@@ -190,18 +219,16 @@ export class TokenUsageRepo {
           COUNT(*) as requests
         FROM token_usage
         WHERE 1=1
-        ${buildAccountFilter(accountId)}
-        ${buildDateFilter(start, end)}
+        ${accountFilter.sql}
+        ${dateFilter.sql}
         GROUP BY bucket
         ORDER BY bucket
       `;
-      const rows = raw.prepare(sql).all() as unknown[];
+      const rows = raw.prepare(sql).all(...accountFilter.params, ...dateFilter.params) as unknown[];
       return rows.map((row) => MonthlyUsageSchema.parse(row));
     } catch (error) {
       logger.error('Failed to get monthly usage', error);
       return [];
-    } finally {
-      raw.close();
     }
   }
 
@@ -216,8 +243,10 @@ export class TokenUsageRepo {
     totalTokens: number;
     requests: number;
   }> {
-    const { raw } = getCloudDb();
+    const { raw } = getUsageDb();
     try {
+      const accountFilter = buildAccountFilter(accountId);
+      const dateFilter = buildDateFilter(start, end);
       const sql = `
         SELECT
           model,
@@ -227,18 +256,16 @@ export class TokenUsageRepo {
           COUNT(*) as requests
         FROM token_usage
         WHERE 1=1
-        ${buildAccountFilter(accountId)}
-        ${buildDateFilter(start, end)}
+        ${accountFilter.sql}
+        ${dateFilter.sql}
         GROUP BY model
         ORDER BY totalTokens DESC
       `;
-      const rows = raw.prepare(sql).all() as unknown[];
+      const rows = raw.prepare(sql).all(...accountFilter.params, ...dateFilter.params) as unknown[];
       return rows.map((row) => ModelUsageSchema.parse(row));
     } catch (error) {
       logger.error('Failed to get model usage', error);
       return [];
-    } finally {
-      raw.close();
     }
   }
 }

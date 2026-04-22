@@ -136,6 +136,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "fastify": "^5.8.4",
     "find-process": "^2.0.0",
+    "gpt-tokenizer": "^3.4.0",
     "i18next": "^25.6.3",
     "i18next-browser-languagedetector": "^8.2.0",
     "keytar": "^7.9.0",

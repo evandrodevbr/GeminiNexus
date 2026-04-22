@@ -35,6 +35,7 @@ import { getMaxOutputTokens, getThinkingBudget } from '../../../lib/geminiNexus/
 import { resolveRequestUserAgent } from './request-user-agent';
 import { UpstreamRequestError } from './clients/upstream-error';
 import { trafficLogger } from '../../../utils/traffic-logger';
+import { encode } from 'gpt-tokenizer';
 
 @Injectable()
 export class ProxyService {
@@ -46,16 +47,16 @@ export class ProxyService {
     @Inject(TokenUsageService) private readonly tokenUsageService: TokenUsageService,
   ) {}
 
-  private recordUsage(
+  private async recordUsage(
     accountId: string,
     model: string,
     usage: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined | null,
     requestType: string,
-  ): void {
+  ): Promise<void> {
     if (!usage) {
       return;
     }
-    this.tokenUsageService.recordUsage({
+    await this.tokenUsageService.recordUsage({
       accountId,
       model,
       promptTokens: usage.promptTokenCount ?? 0,
@@ -64,6 +65,14 @@ export class ProxyService {
       timestamp: Date.now(),
       requestType,
     });
+  }
+
+  private estimateTokens(text: string): number {
+    try {
+      return encode(text).length;
+    } catch {
+      return Math.ceil(text.length / 4);
+    }
   }
 
   // --- Anthropic Handlers ---
@@ -131,7 +140,7 @@ export class ProxyService {
             token.token.upstream_proxy_url,
             extraHeaders,
           );
-          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
+          await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
           return this.toAnthropicChatResponse(transformResponse(response));
         }
       } catch (error) {
@@ -163,7 +172,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
+              await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
               return this.toAnthropicChatResponse(transformResponse(response));
             }
           } catch (fallbackErr) {
@@ -202,7 +211,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
+              await this.recordUsage(token.id, 'gemini-3-flash', response.usageMetadata, 'anthropic');
               const transformed = this.toAnthropicChatResponse(transformResponse(response));
               return {
                 ...transformed,
@@ -232,6 +241,16 @@ export class ProxyService {
     _model: string,
     accountId: string,
   ): Observable<string> {
+    function extractUsageFromMetadata(meta: unknown): { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined {
+      if (!meta || typeof meta !== 'object') return undefined;
+      const m = meta as Record<string, unknown>;
+      return {
+        promptTokenCount: typeof m.promptTokenCount === 'number' ? m.promptTokenCount : undefined,
+        candidatesTokenCount: typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : undefined,
+        totalTokenCount: typeof m.totalTokenCount === 'number' ? m.totalTokenCount : undefined,
+      };
+    }
+
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
       let buffer = '';
@@ -298,12 +317,10 @@ export class ProxyService {
 
         const finishChunks = state.emitFinish(lastFinishReason, lastUsageMetadata);
         finishChunks.forEach((c) => subscriber.next(c));
-        this.recordUsage(
-          accountId,
-          _model,
-          lastUsageMetadata as { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number },
-          'anthropic',
-        );
+        const usage = extractUsageFromMetadata(lastUsageMetadata);
+        if (usage) {
+          void this.recordUsage(accountId, _model, usage, 'anthropic');
+        }
         subscriber.complete();
       });
 
@@ -371,7 +388,7 @@ export class ProxyService {
           extraHeaders,
         );
 
-        this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
+        await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
         return this.normalizeGeminiGenerateResponse(response);
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
@@ -394,7 +411,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
+            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
             return this.normalizeGeminiGenerateResponse(response);
           } catch (fallbackErr) {
             lastError = fallbackErr;
@@ -468,7 +485,7 @@ export class ProxyService {
           token.token.upstream_proxy_url,
           extraHeaders,
         );
-        return this.passthroughSseStream(stream);
+            return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
           this.logger.warn(
@@ -490,7 +507,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            return this.passthroughSseStream(stream);
+        return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
           } catch (fallbackErr) {
             lastError = fallbackErr;
           }
@@ -511,20 +528,45 @@ export class ProxyService {
     throw lastError || new Error('Gemini stream request failed after retries');
   }
 
-  private passthroughSseStream(upstreamStream: NodeJS.ReadableStream): Observable<string> {
+  private passthroughSseStream(
+    upstreamStream: NodeJS.ReadableStream,
+    accountId: string,
+    model: string,
+  ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
+      let buffer = '';
       let receivedData = false;
+      let lastUsageMetadata: Record<string, unknown> | undefined;
 
       upstreamStream.on('data', (chunk: Buffer) => {
         receivedData = true;
-        subscriber.next(decoder.decode(chunk, { stream: true }));
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+          const dataStr = trimmed.slice(6);
+          subscriber.next(`data: ${dataStr}\n\n`);
+          if (dataStr === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed?.usageMetadata) {
+              lastUsageMetadata = parsed.usageMetadata;
+            }
+          } catch { /* ignore */ }
+        }
       });
 
       upstreamStream.on('end', () => {
         if (!receivedData) {
           subscriber.error(new Error('Empty response stream'));
           return;
+        }
+        if (lastUsageMetadata) {
+          void this.recordUsage(accountId, model, lastUsageMetadata as any, 'gemini');
         }
         subscriber.complete();
       });
@@ -787,7 +829,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            return this.processStreamResponse(stream, request.model, requestId);
+              return this.processStreamResponse(stream, request.model, requestId, token.id, effectiveTargetModel);
           } catch (streamError) {
             this.logger.warn(
               `Stream path failed for model=${request.model}; falling back to non-stream generation: ${
@@ -803,7 +845,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
-            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             this.logger.log(
               `Upstream response snippet after stream fallback: ${JSON.stringify(response).substring(0, 500)}`,
             );
@@ -824,7 +866,7 @@ export class ProxyService {
           this.logger.log(
             `Upstream response snippet (non-stream): ${JSON.stringify(response).substring(0, 500)}`,
           );
-          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+          await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
           // Transform Gemini response to OpenAI format
           const claudeResponse = transformResponse(response);
           this.logger.log(
@@ -851,7 +893,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processStreamResponse(stream, request.model, requestId);
+            return this.processStreamResponse(stream, request.model, requestId, token.id, effectiveTargetModel);
             }
 
             trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', fallbackBody, extraHeaders, { model: effectiveTargetModel });
@@ -862,7 +904,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
-            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
             return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
           } catch (fallbackErr) {
@@ -1001,7 +1043,9 @@ export class ProxyService {
   private processStreamResponse(
     upstreamStream: NodeJS.ReadableStream,
     model: string,
-    requestId?: string,
+    requestId: string | undefined,
+    accountId: string,
+    effectiveTargetModel: string,
   ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
@@ -1010,6 +1054,7 @@ export class ProxyService {
       let hasSentRoleChunk = false;
       let hasSentDone = false;
       let toolCallIndex = 0;
+      let lastUsageMetadata: Record<string, unknown> | undefined;
 
       const streamId = `chatcmpl-${uuidv4()}`;
       const created = Math.floor(Date.now() / 1000);
@@ -1055,6 +1100,9 @@ export class ProxyService {
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, json, 0, { rawLine: trimmed });
             // v1internal API wraps response in {"response": {"candidates": [...]}}
             const responsePayload = json.response ?? json;
+            if (responsePayload.usageMetadata) {
+              lastUsageMetadata = responsePayload.usageMetadata;
+            }
             const candidate = responsePayload.candidates?.[0];
             const parts = candidate?.content?.parts || [];
 
@@ -1178,7 +1226,6 @@ export class ProxyService {
               pushChunk(finishChunk);
               subscriber.next('data: [DONE]\n\n');
               hasSentDone = true;
-              subscriber.complete();
             }
           } catch {
             // ignore parse errors on individual SSE lines
@@ -1205,6 +1252,10 @@ export class ProxyService {
         if (!hasSentDone) {
           subscriber.next('data: [DONE]\n\n');
           hasSentDone = true;
+        }
+        if (lastUsageMetadata) {
+          // TODO: integrate local tokenizer fallback for missing usageMetadata
+          void this.recordUsage(accountId, effectiveTargetModel, lastUsageMetadata as any, 'openai');
         }
         subscriber.complete();
       });

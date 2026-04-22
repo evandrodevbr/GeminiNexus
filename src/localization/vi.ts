@@ -476,9 +476,9 @@ const vi = {
   usage: {
     title: 'Token Usage',
     description: 'Theo dõi mức tiêu thụ API token của bạn.',
-    range24h: '24 giờ',
-    range7d: '7 ngày',
-    range30d: '30 ngày',
+    range24h: '24 giờ qua',
+    range7d: '7 ngày qua',
+    range30d: '30 ngày qua',
     totalTokens: 'Tổng Token',
     promptTokens: 'Prompt Token',
     completionTokens: 'Completion Token',
@@ -486,6 +486,9 @@ const vi = {
     dailyUsage: 'Sử dụng hàng ngày',
     byModel: 'Theo Model',
     hourlyUsage: 'Sử dụng theo giờ',
+    loadFailed: 'Không thể tải dữ liệu sử dụng.',
+    retry: 'Thử lại',
+    allAccounts: 'Tất cả tài khoản',
   },
 };
 

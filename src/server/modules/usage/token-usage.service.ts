@@ -3,7 +3,7 @@ import { TokenUsageRepo, RecordUsageParams } from '../../../ipc/database/usageHa
 
 @Injectable()
 export class TokenUsageService {
-  recordUsage(params: RecordUsageParams): void {
+  async recordUsage(params: RecordUsageParams): Promise<void> {
     TokenUsageRepo.recordUsage(params);
   }
 
