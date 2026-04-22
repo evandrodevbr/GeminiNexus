@@ -114,7 +114,8 @@ function formatBucketLabel(bucket: string, range: TimeRange): string {
 function UsagePage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<TimeRange>('7d');
-  const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(undefined);
+  const ALL_ACCOUNTS = '__all__';
+  const [selectedAccountId, setSelectedAccountId] = useState<string>(ALL_ACCOUNTS);
   const { data: accounts, isLoading: accountsLoading } = useCloudAccounts();
 
   const {
@@ -126,7 +127,7 @@ function UsagePage() {
     queryKey: ['usage', 'day', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByDay({ accountId: selectedAccountId, start, end });
+      return ipc.client.usage.getUsageByDay({ accountId: selectedAccountId === ALL_ACCOUNTS ? undefined : selectedAccountId, start, end });
     },
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
@@ -142,7 +143,7 @@ function UsagePage() {
     queryKey: ['usage', 'model', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByModel({ accountId: selectedAccountId, start, end });
+      return ipc.client.usage.getUsageByModel({ accountId: selectedAccountId === ALL_ACCOUNTS ? undefined : selectedAccountId, start, end });
     },
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
@@ -158,7 +159,7 @@ function UsagePage() {
     queryKey: ['usage', 'hour', range, selectedAccountId],
     queryFn: () => {
       const { start, end } = getTimeRange(range);
-      return ipc.client.usage.getUsageByHour({ accountId: selectedAccountId, start, end });
+      return ipc.client.usage.getUsageByHour({ accountId: selectedAccountId === ALL_ACCOUNTS ? undefined : selectedAccountId, start, end });
     },
     enabled: range === '24h',
     refetchInterval: 30000,
@@ -231,8 +232,8 @@ function UsagePage() {
         <div className="flex items-center gap-3">
           {/* Account filter */}
           <Select
-            value={selectedAccountId || ''}
-            onValueChange={(value) => setSelectedAccountId(value || undefined)}
+            value={selectedAccountId}
+            onValueChange={(value) => setSelectedAccountId(value)}
             disabled={accountsLoading}
           >
             <SelectTrigger className="h-9 w-[200px] text-xs">
@@ -246,7 +247,7 @@ function UsagePage() {
               )}
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('usage.allAccounts')}</SelectItem>
+              <SelectItem value={ALL_ACCOUNTS}>{t('usage.allAccounts')}</SelectItem>
               {accounts?.map((acc) => (
                 <SelectItem key={acc.id} value={acc.id}>
                   {acc.email}
