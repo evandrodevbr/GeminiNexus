@@ -52,6 +52,7 @@ export class ProxyService {
     model: string,
     usage: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined | null,
     requestType: string,
+    isEstimated?: boolean,
   ): Promise<void> {
     if (!usage) {
       return;
@@ -64,6 +65,7 @@ export class ProxyService {
       totalTokens: usage.totalTokenCount ?? 0,
       timestamp: Date.now(),
       requestType,
+      isEstimated,
     });
   }
 
@@ -73,6 +75,18 @@ export class ProxyService {
     } catch {
       return Math.ceil(text.length / 4);
     }
+  }
+
+  private extractUsageFromMetadata(
+    meta: unknown,
+  ): { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined {
+    if (!meta || typeof meta !== 'object') return undefined;
+    const m = meta as Record<string, unknown>;
+    return {
+      promptTokenCount: typeof m.promptTokenCount === 'number' ? m.promptTokenCount : undefined,
+      candidatesTokenCount: typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : undefined,
+      totalTokenCount: typeof m.totalTokenCount === 'number' ? m.totalTokenCount : undefined,
+    };
   }
 
   // --- Anthropic Handlers ---
@@ -140,7 +154,7 @@ export class ProxyService {
             token.token.upstream_proxy_url,
             extraHeaders,
           );
-          await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
+          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
           return this.toAnthropicChatResponse(transformResponse(response));
         }
       } catch (error) {
@@ -172,7 +186,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
+              this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'anthropic');
               return this.toAnthropicChatResponse(transformResponse(response));
             }
           } catch (fallbackErr) {
@@ -211,7 +225,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              await this.recordUsage(token.id, 'gemini-3-flash', response.usageMetadata, 'anthropic');
+              this.recordUsage(token.id, 'gemini-3-flash', response.usageMetadata, 'anthropic');
               const transformed = this.toAnthropicChatResponse(transformResponse(response));
               return {
                 ...transformed,
@@ -241,16 +255,6 @@ export class ProxyService {
     _model: string,
     accountId: string,
   ): Observable<string> {
-    function extractUsageFromMetadata(meta: unknown): { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined {
-      if (!meta || typeof meta !== 'object') return undefined;
-      const m = meta as Record<string, unknown>;
-      return {
-        promptTokenCount: typeof m.promptTokenCount === 'number' ? m.promptTokenCount : undefined,
-        candidatesTokenCount: typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : undefined,
-        totalTokenCount: typeof m.totalTokenCount === 'number' ? m.totalTokenCount : undefined,
-      };
-    }
-
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
       let buffer = '';
@@ -260,6 +264,7 @@ export class ProxyService {
 
       let lastFinishReason: string | undefined;
       let lastUsageMetadata: Record<string, unknown> | undefined;
+      let accumulatedText = '';
 
       let receivedData = false;
 
@@ -296,6 +301,9 @@ export class ProxyService {
             if (this.isGeminiPart(part)) {
               const chunks = processor.process(part);
               chunks.forEach((c) => subscriber.next(c));
+              if (part.text) {
+                accumulatedText += part.text;
+              }
             }
 
             // Reset error state on successful parse
@@ -317,9 +325,20 @@ export class ProxyService {
 
         const finishChunks = state.emitFinish(lastFinishReason, lastUsageMetadata);
         finishChunks.forEach((c) => subscriber.next(c));
-        const usage = extractUsageFromMetadata(lastUsageMetadata);
+        const usage = this.extractUsageFromMetadata(lastUsageMetadata);
         if (usage) {
-          void this.recordUsage(accountId, _model, usage, 'anthropic');
+          this.recordUsage(accountId, _model, usage, 'anthropic').catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
+        } else if (accumulatedText) {
+          const estimated = this.estimateTokens(accumulatedText);
+          this.recordUsage(accountId, _model, {
+            promptTokenCount: 0,
+            candidatesTokenCount: estimated,
+            totalTokenCount: estimated,
+          }, 'anthropic', true).catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
         }
         subscriber.complete();
       });
@@ -388,7 +407,7 @@ export class ProxyService {
           extraHeaders,
         );
 
-        await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
+        this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
         return this.normalizeGeminiGenerateResponse(response);
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
@@ -411,7 +430,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'gemini');
             return this.normalizeGeminiGenerateResponse(response);
           } catch (fallbackErr) {
             lastError = fallbackErr;
@@ -538,6 +557,7 @@ export class ProxyService {
       let buffer = '';
       let receivedData = false;
       let lastUsageMetadata: Record<string, unknown> | undefined;
+      let accumulatedText = '';
 
       upstreamStream.on('data', (chunk: Buffer) => {
         receivedData = true;
@@ -549,15 +569,20 @@ export class ProxyService {
           const trimmed = line.trim();
           if (!trimmed.startsWith('data: ')) continue;
           const dataStr = trimmed.slice(6);
-          subscriber.next(`data: ${dataStr}\n\n`);
           if (dataStr === '[DONE]') continue;
           try {
             const parsed = JSON.parse(dataStr);
             if (parsed?.usageMetadata) {
               lastUsageMetadata = parsed.usageMetadata;
             }
+            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (typeof text === 'string') {
+              accumulatedText += text;
+            }
           } catch { /* ignore */ }
         }
+
+        subscriber.next(chunk.toString());
       });
 
       upstreamStream.on('end', () => {
@@ -565,8 +590,20 @@ export class ProxyService {
           subscriber.error(new Error('Empty response stream'));
           return;
         }
-        if (lastUsageMetadata) {
-          void this.recordUsage(accountId, model, lastUsageMetadata as any, 'gemini');
+        const usage = this.extractUsageFromMetadata(lastUsageMetadata);
+        if (usage) {
+          this.recordUsage(accountId, model, usage, 'gemini').catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
+        } else if (accumulatedText) {
+          const estimated = this.estimateTokens(accumulatedText);
+          this.recordUsage(accountId, model, {
+            promptTokenCount: 0,
+            candidatesTokenCount: estimated,
+            totalTokenCount: estimated,
+          }, 'gemini', true).catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
         }
         subscriber.complete();
       });
@@ -845,7 +882,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
-            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             this.logger.log(
               `Upstream response snippet after stream fallback: ${JSON.stringify(response).substring(0, 500)}`,
             );
@@ -866,7 +903,7 @@ export class ProxyService {
           this.logger.log(
             `Upstream response snippet (non-stream): ${JSON.stringify(response).substring(0, 500)}`,
           );
-          await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+          this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
           // Transform Gemini response to OpenAI format
           const claudeResponse = transformResponse(response);
           this.logger.log(
@@ -904,7 +941,7 @@ export class ProxyService {
               extraHeaders,
             );
             trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
-            await this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
+            this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
             return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
           } catch (fallbackErr) {
@@ -1055,6 +1092,7 @@ export class ProxyService {
       let hasSentDone = false;
       let toolCallIndex = 0;
       let lastUsageMetadata: Record<string, unknown> | undefined;
+      let accumulatedText = '';
 
       const streamId = `chatcmpl-${uuidv4()}`;
       const created = Math.floor(Date.now() / 1000);
@@ -1108,6 +1146,7 @@ export class ProxyService {
 
             for (const part of parts) {
               if (part.thought && part.text) {
+                accumulatedText += part.text;
                 // Reasoning/thinking parts: emit via reasoning_content delta field
                 // so clients that support it can display thinking separately.
                 const reasoningChunk = {
@@ -1183,6 +1222,7 @@ export class ProxyService {
               }
 
               if (part.text) {
+                accumulatedText += part.text;
                 pushRoleChunk();
                 const contentChunk = {
                   id: streamId,
@@ -1253,9 +1293,20 @@ export class ProxyService {
           subscriber.next('data: [DONE]\n\n');
           hasSentDone = true;
         }
-        if (lastUsageMetadata) {
-          // TODO: integrate local tokenizer fallback for missing usageMetadata
-          void this.recordUsage(accountId, effectiveTargetModel, lastUsageMetadata as any, 'openai');
+        const usage = this.extractUsageFromMetadata(lastUsageMetadata);
+        if (usage) {
+          this.recordUsage(accountId, effectiveTargetModel, usage, 'openai').catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
+        } else if (accumulatedText) {
+          const estimated = this.estimateTokens(accumulatedText);
+          this.recordUsage(accountId, effectiveTargetModel, {
+            promptTokenCount: 0,
+            candidatesTokenCount: estimated,
+            totalTokenCount: estimated,
+          }, 'openai', true).catch((err) =>
+            this.logger.error('Usage recording failed', err),
+          );
         }
         subscriber.complete();
       });

@@ -21,6 +21,7 @@ export interface RecordUsageParams {
   totalTokens: number;
   timestamp: number;
   requestType?: string;
+  isEstimated?: boolean;
 }
 
 let usageDbConnection: { raw: Database.Database; orm: BetterSQLite3Database<typeof import('./schema')> } | null = null;
@@ -75,6 +76,7 @@ export class TokenUsageRepo {
           totalTokens: params.totalTokens,
           timestamp: params.timestamp,
           requestType: params.requestType ?? null,
+          isEstimated: params.isEstimated ? 1 : null,
         })
         .run();
       return true;

@@ -489,6 +489,7 @@ const vi = {
     loadFailed: 'Không thể tải dữ liệu sử dụng.',
     retry: 'Thử lại',
     allAccounts: 'Tất cả tài khoản',
+    noData: 'Không có dữ liệu',
   },
 };
 

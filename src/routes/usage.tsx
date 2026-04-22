@@ -2,6 +2,13 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 import { Loader2, TrendingUp, TrendingDown, Activity, Layers } from 'lucide-react';
 import { ipc } from '@/ipc/manager';
@@ -27,7 +34,7 @@ function UsagePage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<'24h' | '7d' | '30d'>('7d');
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(undefined);
-  const { data: accounts } = useCloudAccounts();
+  const { data: accounts, isLoading: accountsLoading } = useCloudAccounts();
 
   function getTimeRange(r: '24h' | '7d' | '30d') {
     const now = Date.now();
@@ -52,6 +59,8 @@ function UsagePage() {
       return ipc.client.usage.getUsageByDay({ accountId: selectedAccountId, start, end });
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    staleTime: 60_000,
   });
 
   const {
@@ -66,6 +75,8 @@ function UsagePage() {
       return ipc.client.usage.getUsageByModel({ accountId: selectedAccountId, start, end });
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    staleTime: 60_000,
   });
 
   const {
@@ -80,10 +91,11 @@ function UsagePage() {
       return ipc.client.usage.getUsageByHour({ accountId: selectedAccountId, start, end });
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    staleTime: 60_000,
   });
 
-  const isLoading = dailyLoading || modelLoading || hourlyLoading;
-  const anyError = dailyError || modelError || hourlyError;
+  const isAllLoading = dailyLoading && modelLoading && hourlyLoading;
 
   const totals = useMemo(() => {
     const source = dailyData || [];
@@ -123,7 +135,7 @@ function UsagePage() {
     }));
   }, [hourlyData]);
 
-  if (isLoading) {
+  if (isAllLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="animate-spin" />
@@ -131,23 +143,65 @@ function UsagePage() {
     );
   }
 
-  if (anyError) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-4">
-        <p className="text-destructive">{t('usage.loadFailed')}</p>
+  const dailyPlaceholder = dailyError ? (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
+        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
         <button
-          onClick={() => {
-            refetchDaily();
-            refetchModel();
-            refetchHourly();
-          }}
-          className="text-primary underline"
+          onClick={() => refetchDaily()}
+          className="text-primary text-sm underline"
         >
           {t('usage.retry')}
         </button>
-      </div>
-    );
-  }
+      </CardContent>
+    </Card>
+  ) : !dailyData ? (
+    <Card>
+      <CardContent className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
+      </CardContent>
+    </Card>
+  ) : null;
+
+  const modelPlaceholder = modelError ? (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
+        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
+        <button
+          onClick={() => refetchModel()}
+          className="text-primary text-sm underline"
+        >
+          {t('usage.retry')}
+        </button>
+      </CardContent>
+    </Card>
+  ) : !modelData ? (
+    <Card>
+      <CardContent className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
+      </CardContent>
+    </Card>
+  ) : null;
+
+  const hourlyPlaceholder = hourlyError ? (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
+        <p className="text-sm text-destructive">{t('usage.loadFailed')}</p>
+        <button
+          onClick={() => refetchHourly()}
+          className="text-primary text-sm underline"
+        >
+          {t('usage.retry')}
+        </button>
+      </CardContent>
+    </Card>
+  ) : !hourlyData ? (
+    <Card>
+      <CardContent className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground text-sm">{t('usage.noData')}</p>
+      </CardContent>
+    </Card>
+  ) : null;
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 p-6">
@@ -157,18 +211,30 @@ function UsagePage() {
           <p className="text-muted-foreground mt-1">{t('usage.description')}</p>
         </div>
         <div className="flex items-center gap-4">
-          <select
+          <Select
             value={selectedAccountId || ''}
-            onChange={(e) => setSelectedAccountId(e.target.value || undefined)}
-            className="border rounded px-2 py-1"
+            onValueChange={(value) => setSelectedAccountId(value || undefined)}
+            disabled={accountsLoading}
           >
-            <option value="">{t('usage.allAccounts')}</option>
-            {accounts?.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.email}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[200px]">
+              {accountsLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('common.loading')}
+                </span>
+              ) : (
+                <SelectValue placeholder={t('usage.allAccounts')} />
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('usage.allAccounts')}</SelectItem>
+              {accounts?.map((acc) => (
+                <SelectItem key={acc.id} value={acc.id}>
+                  {acc.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Tabs value={range} onValueChange={(v) => setRange(v as '24h' | '7d' | '30d')}>
             <TabsList>
               <TabsTrigger value="24h">{t('usage.range24h')}</TabsTrigger>
@@ -180,118 +246,126 @@ function UsagePage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('usage.totalTokens')}</CardTitle>
-            <Activity className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totals.totalTokens.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+      {dailyPlaceholder || (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{t('usage.totalTokens')}</CardTitle>
+              <Activity className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totals.totalTokens.toLocaleString()}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('usage.promptTokens')}</CardTitle>
-            <TrendingUp className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totals.promptTokens.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{t('usage.promptTokens')}</CardTitle>
+              <TrendingUp className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totals.promptTokens.toLocaleString()}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('usage.completionTokens')}</CardTitle>
-            <TrendingDown className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totals.completionTokens.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{t('usage.completionTokens')}</CardTitle>
+              <TrendingDown className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totals.completionTokens.toLocaleString()}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t('usage.totalRequests')}</CardTitle>
-            <Layers className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totals.requests.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{t('usage.totalRequests')}</CardTitle>
+              <Layers className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totals.requests.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('usage.dailyUsage')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Prompt" fill="#3b82f6" />
-                <Bar dataKey="Completion" fill="#10b981" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {dailyPlaceholder || (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('usage.dailyUsage')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Prompt" fill="#3b82f6" />
+                  <Bar dataKey="Completion" fill="#10b981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('usage.byModel')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {modelPlaceholder || (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('usage.byModel')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {range === '24h' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('usage.hourlyUsage')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={hourlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Prompt" fill="#3b82f6" />
-                <Bar dataKey="Completion" fill="#10b981" />
-                <Bar dataKey="Total" fill="#8b5cf6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        hourlyPlaceholder || (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('usage.hourlyUsage')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={hourlyChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Prompt" fill="#3b82f6" />
+                  <Bar dataKey="Completion" fill="#10b981" />
+                  <Bar dataKey="Total" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )
       )}
     </div>
   );

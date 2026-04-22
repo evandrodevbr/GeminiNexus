@@ -37,4 +37,5 @@ export const tokenUsage = sqliteTable('token_usage', {
   totalTokens: integer('total_tokens').notNull().default(0),
   timestamp: integer('timestamp').notNull(),
   requestType: text('request_type'),
+  isEstimated: integer('is_estimated'),
 });

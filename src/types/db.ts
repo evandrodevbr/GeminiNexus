@@ -80,6 +80,7 @@ export const TokenUsageRowSchema = z.object({
   total_tokens: z.number(),
   timestamp: z.number(),
   request_type: z.string().nullable(),
+  is_estimated: z.number().nullable(),
 });
 
 export type TokenUsageRow = z.infer<typeof TokenUsageRowSchema>;
