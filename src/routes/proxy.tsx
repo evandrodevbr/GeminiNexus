@@ -24,15 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Loader2,
-  Copy,
-  CheckCircle,
-  Code,
-  Terminal,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Loader2, Copy, CheckCircle, Code, Terminal, Eye, EyeOff } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -180,14 +172,19 @@ function ProxyPage() {
       OpenAI: [],
       Other: [],
     };
-    
+
     availableModelIds.forEach((id) => {
       const lower = id.toLowerCase();
       if (lower.includes('gemini') || lower.includes('learnlm') || lower.includes('gemma')) {
         groups['Google'].push(id);
       } else if (lower.includes('claude')) {
         groups['Anthropic'].push(id);
-      } else if (lower.includes('gpt') || lower.includes('o1') || lower.includes('o3') || lower.includes('dall-e')) {
+      } else if (
+        lower.includes('gpt') ||
+        lower.includes('o1') ||
+        lower.includes('o3') ||
+        lower.includes('dall-e')
+      ) {
         groups['OpenAI'].push(id);
       } else {
         groups['Other'].push(id);
@@ -634,7 +631,10 @@ print(response.choices[0].message.content)`;
           <div className="flex flex-col gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700">
             <div className="flex items-center gap-3">
               <Label className="text-sm font-medium">
-                Model <span className="text-muted-foreground ml-1 font-normal">({availableModelIds.length} available)</span>
+                Model{' '}
+                <span className="text-muted-foreground ml-1 font-normal">
+                  ({availableModelIds.length} available)
+                </span>
               </Label>
               <Select value={activeModelTab} onValueChange={setActiveModelTab}>
                 <SelectTrigger className="h-9 w-[280px] font-mono text-xs">
@@ -645,7 +645,9 @@ print(response.choices[0].message.content)`;
                     if (models.length === 0) return null;
                     return (
                       <SelectGroup key={provider}>
-                        <SelectLabel className="text-xs font-bold text-muted-foreground">{provider}</SelectLabel>
+                        <SelectLabel className="text-muted-foreground text-xs font-bold">
+                          {provider}
+                        </SelectLabel>
                         {models.map((modelId) => (
                           <SelectItem key={modelId} value={modelId} className="font-mono text-xs">
                             {modelId}

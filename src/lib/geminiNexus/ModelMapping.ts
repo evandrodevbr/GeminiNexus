@@ -139,6 +139,10 @@ export function getAllDynamicModels(
     modelIds.add(modelId);
   }
 
+  for (const aliasModelId of Object.keys(CLAUDE_TO_GEMINI)) {
+    modelIds.add(aliasModelId);
+  }
+
   if (dynamicModelIds) {
     for (const dynamicModelId of dynamicModelIds) {
       if (isString(dynamicModelId) && !isEmpty(dynamicModelId.trim())) {

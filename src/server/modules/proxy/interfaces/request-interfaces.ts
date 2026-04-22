@@ -4,12 +4,19 @@ export interface OpenAIChatRequest {
   temperature?: number;
   top_p?: number;
   max_tokens?: number;
+  max_completion_tokens?: number;
   stream?: boolean;
+  stream_options?: { include_usage?: boolean };
   size?: string;
   quality?: string;
   tools?: OpenAITool[];
   tool_choice?: string | { type: string; function?: { name: string } };
   response_format?: { type?: string };
+  seed?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
+  n?: number;
+  logprobs?: boolean;
   extra?: Record<string, unknown>;
 }
 

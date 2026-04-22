@@ -143,9 +143,7 @@ class Logger {
   }
 
   private formatArgs(args: unknown[]): string {
-    return args
-      .map((arg) => (isObjectLike(arg) ? safeStringify(arg) : String(arg)))
-      .join(' ');
+    return args.map((arg) => (isObjectLike(arg) ? safeStringify(arg) : String(arg))).join(' ');
   }
 
   log(level: LogLevel, message: string, ...args: unknown[]) {

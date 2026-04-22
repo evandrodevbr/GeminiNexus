@@ -244,11 +244,7 @@ export class GeminiController {
   }
 
   private writeObservableSseResponse(res: FastifyReply, stream: Observable<unknown>): void {
-    if (
-      !res.raw ||
-      !isFunction(res.raw.writeHead) ||
-      !isFunction(res.raw.write)
-    ) {
+    if (!res.raw || !isFunction(res.raw.writeHead) || !isFunction(res.raw.write)) {
       res.header('Content-Type', 'text/event-stream');
       res.header('Cache-Control', 'no-cache');
       res.header('Connection', 'keep-alive');

@@ -50,6 +50,7 @@ Quando você usa suas IDEs favoritas, já encontrou estes problemas?
 Este projeto contém melhorias significativas de desenvolvimento, correção de erros e melhorias de configuração em relação ao projeto original base.
 
 Principais melhorias incluem:
+
 - **Interface de Gerenciamento de API Aprimorada:** Seletores dinâmicos de modelos e recursos de "Copiar Nome da API" implementados para facilitar a integração com outras ferramentas.
 - **Streaming Robusto (SSE):** Correção de bugs críticos no streaming via Server-Sent Events (SSE) no endpoint proxy `/v1/chat/completions` para suportar perfeitamente IDEs como Cursor, OpenCode e Windsurf.
 - **Rebranding e Localização:** Rebranding completo para Gemini Nexus com traduções melhoradas em Português (Brasil) e padrões em Inglês.

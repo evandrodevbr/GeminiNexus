@@ -78,7 +78,11 @@ export const MainLayout: React.FC = () => {
           <div className={cn('flex flex-col', isCollapsed ? 'items-center p-4' : 'p-6')}>
             <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded bg-transparent">
-                <img src="/src/assets/icon.png" alt="Gemini Nexus Logo" className="h-full w-full object-contain" />
+                <img
+                  src="/src/assets/icon.png"
+                  alt="Gemini Nexus Logo"
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div
                 className={cn(

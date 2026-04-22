@@ -53,12 +53,15 @@ export interface ClaudeRequest {
   tools?: Tool[];
   stream?: boolean;
   max_tokens?: number;
+  max_completion_tokens?: number;
   stop_sequences?: string[];
   temperature?: number;
   top_p?: number;
   top_k?: number;
   thinking?: ThinkingConfig;
   metadata?: Metadata;
+  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+  response_format?: { type: 'text' | 'json_object' | 'json_schema'; json_schema?: any };
 }
 
 export interface ThinkingConfig {
@@ -77,6 +80,7 @@ export interface SystemBlock {
 export interface Message {
   role: string;
   content: string | ContentBlock[];
+  name?: string;
 }
 
 export type ContentBlock =
@@ -185,6 +189,8 @@ export interface GenerationConfig {
   responseModalities?: string[];
   /** Image generation configuration */
   imageConfig?: ImageConfig;
+  /** Response schema for structured output */
+  responseSchema?: unknown;
 }
 
 /**

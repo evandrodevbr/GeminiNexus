@@ -164,9 +164,7 @@ export class QuotaService {
           }
 
           if (hasNextEndpoint && (status === 429 || (isNumber(status) && status >= 500))) {
-            logger.warn(
-              `Quota API ${endpoint} returned ${status}, falling back to next endpoint`,
-            );
+            logger.warn(`Quota API ${endpoint} returned ${status}, falling back to next endpoint`);
             lastError = new Error(`HTTP ${status} - ${text}`);
             await new Promise((r) => setTimeout(r, 1000));
             continue;

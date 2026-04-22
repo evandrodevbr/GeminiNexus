@@ -181,6 +181,37 @@ export class TokenManagerService implements OnModuleInit {
     this.setAccountCooldown(accountIdOrEmail, 'forbidden', this.forbiddenCooldownMs);
   }
 
+  async forceRefreshToken(accountIdOrEmail: string): Promise<boolean> {
+    const accountId = this.resolveAccountId(accountIdOrEmail) ?? accountIdOrEmail;
+    const tokenData = this.tokens.get(accountId);
+    if (!tokenData) {
+      return false;
+    }
+
+    try {
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const newTokens = await GoogleAPIService.refreshAccessToken(
+        tokenData.refresh_token,
+        tokenData.upstream_proxy_url,
+        tokenData.oauth_client_key,
+      );
+      tokenData.access_token = newTokens.access_token;
+      tokenData.expires_in = newTokens.expires_in;
+      tokenData.expiry_timestamp = nowSeconds + newTokens.expires_in;
+      tokenData.oauth_client_key = this.normalizeRefreshedOauthClientKey(
+        tokenData,
+        newTokens.oauth_client_key,
+      );
+      await this.persistTokenState(accountId, tokenData);
+      this.tokens.set(accountId, tokenData);
+      this.logger.log(`Access token force-refreshed for ${tokenData.email}`);
+      return true;
+    } catch (e) {
+      this.logger.error(`Failed to force-refresh access token for ${tokenData.email}`, e);
+      return false;
+    }
+  }
+
   async markFromUpstreamError(params: {
     accountIdOrEmail: string;
     status?: number;
@@ -661,11 +692,7 @@ export class TokenManagerService implements OnModuleInit {
       }
 
       const limitCandidate = modelInfo.max_output_tokens ?? modelInfo.max_tokens;
-      if (
-        isNumber(limitCandidate) &&
-        Number.isFinite(limitCandidate) &&
-        limitCandidate > 0
-      ) {
+      if (isNumber(limitCandidate) && Number.isFinite(limitCandidate) && limitCandidate > 0) {
         modelLimits[normalizedModel] = Math.floor(limitCandidate);
       }
 

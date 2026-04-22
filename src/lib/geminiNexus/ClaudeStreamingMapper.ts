@@ -53,7 +53,7 @@ export class StreamingState {
     return `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
   }
 
-  public emitMessageStart(rawJson: any): string {
+  public emitMessageStart(rawJson: any, modelName?: string): string {
     if (this.messageStartSent) return '';
 
     const usageMeta = rawJson.usageMetadata;
@@ -69,7 +69,7 @@ export class StreamingState {
       type: 'message',
       role: 'assistant',
       content: [],
-      model: rawJson.modelVersion || '',
+      model: rawJson.modelVersion || modelName || '',
       stop_reason: null,
       stop_sequence: null,
       usage: usage,

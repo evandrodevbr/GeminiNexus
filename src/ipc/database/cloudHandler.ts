@@ -1078,14 +1078,9 @@ export class CloudAccountRepo {
           'enterpriseGcpProjectId',
           projectPayload,
         );
-        this.upsertItemValue(
-          tx,
-          'geminiNexusUnifiedStateSync.enterprisePreferences',
-          projectEntry,
-        );
+        this.upsertItemValue(tx, 'geminiNexusUnifiedStateSync.enterprisePreferences', projectEntry);
       } else {
-        tx
-          .delete(itemTable)
+        tx.delete(itemTable)
           .where(eq(itemTable.key, 'geminiNexusUnifiedStateSync.enterprisePreferences'))
           .run();
       }

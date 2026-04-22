@@ -363,10 +363,7 @@ export class RateLimitTracker {
         }
       }
 
-      if (
-        isString(detail.metadata?.retryDelay) &&
-        !isEmpty(detail.metadata.retryDelay.trim())
-      ) {
+      if (isString(detail.metadata?.retryDelay) && !isEmpty(detail.metadata.retryDelay.trim())) {
         const parsedDelay = parseDurationToSeconds(detail.metadata.retryDelay);
         if (parsedDelay !== null) {
           return parsedDelay;

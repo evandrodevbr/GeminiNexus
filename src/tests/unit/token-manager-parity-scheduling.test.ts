@@ -123,11 +123,7 @@ describe('TokenManagerService parity scheduling replay', () => {
 
     const selected = await (service as any).finalizeSelectedToken('acc-1', tokenData, nowSec);
 
-    expect(refreshSpy).toHaveBeenCalledWith(
-      'refresh-1',
-      'http://127.0.0.1:8080',
-      'custom-client',
-    );
+    expect(refreshSpy).toHaveBeenCalledWith('refresh-1', 'http://127.0.0.1:8080', 'custom-client');
     expect(selected?.token.oauth_client_key).toBe('custom-fallback');
     expect((service as any).tokens.get('acc-1')?.oauth_client_key).toBe('custom-fallback');
 

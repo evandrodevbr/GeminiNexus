@@ -249,9 +249,8 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
     } as any);
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
-    const { FALLBACK_VERSION, resolveLocalInstalledVersion } = await import(
-      '../../server/modules/proxy/request-user-agent'
-    );
+    const { FALLBACK_VERSION, resolveLocalInstalledVersion } =
+      await import('../../server/modules/proxy/request-user-agent');
     const expectedVersion = resolveLocalInstalledVersion() ?? FALLBACK_VERSION;
 
     await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toEqual({
@@ -279,13 +278,11 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
   });
 
   it('does not fall through to the next endpoint on permanent 400 errors', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        text: vi.fn().mockResolvedValue('INVALID_ARGUMENT'),
-      });
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      text: vi.fn().mockResolvedValue('INVALID_ARGUMENT'),
+    });
 
     vi.stubGlobal('fetch', fetchMock);
 
@@ -405,9 +402,11 @@ describe('QuotaService fallback policy', () => {
         create: vi.fn(() => ({
           post: postMock,
         })),
-        isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
+        isAxiosError: (error: unknown) =>
+          Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
       },
-      isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
+      isAxiosError: (error: unknown) =>
+        Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
     }));
 
     const { QuotaService } = await import('../../lib/geminiNexus/QuotaService');

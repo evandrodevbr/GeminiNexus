@@ -9,6 +9,7 @@ const mockTokenManager: any = {
   getNextToken: async () => null,
   markAsRateLimited: () => undefined,
   markAsForbidden: () => undefined,
+  forceRefreshToken: async () => false,
   markFromUpstreamError: () => undefined,
   recordParityError: () => undefined,
 };
@@ -241,6 +242,8 @@ async function validateRuntimeAnthropicRequestFromRealTokenManager(): Promise<vo
       realTokenManager.markAsRateLimited(accountIdOrEmail),
     markAsForbidden: (accountIdOrEmail: string) =>
       realTokenManager.markAsForbidden(accountIdOrEmail),
+    forceRefreshToken: (accountIdOrEmail: string) =>
+      realTokenManager.forceRefreshToken(accountIdOrEmail),
     markFromUpstreamError: (args: {
       accountIdOrEmail: string;
       status?: number;
@@ -272,9 +275,7 @@ async function validateRuntimeAnthropicRequestFromRealTokenManager(): Promise<vo
   const captured = capturedBody as Record<string, unknown>;
   const tokenProjectId = selectedToken?.token?.project_id;
   const normalizedTokenProjectId =
-    isString(tokenProjectId) && !isEmpty(tokenProjectId.trim())
-      ? tokenProjectId.trim()
-      : undefined;
+    isString(tokenProjectId) && !isEmpty(tokenProjectId.trim()) ? tokenProjectId.trim() : undefined;
 
   if (normalizedTokenProjectId) {
     assert.equal(

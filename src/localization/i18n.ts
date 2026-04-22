@@ -154,7 +154,8 @@ i18n
               timeout: 'Request Timeout (Seconds)',
               accountProxies: {
                 title: 'Account Proxies',
-                description: 'Configure specific proxies for individual accounts. These will override the global upstream proxy for that specific account.',
+                description:
+                  'Configure specific proxies for individual accounts. These will override the global upstream proxy for that specific account.',
               },
             },
             modelMapping: {
@@ -1109,7 +1110,8 @@ i18n
               timeout: 'Тайм-аут запроса (сек)',
               accountProxies: {
                 title: 'Прокси аккаунтов',
-                description: 'Настройка индивидуальных прокси для каждого аккаунта. Эти настройки переопределят глобальный прокси для данного аккаунта.',
+                description:
+                  'Настройка индивидуальных прокси для каждого аккаунта. Эти настройки переопределят глобальный прокси для данного аккаунта.',
               },
             },
             modelMapping: {
