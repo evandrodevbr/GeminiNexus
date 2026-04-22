@@ -751,7 +751,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            return this.processStreamResponse(stream, request.model, request.stream_options);
+            return this.processStreamResponse(stream, request.model);
           } catch (streamError) {
             this.logger.warn(
               `Stream path failed for model=${request.model}; falling back to non-stream generation: ${
@@ -810,7 +810,7 @@ export class ProxyService {
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processStreamResponse(stream, request.model, request.stream_options);
+              return this.processStreamResponse(stream, request.model);
             }
 
             const response = await this.generateInternalWithStreamFallback(
@@ -957,38 +957,19 @@ export class ProxyService {
   private processStreamResponse(
     upstreamStream: NodeJS.ReadableStream,
     model: string,
-    streamOptions?: { include_usage?: boolean },
   ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
       let buffer = '';
       let hasEmittedChunk = false;
       let hasSentDone = false;
-      let isThinking = false;
       let toolCallIndex = 0;
-      let lastUsageMetadata: GeminiResponse['usageMetadata'];
 
       const streamId = `chatcmpl-${uuidv4()}`;
       const created = Math.floor(Date.now() / 1000);
 
-      // Emit initial role chunk immediately to prevent strict clients (like Hermes) from timing out during long TTFT
-      const initialChunk = {
-        id: streamId,
-        object: 'chat.completion.chunk',
-        created: created,
-        model: model,
-        choices: [
-          {
-            index: 0,
-            delta: { role: 'assistant', content: '' },
-            finish_reason: null,
-          },
-        ],
-      };
-      subscriber.next(`data: ${JSON.stringify(initialChunk)}\n\n`);
-      hasEmittedChunk = true;
-
       const pushChunk = (payload: Record<string, unknown>): void => {
+        hasEmittedChunk = true;
         subscriber.next(`data: ${JSON.stringify(payload)}\n\n`);
       };
 
@@ -1009,17 +990,10 @@ export class ProxyService {
             const candidate = json.candidates?.[0];
             const parts = candidate?.content?.parts || [];
 
-            if (json.usageMetadata) {
-              lastUsageMetadata = json.usageMetadata;
-            }
-
             for (const part of parts) {
               if (part.thought && part.text) {
-                let textToEmit = part.text;
-                if (!isThinking) {
-                  isThinking = true;
-                  textToEmit = `<think>\n${textToEmit}`;
-                }
+                // Reasoning/thinking parts: emit via reasoning_content delta field
+                // so clients that support it can display thinking separately.
                 const reasoningChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',
@@ -1028,7 +1002,7 @@ export class ProxyService {
                   choices: [
                     {
                       index: 0,
-                      delta: { content: textToEmit },
+                      delta: { reasoning_content: part.text },
                       finish_reason: null,
                     },
                   ],
@@ -1090,11 +1064,6 @@ export class ProxyService {
               }
 
               if (part.text) {
-                let textToEmit = part.text;
-                if (isThinking && !part.thought) {
-                  isThinking = false;
-                  textToEmit = `\n</think>\n\n${textToEmit}`;
-                }
                 const contentChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',
@@ -1103,7 +1072,7 @@ export class ProxyService {
                   choices: [
                     {
                       index: 0,
-                      delta: { content: textToEmit },
+                      delta: { content: part.text },
                       finish_reason: null,
                     },
                   ],
@@ -1113,26 +1082,9 @@ export class ProxyService {
             }
 
             if (candidate?.finishReason) {
-              if (isThinking) {
-                isThinking = false;
-                const closingChunk = {
-                  id: streamId,
-                  object: 'chat.completion.chunk',
-                  created: created,
-                  model: model,
-                  choices: [
-                    {
-                      index: 0,
-                      delta: { content: '\n</think>\n\n' },
-                      finish_reason: null,
-                    },
-                  ],
-                };
-                pushChunk(closingChunk);
-              }
-
               // Per the OpenAI spec, finish_reason must be "tool_calls" when the
-              // response contains function calls, even though Gemini always sends "STOP".
+              // response contains function calls. Gemini always sends "STOP" even
+              // for tool call responses, so we infer from toolCallIndex.
               const mappedFinishReason =
                 toolCallIndex > 0
                   ? 'tool_calls'
@@ -1157,7 +1109,7 @@ export class ProxyService {
               subscriber.complete();
             }
           } catch {
-            // ignore parse errors
+            // ignore parse errors on individual SSE lines
           }
         }
       });
@@ -1178,26 +1130,6 @@ export class ProxyService {
             ],
           });
         }
-        if (streamOptions?.include_usage && lastUsageMetadata) {
-          const usageChunk = {
-            id: streamId,
-            object: 'chat.completion.chunk',
-            created,
-            model,
-            choices: [],
-            usage: {
-              prompt_tokens: lastUsageMetadata.promptTokenCount || 0,
-              completion_tokens:
-                (lastUsageMetadata.candidatesTokenCount || 0) +
-                (lastUsageMetadata.thoughtsTokenCount || 0),
-              total_tokens:
-                (lastUsageMetadata.promptTokenCount || 0) +
-                (lastUsageMetadata.candidatesTokenCount || 0) +
-                (lastUsageMetadata.thoughtsTokenCount || 0),
-            },
-          };
-          pushChunk(usageChunk);
-        }
         if (!hasSentDone) {
           subscriber.next('data: [DONE]\n\n');
           hasSentDone = true;
@@ -1205,17 +1137,12 @@ export class ProxyService {
         subscriber.complete();
       });
 
-      upstreamStream.on('error', (err) => {
-        this.logger.error('OpenAI-compatible stream error:', err);
+      upstreamStream.on('error', (err: unknown) => {
+        // Convert to clean Error to avoid circular reference issues (socket objects)
         const cleanError = err instanceof Error ? new Error(err.message) : new Error(String(err));
+        this.logger.error(`OpenAI-compatible stream error: ${cleanError.message}`);
         subscriber.error(cleanError);
       });
-
-      return () => {
-        if (typeof (upstreamStream as any).destroy === 'function') {
-          (upstreamStream as any).destroy();
-        }
-      };
     });
   }
 
