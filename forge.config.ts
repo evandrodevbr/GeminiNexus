@@ -450,7 +450,7 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       setupIcon: 'images/icon.ico',
       iconUrl:
-        'https://raw.githubusercontent.com/Draculabo/AntigravityManager/main/images/icon.ico',
+        'https://raw.githubusercontent.com/evandrodevbr/GeminiNexus/main/images/icon.ico',
     }),
     ...(process.platform === 'win32' && process.arch === 'x64'
       ? [
@@ -484,8 +484,8 @@ const config: ForgeConfig = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: 'Draculabo',
-          name: 'AntigravityManager',
+          owner: 'evandrodevbr',
+          name: 'GeminiNexus',
         },
         draft: true,
         prerelease: false,
