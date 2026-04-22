@@ -648,6 +648,7 @@ describe('ProxyService Protocol Parity Fixtures', () => {
     });
 
     const output = chunks.join('');
+    expect(output).toContain('"role":"assistant"');
     expect(output).toContain('"reasoning_content":"reasoning text"');
     expect(output).toContain('"tool_calls"');
     expect(output).toContain('"content":"final answer"');
@@ -689,6 +690,7 @@ describe('ProxyService Protocol Parity Fixtures', () => {
 
     expect(streamResult.completed).not.toBe(true);
     expect(streamResult.error?.message).toContain('socket hang up');
+    expect(chunks.join('')).toContain('"role":"assistant"');
     expect(chunks.join('')).toContain('"content":"partial output"');
     expect(chunks.join('')).not.toContain('data: [DONE]');
   });

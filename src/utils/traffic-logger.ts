@@ -87,9 +87,22 @@ class TrafficLogger {
       console.error('Traffic DailyRotateFile transport error', error);
     });
 
+    const consoleFormat = winston.format.combine(
+      winston.format.colorize(),
+      winston.format.printf(({ level, message }) => {
+        return `[TRAFFIC] ${level}: ${message}`;
+      }),
+    );
+
     this.winstonLogger = winston.createLogger({
       level: 'debug',
-      transports: [rotateTransport],
+      transports: [
+        rotateTransport,
+        new winston.transports.Console({
+          level: 'debug',
+          format: consoleFormat,
+        }),
+      ],
       exitOnError: false,
     });
   }

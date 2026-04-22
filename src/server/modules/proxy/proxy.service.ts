@@ -33,6 +33,7 @@ import {
 import { getMaxOutputTokens, getThinkingBudget } from '../../../lib/geminiNexus/ModelSpecs';
 import { resolveRequestUserAgent } from './request-user-agent';
 import { UpstreamRequestError } from './clients/upstream-error';
+import { trafficLogger } from '../../../utils/traffic-logger';
 
 @Injectable()
 export class ProxyService {
@@ -691,7 +692,7 @@ export class ProxyService {
 
   async handleChatCompletions(
     request: OpenAIChatRequest,
-    _requestId?: string,
+    requestId?: string,
     headerSessionKey?: string,
   ): Promise<OpenAIChatResponse | Observable<string>> {
     // Prefer the x-session-affinity header value (sent by OpenCode) over body-level session ids.
@@ -745,13 +746,14 @@ export class ProxyService {
         // Use v1internal API (same as Anthropic handler)
         if (request.stream) {
           try {
+            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', geminiBody, extraHeaders, { model: effectiveTargetModel });
             const stream = await this.geminiClient.streamGenerateInternal(
               geminiBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            return this.processStreamResponse(stream, request.model);
+            return this.processStreamResponse(stream, request.model, requestId);
           } catch (streamError) {
             this.logger.warn(
               `Stream path failed for model=${request.model}; falling back to non-stream generation: ${
@@ -759,12 +761,14 @@ export class ProxyService {
               }`,
             );
 
+            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', geminiBody, extraHeaders, { model: effectiveTargetModel });
             const response = await this.generateInternalWithStreamFallback(
               geminiBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
+            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
             this.logger.log(
               `Upstream response snippet after stream fallback: ${JSON.stringify(response).substring(0, 500)}`,
             );
@@ -804,21 +808,24 @@ export class ProxyService {
             fallbackBody.model = effectiveTargetModel;
             this.applyInternalGenerationConstraints(fallbackBody, effectiveTargetModel, token.id);
             if (request.stream) {
+              trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', fallbackBody, extraHeaders, { model: effectiveTargetModel });
               const stream = await this.geminiClient.streamGenerateInternal(
                 fallbackBody,
                 token.token.access_token,
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-              return this.processStreamResponse(stream, request.model);
+              return this.processStreamResponse(stream, request.model, requestId);
             }
 
+            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', fallbackBody, extraHeaders, { model: effectiveTargetModel });
             const response = await this.generateInternalWithStreamFallback(
               fallbackBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
+            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
             const claudeResponse = transformResponse(response);
             return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
           } catch (fallbackErr) {
@@ -957,16 +964,37 @@ export class ProxyService {
   private processStreamResponse(
     upstreamStream: NodeJS.ReadableStream,
     model: string,
+    requestId?: string,
   ): Observable<string> {
     return new Observable<string>((subscriber) => {
       const decoder = new TextDecoder();
       let buffer = '';
       let hasEmittedChunk = false;
+      let hasSentRoleChunk = false;
       let hasSentDone = false;
       let toolCallIndex = 0;
 
       const streamId = `chatcmpl-${uuidv4()}`;
       const created = Math.floor(Date.now() / 1000);
+
+      const pushRoleChunk = (): void => {
+        if (hasSentRoleChunk) return;
+        hasSentRoleChunk = true;
+        const roleChunk = {
+          id: streamId,
+          object: 'chat.completion.chunk',
+          created,
+          model,
+          choices: [
+            {
+              index: 0,
+              delta: { role: 'assistant', content: '' },
+              finish_reason: null,
+            },
+          ],
+        };
+        subscriber.next(`data: ${JSON.stringify(roleChunk)}\n\n`);
+      };
 
       const pushChunk = (payload: Record<string, unknown>): void => {
         hasEmittedChunk = true;
@@ -987,7 +1015,10 @@ export class ProxyService {
 
           try {
             const json = JSON.parse(dataStr);
-            const candidate = json.candidates?.[0];
+            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, json, 0, { rawLine: trimmed });
+            // v1internal API wraps response in {"response": {"candidates": [...]}}
+            const responsePayload = json.response ?? json;
+            const candidate = responsePayload.candidates?.[0];
             const parts = candidate?.content?.parts || [];
 
             for (const part of parts) {
@@ -1007,11 +1038,13 @@ export class ProxyService {
                     },
                   ],
                 };
+                pushRoleChunk();
                 pushChunk(reasoningChunk);
                 continue;
               }
 
               if (part.functionCall) {
+                pushRoleChunk();
                 const currentToolIndex = toolCallIndex++;
                 const toolCallChunk = {
                   id: streamId,
@@ -1059,11 +1092,13 @@ export class ProxyService {
                     },
                   ],
                 };
+                pushRoleChunk();
                 pushChunk(imageChunk);
                 continue;
               }
 
               if (part.text) {
+                pushRoleChunk();
                 const contentChunk = {
                   id: streamId,
                   object: 'chat.completion.chunk',

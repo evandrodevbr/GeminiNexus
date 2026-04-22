@@ -11,6 +11,10 @@ function createReplyMock() {
   return reply;
 }
 
+function createReqMock() {
+  return { headers: {} } as any;
+}
+
 describe('ProxyController Integration', () => {
   it('routes Claude OpenAI requests to protocol parity path', async () => {
     const proxyService = {
@@ -19,6 +23,7 @@ describe('ProxyController Integration', () => {
     };
     const controller = new ProxyController(proxyService as any);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.chatCompletions(
       {
@@ -26,6 +31,7 @@ describe('ProxyController Integration', () => {
         stream: false,
         messages: [{ role: 'user', content: 'hello' }],
       } as any,
+      req,
       reply as any,
     );
 
@@ -42,6 +48,7 @@ describe('ProxyController Integration', () => {
     };
     const controller = new ProxyController(proxyService as any);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.chatCompletions(
       {
@@ -49,6 +56,7 @@ describe('ProxyController Integration', () => {
         stream: true,
         messages: [{ role: 'user', content: 'hello' }],
       } as any,
+      req,
       reply as any,
     );
 
