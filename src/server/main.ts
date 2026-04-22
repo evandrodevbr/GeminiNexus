@@ -22,9 +22,13 @@ export async function bootstrapNestServer(config: ProxyConfig): Promise<boolean>
   setServerConfig(config);
 
   try {
-    app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
-      logger: ['error', 'warn', 'log'],
-    });
+    app = await NestFactory.create<NestFastifyApplication>(
+      AppModule,
+      new FastifyAdapter({ bodyLimit: 10 * 1024 * 1024 }),
+      {
+        logger: ['error', 'warn', 'log'],
+      },
+    );
 
     // Enable CORS
     app.enableCors();

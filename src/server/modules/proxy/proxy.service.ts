@@ -844,6 +844,7 @@ export class ProxyService {
     request: OpenAIChatRequest,
     context?: ProxyRequestContext,
     configOverride?: ProxyConfigOverride,
+    _requestId?: string,
   ): Promise<OpenAIChatResponse | Observable<string>> {
     const targetModel = this.resolveTargetModel(request.model);
     const extraHeaders = this.createModelSpecificHeaders(request.model);
@@ -1292,7 +1293,11 @@ export class ProxyService {
               if (part.functionCall) {
                 pushRoleChunk();
                 const currentToolIndex = toolCallIndex++;
-                const toolCallChunk = {
+                const toolCallId = part.functionCall.id || `${part.functionCall.name}-${uuidv4()}`;
+                const argsJson = JSON.stringify(part.functionCall.args || {});
+
+                // First delta: id, type, name, empty arguments
+                pushChunk({
                   id: streamId,
                   object: 'chat.completion.chunk',
                   created: created,
@@ -1304,11 +1309,11 @@ export class ProxyService {
                         tool_calls: [
                           {
                             index: currentToolIndex,
-                            id: part.functionCall.id || `${part.functionCall.name}-${uuidv4()}`,
+                            id: toolCallId,
                             type: 'function',
                             function: {
                               name: part.functionCall.name,
-                              arguments: JSON.stringify(part.functionCall.args || {}),
+                              arguments: '',
                             },
                           },
                         ],
@@ -1316,8 +1321,35 @@ export class ProxyService {
                       finish_reason: null,
                     },
                   ],
-                };
-                pushChunk(toolCallChunk);
+                });
+
+                // Subsequent deltas: only arguments (split if large to respect SSE framing)
+                const ARG_CHUNK_SIZE = 1000;
+                for (let i = 0; i < argsJson.length; i += ARG_CHUNK_SIZE) {
+                  const slice = argsJson.slice(i, i + ARG_CHUNK_SIZE);
+                  pushChunk({
+                    id: streamId,
+                    object: 'chat.completion.chunk',
+                    created: created,
+                    model: model,
+                    choices: [
+                      {
+                        index: 0,
+                        delta: {
+                          tool_calls: [
+                            {
+                              index: currentToolIndex,
+                              function: {
+                                arguments: slice,
+                              },
+                            },
+                          ],
+                        },
+                        finish_reason: null,
+                      },
+                    ],
+                  });
+                }
                 continue;
               }
 
