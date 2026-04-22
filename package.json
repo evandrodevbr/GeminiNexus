@@ -145,6 +145,7 @@
     "react-dom": "^19.2.0",
     "react-error-boundary": "^6.1.0",
     "react-i18next": "^16.2.4",
+    "recharts": "^3.8.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "tailwind-merge": "^3.4.0",
