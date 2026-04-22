@@ -1,6 +1,6 @@
 # Gemini Nexus CLI
 
-A powerful command-line interface for managing multiple Google Cloud AI accounts in Antigravity IDE. Supports account switching, quota monitoring, token validation, and more.
+A powerful command-line interface for managing multiple Google Cloud AI accounts in Gemini Nexus IDE. Supports account switching, quota monitoring, token validation, and more.
 
 ## Features
 
@@ -149,7 +149,7 @@ agm doctor
 
 The CLI interacts directly with the Gemini Nexus's encrypted database:
 
-1. **Database Location**: Auto-discovers the database in `%APPDATA%\AntigravityManager` or IDE installation directory
+1. **Database Location**: Auto-discovers the database in `%APPDATA%\GeminiNexus` or IDE installation directory
 2. **Encryption**: Uses Windows DPAPI + AES-256-GCM to decrypt account tokens (same as the IDE)
 3. **Quota API**: Fetches live quota data from Google Cloud AI REST API
 4. **Process Control**: Can start/stop the IDE executable automatically
