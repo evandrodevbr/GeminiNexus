@@ -1,15 +1,15 @@
-export const COLOR_PROMPT = '#5b9bd5';
-export const COLOR_COMPLETION = '#70ad47';
-export const COLOR_TOTAL = '#a5a5a5';
+export const COLOR_PROMPT = 'var(--chart-2)';
+export const COLOR_COMPLETION = 'var(--chart-1)';
+export const COLOR_TOTAL = 'var(--chart-3)';
 export const PIE_COLORS = [
-  '#5b9bd5',
-  '#ed7d31',
-  '#70ad47',
-  '#a5a5a5',
-  '#ffc000',
-  '#4472c4',
-  '#91d1c2',
-  '#c55a5a',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
 ];
 
 const colorMap: Record<string, string> = {

@@ -92,7 +92,7 @@ function barColor(bar: any): string {
   if (bar.id === 'Prompt') return COLOR_PROMPT;
   if (bar.id === 'Completion') return COLOR_COMPLETION;
   if (bar.id === 'Total') return COLOR_TOTAL;
-  return '#a5a5a5';
+  return 'var(--chart-3)';
 }
 
 /* ------------------------------------------------------------------ */

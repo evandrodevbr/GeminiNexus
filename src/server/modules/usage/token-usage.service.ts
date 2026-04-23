@@ -15,9 +15,16 @@ const RecordUsageInputSchema = z.object({
 
 @Injectable()
 export class TokenUsageService {
-  recordUsage(params: RecordUsageParams): boolean {
+  recordUsage(params: RecordUsageParams): void {
     RecordUsageInputSchema.parse(params);
-    return TokenUsageRepo.recordUsage(params);
+    // Fire-and-forget: don't block the proxy request cycle
+    setImmediate(() => {
+      try {
+        TokenUsageRepo.recordUsage(params);
+      } catch {
+        // Silently ignore: usage recording should not break proxy requests
+      }
+    });
   }
 
   getUsageByHour(accountId?: string, start?: number, end?: number) {

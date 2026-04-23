@@ -64,7 +64,7 @@ export class ProxyService {
     @Inject(TokenUsageService) private readonly tokenUsageService: TokenUsageService,
   ) {}
 
-  private async recordUsage(
+  private recordUsage(
     accountId: string,
     model: string,
     usage:
@@ -73,11 +73,11 @@ export class ProxyService {
       | null,
     requestType: string,
     isEstimated?: boolean,
-  ): Promise<void> {
+  ): void {
     if (!usage) {
       return;
     }
-    await this.tokenUsageService.recordUsage({
+    this.tokenUsageService.recordUsage({
       accountId,
       model,
       promptTokens: usage.promptTokenCount ?? 0,
@@ -358,9 +358,7 @@ export class ProxyService {
         finishChunks.forEach((c) => subscriber.next(c));
         const usage = this.extractUsageFromMetadata(lastUsageMetadata);
         if (usage) {
-          this.recordUsage(accountId, _model, usage, 'anthropic').catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(accountId, _model, usage, 'anthropic');
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
           this.recordUsage(
@@ -373,7 +371,7 @@ export class ProxyService {
             },
             'anthropic',
             true,
-          ).catch((err) => this.logger.error('Usage recording failed', err));
+          );
         }
         subscriber.complete();
       });
@@ -629,9 +627,7 @@ export class ProxyService {
         }
         const usage = this.extractUsageFromMetadata(lastUsageMetadata);
         if (usage) {
-          this.recordUsage(accountId, model, usage, 'gemini').catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(accountId, model, usage, 'gemini');
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
           this.recordUsage(
@@ -644,7 +640,7 @@ export class ProxyService {
             },
             'gemini',
             true,
-          ).catch((err) => this.logger.error('Usage recording failed', err));
+          );
         }
         subscriber.complete();
       });
@@ -1421,9 +1417,7 @@ export class ProxyService {
         }
         const usage = this.extractUsageFromMetadata(lastUsageMetadata);
         if (usage) {
-          this.recordUsage(accountId, effectiveTargetModel, usage, 'openai').catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(accountId, effectiveTargetModel, usage, 'openai');
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
           this.recordUsage(
@@ -1436,7 +1430,7 @@ export class ProxyService {
             },
             'openai',
             true,
-          ).catch((err) => this.logger.error('Usage recording failed', err));
+          );
         }
         subscriber.complete();
       });
