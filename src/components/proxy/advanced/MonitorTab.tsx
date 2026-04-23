@@ -15,7 +15,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { StatCard } from '@/components/usage/StatCard';
 import { TrafficLogTable } from './TrafficLogTable';
-import { Loader2, Zap, Clock, AlertTriangle, Network } from 'lucide-react';
+import { Loader2, Zap, Clock, AlertTriangle, Network, HardDrive } from 'lucide-react';
 
 export const MonitorTab: React.FC = () => {
   const { t } = useTranslation();
@@ -102,6 +102,13 @@ export const MonitorTab: React.FC = () => {
           icon={Network}
           isLoading={metricsLoading}
           accent="green"
+        />
+        <StatCard
+          label={t('proxy.advanced.metrics.cacheStatus')}
+          value={metrics?.cacheHitRate ? `${Math.round(metrics.cacheHitRate * 100)}%` : 'N/A'}
+          icon={HardDrive}
+          isLoading={metricsLoading}
+          accent="purple"
         />
       </div>
 

@@ -166,13 +166,14 @@ export async function getCircuitBreakerStatus(): Promise<{
 
 export async function getProxyMetrics(): Promise<{
   success: boolean;
-  data?: {
+    data?: {
     uptimeSeconds: number;
     totalRequests: number;
     activeConnections: number;
     avgLatency: number;
     errorRate: number;
     requestsPerMinute: number;
+    cacheHitRate: number;
   };
   error?: string;
 }> {
@@ -188,6 +189,7 @@ export async function getProxyMetrics(): Promise<{
           avgLatency: 0,
           errorRate: 0,
           requestsPerMinute: 0,
+          cacheHitRate: 0,
         },
       };
     }
@@ -202,6 +204,7 @@ export async function getProxyMetrics(): Promise<{
         avgLatency: metrics.avgLatency,
         errorRate: metrics.errorRate,
         requestsPerMinute: metrics.requestsPerMinute,
+        cacheHitRate: metrics.cacheHitRate,
       },
     };
   } catch (error) {
@@ -223,6 +226,58 @@ export async function getRecentRequests(): Promise<{ success: boolean; data?: un
       success: true,
       data: proxyReplay.getRecentRequests(20),
     };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export async function replayRequest(
+  requestId: string,
+): Promise<{ success: boolean; data?: { original: unknown; newResponse: unknown }; error?: string }> {
+  try {
+    const proxyReplay = proxyAdvancedRegistry.proxyReplay;
+    if (!proxyReplay) {
+      return { success: false, error: 'Replay service not available' };
+    }
+    const result = await proxyReplay.replayRequest(requestId);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export async function getModelCapabilities(): Promise<{
+  success: boolean;
+  data?: { id: string; object: string; capabilities: { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean } }[];
+  error?: string;
+}> {
+  try {
+    const capabilitiesMap: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {
+      'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      'gemini-3.1-pro-low': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      'gemini-3.1-pro-high': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      'claude-sonnet-4-6-thinking': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      'claude-opus-4-6-thinking': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+    };
+
+    const models = [
+      { id: 'gemini-3-flash', object: 'model' },
+      { id: 'gemini-3.1-pro-low', object: 'model' },
+      { id: 'gemini-3.1-pro-high', object: 'model' },
+      { id: 'claude-sonnet-4-6-thinking', object: 'model' },
+      { id: 'claude-opus-4-6-thinking', object: 'model' },
+    ];
+
+    const data = models.map((m) => {
+      const baseId = Object.keys(capabilitiesMap).find((key) => m.id.includes(key)) ?? 'gemini-3-flash';
+      return {
+        id: m.id,
+        object: m.object,
+        capabilities: capabilitiesMap[baseId] ?? capabilitiesMap['gemini-3-flash'],
+      };
+    });
+
+    return { success: true, data };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }

@@ -10,13 +10,16 @@ import {
   Req,
   Logger,
   Optional,
+  Param,
+  Query,
+  Sse,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { isEmpty, isFunction, isNil, isObjectLike, isPlainObject, isString } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { ProxyService } from './proxy.service';
+import { ProxyService, ProxyRequestContext, ProxyConfigOverride } from './proxy.service';
 import { ProxyReplayService } from './proxy-replay.service';
-import { Observable } from 'rxjs';
+import { Observable, interval, map } from 'rxjs';
 import { trafficLogger } from '../../../utils/traffic-logger';
 import {
   OpenAIChatRequest,
@@ -103,6 +106,257 @@ export class ProxyController {
     }
   }
 
+  @Get('status')
+  async getStatus(@Res() res: FastifyReply) {
+    const startTime = Date.now();
+    try {
+      const metrics = this.proxyMetrics?.getMetrics();
+      const circuitBreakerStatus = this.tokenManager?.getCircuitBreakerStatus() ?? {};
+      const accountCount = Object.keys(circuitBreakerStatus).length;
+      const healthyAccounts = Object.values(circuitBreakerStatus).filter(s => s.state === 'healthy').length;
+
+      res.status(HttpStatus.OK).send({
+        status: 'healthy',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        accounts: {
+          total: accountCount,
+          healthy: healthyAccounts,
+        },
+        metrics: {
+          requestsPerMinute: metrics?.requestsPerMinute ?? 0,
+          avgLatency: metrics?.avgLatency ?? 0,
+          errorRate: metrics?.errorRate ?? 0,
+          activeConnections: metrics?.activeConnections ?? 0,
+        },
+      });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint: '/v1/status',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to get status';
+      this.logger.error(message, error instanceof Error ? error.stack : undefined);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        error: {
+          message,
+          type: 'internal_server_error',
+        },
+      });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        endpoint: '/v1/status',
+      });
+    }
+  }
+
+  @Get('replay/requests')
+  async getReplayRequests(@Query('limit') limit?: string, @Res() res?: FastifyReply) {
+    if (!res) {
+      throw new Error('Response object is required');
+    }
+    const startTime = Date.now();
+    try {
+      const requests = this.proxyReplayService?.getRecentRequests(limit ? parseInt(limit, 10) : undefined) ?? [];
+      this.setProxyHeaders(res, { requestId: uuidv4(), accountId: '', retryCount: 0, model: '' });
+      res.status(HttpStatus.OK).send({
+        object: 'list',
+        data: requests,
+      });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint: '/v1/replay/requests',
+      });
+    } catch (error) {
+      this.sendOpenAIErrorResponse(res, '/v1/replay/requests', error);
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        endpoint: '/v1/replay/requests',
+      });
+    }
+  }
+
+  @Post('replay/:requestId')
+  async replayRequest(@Param('requestId') requestId: string, @Res() res: FastifyReply) {
+    const startTime = Date.now();
+    try {
+      if (!this.proxyReplayService) {
+        throw new Error('Replay service not available');
+      }
+      const result = await this.proxyReplayService.replayRequest(requestId);
+      this.setProxyHeaders(res, { requestId: uuidv4(), accountId: '', retryCount: 0, model: '' });
+      res.status(HttpStatus.OK).send(result);
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint: '/v1/replay/:requestId',
+      });
+    } catch (error) {
+      this.sendOpenAIErrorResponse(res, '/v1/replay/:requestId', error);
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        endpoint: '/v1/replay/:requestId',
+      });
+    }
+  }
+
+  @Get('models/capabilities')
+  listModelCapabilities(@Res() res: FastifyReply) {
+    const startTime = Date.now();
+    try {
+      const config = getServerConfig();
+      const customMapping = config?.custom_mapping ?? {};
+      const modelIds = getAllDynamicModels(
+        customMapping,
+        this.tokenManager?.getAllCollectedModels(),
+      );
+
+      const capabilitiesMap: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {
+        'gemini-3-pro': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: true },
+        'gemini-3-pro-image': { vision: true, streaming: false, jsonMode: false, audio: false, imageGeneration: true },
+        'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+        'gemini-3-flash-lite': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+        'claude-3-5-sonnet': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+        'claude-3-5-haiku': { vision: false, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+        'claude-3-opus': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      };
+
+      const data = modelIds.map((id) => {
+        const baseId = Object.keys(capabilitiesMap).find((key) => id.includes(key)) ?? 'gemini-3-flash';
+        return {
+          id,
+          object: 'model_capability',
+          capabilities: capabilitiesMap[baseId] ?? capabilitiesMap['gemini-3-flash'],
+        };
+      });
+
+      res.status(HttpStatus.OK).send({
+        object: 'list',
+        data,
+      });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint: '/v1/models/capabilities',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to list model capabilities';
+      this.logger.error(message, error instanceof Error ? error.stack : undefined);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: { message, type: 'internal_server_error' } });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        endpoint: '/v1/models/capabilities',
+      });
+    }
+  }
+
+  @Post('batch/completions')
+  async batchCompletions(
+    @Body() body: { requests: OpenAIChatRequest[] },
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ) {
+    const startTime = Date.now();
+    const endpoint = '/v1/batch/completions';
+    this.proxyMetrics?.incrementActiveConnections();
+    try {
+      const requests = Array.isArray(body?.requests) ? body.requests : [];
+      const responses: unknown[] = [];
+
+      for (let i = 0; i < requests.length; i++) {
+        const request = requests[i];
+        const proxyContext: ProxyRequestContext = {};
+        try {
+          const result = await this.proxyService.handleChatCompletions(
+            request,
+            proxyContext,
+          );
+          if (this.isObservableLike(result)) {
+            responses.push({
+              index: i,
+              error: { message: 'Streaming not supported in batch mode', type: 'invalid_request_error' },
+            });
+          } else {
+            responses.push({
+              index: i,
+              response: result,
+            });
+          }
+        } catch (error) {
+          responses.push({
+            index: i,
+            error: {
+              message: error instanceof Error ? error.message : 'Request failed',
+              type: 'api_error',
+            },
+          });
+        }
+      }
+
+      this.setProxyHeaders(res, { requestId: uuidv4(), accountId: '', retryCount: 0, model: '' });
+      res.status(HttpStatus.OK).send({
+        object: 'list',
+        data: responses,
+      });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint,
+      });
+    } catch (error) {
+      this.sendOpenAIErrorResponse(res, endpoint, error);
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        endpoint,
+      });
+    } finally {
+      this.proxyMetrics?.decrementActiveConnections();
+    }
+  }
+
+  @Sse('events')
+  proxyEvents() {
+    const startTime = Date.now();
+    this.proxyMetrics?.recordRequest({
+      timestamp: startTime,
+      duration: 0,
+      status: HttpStatus.OK,
+      endpoint: '/v1/events',
+    });
+
+    return interval(5000).pipe(
+      map((tick) => {
+        const metrics = this.proxyMetrics?.getMetrics();
+        return {
+          data: {
+            type: 'heartbeat',
+            tick,
+            timestamp: Date.now(),
+            metrics,
+          },
+        };
+      }),
+    );
+  }
+
   @Post('chat/completions')
   async chatCompletions(
     @Body() body: OpenAIChatRequest,
@@ -182,12 +436,13 @@ export class ProxyController {
       top_p: body.top_p,
       stream: body.stream,
     };
+    const proxyContext: ProxyRequestContext = {};
     let isStream = false;
     try {
-      const result = await this.proxyService.handleChatCompletions(request);
+      const result = await this.proxyService.handleChatCompletions(request, proxyContext);
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/completions', startTime);
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/completions', startTime, proxyContext);
         return;
       }
 
@@ -202,6 +457,7 @@ export class ProxyController {
       if (response.usage?.total_tokens) {
         this.proxyMetrics?.recordTokens(response.usage.total_tokens);
       }
+      this.setProxyHeaders(res, proxyContext);
       res.status(HttpStatus.OK).send(this.toLegacyTextCompletionsResponse(response));
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -248,13 +504,14 @@ export class ProxyController {
     this.proxyMetrics?.incrementActiveConnections();
     const startTime = Date.now();
     const request = this.buildResponsesChatRequest(body);
+    const proxyContext: ProxyRequestContext = {};
     let isStream = false;
 
     try {
-      const result = await this.proxyService.handleChatCompletions(request);
+      const result = await this.proxyService.handleChatCompletions(request, proxyContext);
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/responses', startTime);
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/responses', startTime, proxyContext);
         return;
       }
 
@@ -269,6 +526,7 @@ export class ProxyController {
       if (response.usage?.total_tokens) {
         this.proxyMetrics?.recordTokens(response.usage.total_tokens);
       }
+      this.setProxyHeaders(res, proxyContext);
       res.status(HttpStatus.OK).send(this.toLegacyTextCompletionsResponse(response));
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -496,6 +754,51 @@ export class ProxyController {
     }
   }
 
+  private setProxyHeaders(res: FastifyReply, context: ProxyRequestContext): void {
+    if (context.accountId) {
+      res.header('X-Proxy-Account-Used', context.accountId);
+    }
+    if (typeof context.retryCount === 'number') {
+      res.header('X-Proxy-Retry-Count', String(context.retryCount));
+    }
+    if (context.model) {
+      res.header('X-Proxy-Model-Used', context.model);
+    }
+    if (context.requestId) {
+      res.header('X-Proxy-Request-Id', context.requestId);
+    }
+    if (context?.cacheStatus) {
+      res.header('X-Proxy-Cache-Status', context.cacheStatus);
+    }
+  }
+
+  private extractConfigOverride(req: FastifyRequest): ProxyConfigOverride {
+    const headers = req.headers as Record<string, string | undefined>;
+    const override: ProxyConfigOverride = {};
+    if (headers['x-proxy-account-id']) {
+      override.accountId = headers['x-proxy-account-id'];
+    }
+    if (headers['x-proxy-scheduling-mode']) {
+      const mode = headers['x-proxy-scheduling-mode'];
+      if (mode === 'cache-first' || mode === 'balance' || mode === 'performance-first') {
+        override.schedulingMode = mode;
+      }
+    }
+    if (headers['x-proxy-max-retries']) {
+      const maxRetries = parseInt(headers['x-proxy-max-retries'], 10);
+      if (!isNaN(maxRetries) && maxRetries >= 0) {
+        override.maxRetries = maxRetries;
+      }
+    }
+    if (headers['x-proxy-timeout']) {
+      const timeout = parseInt(headers['x-proxy-timeout'], 10);
+      if (!isNaN(timeout) && timeout > 0) {
+        override.timeout = timeout;
+      }
+    }
+    return override;
+  }
+
   private async respondOpenAIChatCompletions(
     body: OpenAIChatRequest,
     res: FastifyReply,
@@ -514,17 +817,17 @@ export class ProxyController {
       ? (req.headers['x-session-affinity'] as string | undefined)
       : undefined;
 
+    const proxyContext: ProxyRequestContext = {};
     let isStream = false;
     try {
       const result = await this.proxyService.handleChatCompletions(
         body,
-        requestId,
-        headerSessionKey,
+        proxyContext,
       );
 
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, requestId, '/v1/chat/completions', startTime);
+        this.writeSseResponse(res, result as Observable<unknown>, requestId, '/v1/chat/completions', startTime, proxyContext);
         return;
       } else {
         const duration = Date.now() - startTime;
@@ -545,6 +848,7 @@ export class ProxyController {
         if (response.usage?.total_tokens) {
           this.proxyMetrics?.recordTokens(response.usage.total_tokens);
         }
+        this.setProxyHeaders(res, proxyContext);
         res.status(HttpStatus.OK).send(result);
       }
     } catch (error) {
@@ -583,12 +887,18 @@ export class ProxyController {
     this.proxyMetrics?.incrementActiveConnections();
     const startTime = Date.now();
     let isStream = false;
+    const proxyContext: ProxyRequestContext = {
+      requestId: uuidv4(),
+      accountId: '',
+      retryCount: 0,
+      model: body.model || '',
+    };
     try {
-      const result = await this.proxyService.handleAnthropicMessages(body);
+      const result = await this.proxyService.handleAnthropicMessages(body, proxyContext);
       isStream = !!(body.stream && this.isObservableLike(result));
 
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/messages', startTime);
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/messages', startTime, proxyContext);
         return;
       } else {
         const duration = Date.now() - startTime;
@@ -598,6 +908,7 @@ export class ProxyController {
           status: HttpStatus.OK,
           endpoint: '/v1/messages',
         });
+        this.setProxyHeaders(res, proxyContext);
         res.status(HttpStatus.OK).send(result);
       }
     } catch (error) {
@@ -1045,11 +1356,32 @@ export class ProxyController {
     requestId?: string,
     endpoint?: string,
     startTime?: number,
+    proxyContext?: ProxyRequestContext,
   ): void {
+    const extraHeaders: Record<string, string> = {};
+    if (proxyContext?.accountId) {
+      extraHeaders['X-Proxy-Account-Used'] = proxyContext.accountId;
+    }
+    if (typeof proxyContext?.retryCount === 'number') {
+      extraHeaders['X-Proxy-Retry-Count'] = String(proxyContext.retryCount);
+    }
+    if (proxyContext?.model) {
+      extraHeaders['X-Proxy-Model-Used'] = proxyContext.model;
+    }
+    if (proxyContext?.requestId) {
+      extraHeaders['X-Proxy-Request-Id'] = proxyContext.requestId;
+    }
+    if (proxyContext?.cacheStatus) {
+      extraHeaders['X-Proxy-Cache-Status'] = proxyContext.cacheStatus;
+    }
+
     if (!res.raw || !isFunction(res.raw.writeHead) || !isFunction(res.raw.write)) {
       res.header('Content-Type', 'text/event-stream');
       res.header('Cache-Control', 'no-cache');
       res.header('Connection', 'keep-alive');
+      for (const [key, value] of Object.entries(extraHeaders)) {
+        res.header(key, value);
+      }
       res.send(stream);
       this.proxyMetrics?.decrementActiveConnections();
       return;
@@ -1063,6 +1395,7 @@ export class ProxyController {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      ...extraHeaders,
     });
 
     if (isFunction(res.raw.flushHeaders)) {

@@ -64,7 +64,7 @@ export class ProxyReplayService {
       case '/v1/chat/completions':
       case '/v1/messages/chat/completions': {
         const body = entry.body as OpenAIChatRequest;
-        return this.proxyService.handleChatCompletions(body, uuidv4());
+        return this.proxyService.handleChatCompletions(body);
       }
       case '/v1/completions': {
         const originalBody = entry.body as {
@@ -90,7 +90,7 @@ export class ProxyReplayService {
           top_p: originalBody.top_p,
           stream: originalBody.stream,
         };
-        return this.proxyService.handleChatCompletions(request, uuidv4());
+        return this.proxyService.handleChatCompletions(request);
       }
       case '/v1/messages': {
         const body = entry.body as AnthropicChatRequest;
@@ -152,7 +152,7 @@ export class ProxyReplayService {
           top_p: originalBody.top_p,
           stream: originalBody.stream,
         };
-        return this.proxyService.handleChatCompletions(request, uuidv4());
+        return this.proxyService.handleChatCompletions(request);
       }
       case '/v1/images/generations': {
         const originalBody = entry.body as {
@@ -168,7 +168,7 @@ export class ProxyReplayService {
           size: originalBody.size,
           quality: originalBody.quality,
         };
-        return this.proxyService.handleChatCompletions(request, uuidv4());
+        return this.proxyService.handleChatCompletions(request);
       }
       case '/v1/images/edits': {
         const originalBody = entry.body as {
@@ -209,7 +209,7 @@ export class ProxyReplayService {
           size: originalBody.size,
           quality: originalBody.quality,
         };
-        return this.proxyService.handleChatCompletions(request, uuidv4());
+        return this.proxyService.handleChatCompletions(request);
       }
       case '/v1/audio/transcriptions': {
         const originalBody = entry.body as {

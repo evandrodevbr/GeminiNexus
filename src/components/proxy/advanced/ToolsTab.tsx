@@ -130,21 +130,6 @@ export const ToolsTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Request Replay Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('proxy.advanced.tools.requestReplay')}</CardTitle>
-          <CardDescription>Replay recent requests for debugging</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed">
-            <Badge variant="outline">{t('proxy.advanced.tools.comingSoon')}</Badge>
-            <p className="text-xs text-muted-foreground">
-              Request replay will be available in a future update
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

@@ -33,6 +33,7 @@ interface GetNextTokenOptions {
   sessionKey?: string;
   excludeAccountIds?: string[];
   model?: string;
+  accountId?: string;
 }
 
 type TokenEntry = [string, TokenData];
@@ -339,9 +340,25 @@ export class TokenManagerService implements OnModuleInit {
       const sessionKey = options?.sessionKey?.trim();
       const model = options?.model;
       const excludedAccountIds = new Set(options?.excludeAccountIds ?? []);
+      const requestedAccountId = options?.accountId?.trim();
 
       this.clearExpiredSessionBindings(now);
       this.rateLimitTracker.cleanupExpired();
+
+      // If a specific account is requested, try to use it first
+      if (requestedAccountId && !excludedAccountIds.has(requestedAccountId)) {
+        const requestedToken = this.tokens.get(requestedAccountId);
+        if (requestedToken) {
+          const isHealthy = this.isAccountHealthy(requestedAccountId, requestedToken, nowSeconds, model);
+          if (isHealthy) {
+            this.logger.log(`Using requested account: ${requestedAccountId}`);
+            return this.buildCloudAccount(requestedAccountId, requestedToken);
+          }
+          this.logger.warn(`Requested account ${requestedAccountId} is not healthy, falling back to selection`);
+        } else {
+          this.logger.warn(`Requested account ${requestedAccountId} not found, falling back to selection`);
+        }
+      }
 
       const fullAccountPool = Array.from(this.tokens.entries());
       const filteredAccountPool = fullAccountPool.filter(
@@ -943,6 +960,42 @@ export class TokenManagerService implements OnModuleInit {
       this.logger.error('Failed to finalize selected account token', error);
       return null;
     }
+  }
+
+  private isAccountHealthy(accountId: string, tokenData: TokenData, nowSeconds: number, model?: string): boolean {
+    const entry = this.getOrCreateCircuitBreakerEntry(accountId);
+    if (entry.state === 'unhealthy') {
+      return false;
+    }
+    if (this.rateLimitTracker.isRateLimited(accountId, model)) {
+      return false;
+    }
+    if (nowSeconds >= tokenData.expiry_timestamp) {
+      return false;
+    }
+    return true;
+  }
+
+  private buildCloudAccount(accountId: string, tokenData: TokenData): CloudAccount {
+    const timestamp = Date.now();
+    return {
+      id: accountId,
+      provider: 'google',
+      email: tokenData.email,
+      token: {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        token_type: tokenData.token_type,
+        expires_in: tokenData.expires_in,
+        expiry_timestamp: tokenData.expiry_timestamp,
+        project_id: tokenData.project_id,
+        oauth_client_key: tokenData.oauth_client_key,
+        session_id: tokenData.session_id,
+        upstream_proxy_url: tokenData.upstream_proxy_url,
+      },
+      created_at: timestamp,
+      last_used: timestamp,
+    };
   }
 
   private resolveAccountId(accountIdOrEmail: string): string | null {

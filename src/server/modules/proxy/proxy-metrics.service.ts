@@ -74,6 +74,7 @@ export class ProxyMetricsService implements OnModuleInit {
     errorRate: number;
     activeConnections: number;
     tokenThroughput: number;
+    cacheHitRate: number;
   } {
     const aggregates = ProxyMetricsRepo.getHistoricalAggregates(HISTORICAL_WINDOW_MS);
 
@@ -87,6 +88,7 @@ export class ProxyMetricsService implements OnModuleInit {
       errorRate: Math.round(aggregates.errorRatePercent * 100) / 100,
       activeConnections: Math.round(aggregates.avgActiveConnections * 100) / 100,
       tokenThroughput,
+      cacheHitRate: 0,
     };
   }
 

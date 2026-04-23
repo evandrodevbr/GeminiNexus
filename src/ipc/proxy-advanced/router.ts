@@ -9,6 +9,8 @@ import {
   getProxyMetrics,
   getRecentRequests,
   generateIdeConfig,
+  replayRequest,
+  getModelCapabilities,
 } from './handler';
 
 const TrafficLogEntrySchema = z.object({
@@ -98,6 +100,7 @@ const ProxyMetricsResponseSchema = z.object({
       avgLatency: z.number(),
       errorRate: z.number(),
       requestsPerMinute: z.number(),
+      cacheHitRate: z.number(),
     })
     .optional(),
   error: z.string().optional(),
@@ -106,6 +109,37 @@ const ProxyMetricsResponseSchema = z.object({
 const RecentRequestsResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(z.unknown()).optional(),
+  error: z.string().optional(),
+});
+
+const ReplayRequestResponseSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      original: z.unknown(),
+      newResponse: z.unknown(),
+    })
+    .optional(),
+  error: z.string().optional(),
+});
+
+const ModelCapabilitiesResponseSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .array(
+      z.object({
+        id: z.string(),
+        object: z.string(),
+        capabilities: z.object({
+          vision: z.boolean(),
+          streaming: z.boolean(),
+          jsonMode: z.boolean(),
+          audio: z.boolean(),
+          imageGeneration: z.boolean(),
+        }),
+      }),
+    )
+    .optional(),
   error: z.string().optional(),
 });
 
@@ -169,4 +203,15 @@ export const proxyAdvancedRouter = os.router({
     .handler(async ({ input }) => {
       return generateIdeConfig(input.ide);
     }),
+
+  replayRequest: os
+    .input(z.object({ requestId: z.string() }))
+    .output(ReplayRequestResponseSchema)
+    .handler(async ({ input }) => {
+      return replayRequest(input.requestId);
+    }),
+
+  getModelCapabilities: os.output(ModelCapabilitiesResponseSchema).handler(async () => {
+    return getModelCapabilities();
+  }),
 });

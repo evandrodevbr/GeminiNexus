@@ -6,11 +6,11 @@ import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   label: string;
-  value: number;
+  value: number | string;
   icon: LucideIcon;
   isLoading?: boolean;
   className?: string;
-  accent?: 'blue' | 'green' | 'amber' | 'slate';
+  accent?: 'blue' | 'green' | 'amber' | 'slate' | 'purple';
 }
 
 const ACCENT_MAP = {
@@ -18,6 +18,7 @@ const ACCENT_MAP = {
   green: 'text-emerald-400',
   amber: 'text-amber-400',
   slate: 'text-slate-400',
+  purple: 'text-purple-400',
 };
 
 const BG_MAP = {
@@ -25,6 +26,7 @@ const BG_MAP = {
   green: 'bg-emerald-500/5',
   amber: 'bg-amber-500/5',
   slate: 'bg-slate-500/5',
+  purple: 'bg-purple-500/5',
 };
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -51,7 +53,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             <Skeleton className="h-7 w-24" />
           ) : (
             <span className="text-foreground font-mono text-2xl font-semibold tracking-tight">
-              {value.toLocaleString()}
+              {typeof value === 'number' ? value.toLocaleString() : value}
             </span>
           )}
         </div>

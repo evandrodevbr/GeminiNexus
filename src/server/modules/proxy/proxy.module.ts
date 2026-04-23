@@ -9,11 +9,24 @@ import { TokenUsageService } from '../usage/token-usage.service';
 import { ProxyReplayService } from './proxy-replay.service';
 import { ProxyMetricsService } from './proxy-metrics.service';
 import { ProxyIdeConfigService } from './proxy-ide-config.service';
+import { ProxyEventBus } from './proxy-event-bus.service';
+import { ProxyTransformInterceptor } from './proxy-transform.interceptor';
 
 @Module({
   imports: [],
   controllers: [ProxyController, GeminiController],
-  providers: [ProxyService, TokenManagerService, GeminiClient, ProxyGuard, TokenUsageService, ProxyReplayService, ProxyMetricsService, ProxyIdeConfigService],
+  providers: [
+    ProxyService,
+    TokenManagerService,
+    GeminiClient,
+    ProxyGuard,
+    TokenUsageService,
+    ProxyReplayService,
+    ProxyMetricsService,
+    ProxyIdeConfigService,
+    ProxyEventBus,
+    ProxyTransformInterceptor,
+  ],
   exports: [TokenManagerService],
 })
 export class ProxyModule {}

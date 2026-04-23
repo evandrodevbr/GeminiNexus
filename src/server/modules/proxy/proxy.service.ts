@@ -37,9 +37,26 @@ import { UpstreamRequestError } from './clients/upstream-error';
 import { trafficLogger } from '../../../utils/traffic-logger';
 import { encode } from 'gpt-tokenizer';
 
+export interface ProxyRequestContext {
+  requestId?: string;
+  accountId?: string;
+  retryCount?: number;
+  model?: string;
+  cacheStatus?: 'HIT' | 'MISS';
+}
+
+export interface ProxyConfigOverride {
+  accountId?: string;
+  schedulingMode?: 'cache-first' | 'balance' | 'performance-first';
+  maxRetries?: number;
+  timeout?: number;
+}
+
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
+  private readonly responseCache = new Map<string, { response: OpenAIChatResponse; expiry: number }>();
+  private readonly CACHE_TTL_MS = 60000; // 1 minute
 
   constructor(
     @Inject(TokenManagerService) private readonly tokenManager: TokenManagerService,
@@ -99,6 +116,8 @@ export class ProxyService {
 
   async handleAnthropicMessages(
     request: AnthropicChatRequest,
+    context?: ProxyRequestContext,
+    configOverride?: ProxyConfigOverride,
   ): Promise<AnthropicChatResponse | Observable<string>> {
     const sessionKey = this.extractAnthropicSessionKey(request);
 
@@ -124,11 +143,17 @@ export class ProxyService {
         sessionKey,
         excludeAccountIds: Array.from(attemptedAccountIds),
         model: targetModel,
+        accountId: configOverride?.accountId,
       });
       if (!token) {
         throw new Error('No available accounts');
       }
       attemptedAccountIds.add(token.id);
+      if (context) {
+        context.accountId = token.id;
+        context.retryCount = i;
+        context.model = targetModel;
+      }
       const effectiveTargetModel = this.tokenManager.resolveDynamicModelForAccount(
         token.id,
         targetModel,
@@ -821,23 +846,35 @@ export class ProxyService {
 
   async handleChatCompletions(
     request: OpenAIChatRequest,
-    requestId?: string,
-    headerSessionKey?: string,
+    context?: ProxyRequestContext,
+    configOverride?: ProxyConfigOverride,
   ): Promise<OpenAIChatResponse | Observable<string>> {
-    // Prefer the x-session-affinity header value (sent by OpenCode) over body-level session ids.
-    const sessionKey =
-      (headerSessionKey ? `openai:${headerSessionKey}` : undefined) ??
-      this.extractOpenAISessionKey(request);
-
     const targetModel = this.resolveTargetModel(request.model);
     const extraHeaders = this.createModelSpecificHeaders(request.model);
     this.logger.log(
-      `OpenAI-compatible request received: model=${request.model}, mappedModel=${targetModel}, stream=${request.stream}`,
+      `Anthropic request received: model=${request.model}, mappedModel=${targetModel}, stream=${request.stream}`,
     );
+    const sessionKey = this.extractOpenAISessionKey(request);
+    const requestId = uuidv4();
 
-    // Retry loop for account selection
+    // Cache lookup for non-streaming requests
+    if (!request.stream) {
+      const cacheKey = this.buildCacheKey(request);
+      const cached = this.getCachedResponse(cacheKey);
+      if (cached) {
+        if (context) {
+          context.cacheStatus = 'HIT';
+          context.accountId = 'cache';
+          context.model = request.model;
+          context.retryCount = 0;
+        }
+        return cached;
+      }
+    }
+
+    // Retry loop
     let lastError: unknown = null;
-    const maxRetries = 3;
+    const maxRetries = configOverride?.maxRetries ?? 3;
     const attemptedAccountIds = new Set<string>();
 
     for (let i = 0; i < maxRetries; i++) {
@@ -863,6 +900,12 @@ export class ProxyService {
         token.id,
         targetModel,
       );
+      if (context) {
+        context.accountId = token.id;
+        context.retryCount = i;
+        context.model = effectiveTargetModel;
+        context.requestId = requestId;
+      }
 
       try {
         const claudeRequest = this.convertOpenAIToClaude(request);
@@ -949,7 +992,13 @@ export class ProxyService {
           this.logger.log(
             `Transformed Claude response snippet: ${JSON.stringify(claudeResponse).substring(0, 500)}`,
           );
-          return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
+          const openaiResponse = this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
+          const transformedResponse = this.applyResponseFormatTransformation(openaiResponse, request);
+          this.setCachedResponse(this.buildCacheKey(request), transformedResponse);
+          if (context) {
+            context.cacheStatus = 'MISS';
+          }
+          return transformedResponse;
         }
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
@@ -1007,7 +1056,13 @@ export class ProxyService {
             );
             this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
-            return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
+            const openaiResponse = this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
+            const transformedResponse = this.applyResponseFormatTransformation(openaiResponse, request);
+            this.setCachedResponse(this.buildCacheKey(request), transformedResponse);
+            if (context) {
+              context.cacheStatus = 'MISS';
+            }
+            return transformedResponse;
           } catch (fallbackErr) {
             lastError = fallbackErr;
           }
@@ -1593,6 +1648,10 @@ export class ProxyService {
       });
     }
 
+    if (request.response_format?.type === 'json_object' || request.response_format?.type === 'json_schema') {
+      systemPromptParts.push('You must format your entire response as a single valid JSON object. Do not include any markdown formatting, explanations, or text outside the JSON structure.');
+    }
+
     const systemPrompt = systemPromptParts.length > 0 ? systemPromptParts.join('\n') : undefined;
 
     return {
@@ -2071,6 +2130,75 @@ export class ProxyService {
       msg.includes('resource_exhausted') ||
       msg.includes('quota')
     );
+  }
+
+  private applyResponseFormatTransformation(
+    response: OpenAIChatResponse,
+    request: OpenAIChatRequest,
+  ): OpenAIChatResponse {
+    if (!request.response_format?.type) {
+      return response;
+    }
+    const type = request.response_format.type;
+    if (type !== 'json_object' && type !== 'json_schema') {
+      return response;
+    }
+
+    const content = response.choices?.[0]?.message?.content;
+    if (!isString(content)) {
+      return response;
+    }
+
+    // Try to extract JSON from markdown code blocks
+    let jsonText = content;
+    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch?.[1]) {
+      jsonText = codeBlockMatch[1].trim();
+    }
+
+    try {
+      // Validate it's parseable JSON
+      JSON.parse(jsonText);
+      // Replace the content with the extracted JSON string
+      const newResponse = { ...response };
+      newResponse.choices = [...response.choices];
+      newResponse.choices[0] = { ...response.choices[0] };
+      newResponse.choices[0].message = { ...response.choices[0].message };
+      newResponse.choices[0].message.content = jsonText;
+      return newResponse;
+    } catch {
+      // If not valid JSON, return original unchanged
+      return response;
+    }
+  }
+
+  private buildCacheKey(request: OpenAIChatRequest): string {
+    const keyBody = {
+      model: request.model,
+      messages: request.messages,
+      temperature: request.temperature,
+      top_p: request.top_p,
+      max_tokens: request.max_tokens,
+      tools: request.tools,
+      response_format: request.response_format,
+    };
+    return JSON.stringify(keyBody);
+  }
+
+  private getCachedResponse(key: string): OpenAIChatResponse | undefined {
+    const entry = this.responseCache.get(key);
+    if (!entry) {
+      return undefined;
+    }
+    if (Date.now() > entry.expiry) {
+      this.responseCache.delete(key);
+      return undefined;
+    }
+    return entry.response;
+  }
+
+  private setCachedResponse(key: string, response: OpenAIChatResponse): void {
+    this.responseCache.set(key, { response, expiry: Date.now() + this.CACHE_TTL_MS });
   }
 
   private extractAnthropicSessionKey(request: AnthropicChatRequest): string | undefined {

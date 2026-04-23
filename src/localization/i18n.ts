@@ -506,15 +506,13 @@ i18n
             advanced: {
               title: 'Advanced',
               monitor: 'Monitor',
-              tabs: {
-                tools: 'Tools',
-              },
               metrics: {
                 title: 'Performance Metrics',
                 requestsPerMinute: 'Requests/min',
                 avgLatency: 'Avg Latency',
                 errorRate: 'Error Rate',
                 activeConnections: 'Active Connections',
+                cacheStatus: 'Cache Hit Rate',
               },
               circuitBreaker: {
                 title: 'Circuit Breaker Status',
@@ -575,7 +573,27 @@ i18n
               },
               replay: {
                 title: 'Request Replay',
+                description: 'Replay recent requests for debugging',
+                refresh: 'Refresh',
+                recentRequests: 'Recent Requests',
+                clickToReplay: 'Click the play button to replay any request',
+                noRequests: 'No recent requests',
+                replay: 'Replay',
+                success: 'Replay Successful',
+                replayedSuccessfully: 'Request was replayed successfully',
+                error: 'Replay Failed',
+                unknownError: 'An unknown error occurred',
+                pending: 'Pending',
                 comingSoon: 'Coming soon',
+              },
+              capabilities: {
+                title: 'Model Capabilities',
+                description: 'Discover what each model can do',
+              },
+              tabs: {
+                tools: 'Tools',
+                replay: 'Replay',
+                capabilities: 'Capabilities',
               },
             },
           },
@@ -1092,15 +1110,13 @@ i18n
             advanced: {
               title: '高级',
               monitor: '监控',
-              tabs: {
-                tools: '工具',
-              },
               metrics: {
                 title: '性能指标',
                 requestsPerMinute: '请求/分钟',
                 avgLatency: '平均延迟',
                 errorRate: '错误率',
                 activeConnections: '活跃连接',
+                cacheStatus: '缓存命中率',
               },
               circuitBreaker: {
                 title: '熔断器状态',
@@ -1161,7 +1177,27 @@ i18n
               },
               replay: {
                 title: '请求重放',
+                description: '重放最近的请求以进行调试',
+                refresh: '刷新',
+                recentRequests: '最近请求',
+                clickToReplay: '点击播放按钮重放任何请求',
+                noRequests: '暂无最近请求',
+                replay: '重放',
+                success: '重放成功',
+                replayedSuccessfully: '请求已成功重放',
+                error: '重放失败',
+                unknownError: '发生未知错误',
+                pending: '待定',
                 comingSoon: '即将推出',
+              },
+              capabilities: {
+                title: '模型能力',
+                description: '发现每个模型可以做什么',
+              },
+              tabs: {
+                tools: '工具',
+                replay: '重放',
+                capabilities: '能力',
               },
             },
           },
@@ -1683,15 +1719,13 @@ i18n
             advanced: {
               title: 'Расширенные',
               monitor: 'Монитор',
-              tabs: {
-                tools: 'Инструменты',
-              },
               metrics: {
                 title: 'Метрики производительности',
                 requestsPerMinute: 'Запросов/мин',
                 avgLatency: 'Средняя задержка',
                 errorRate: 'Частота ошибок',
                 activeConnections: 'Активные соединения',
+                cacheStatus: 'Попадание в кэш',
               },
               circuitBreaker: {
                 title: 'Состояние предохранителя',
@@ -1751,8 +1785,28 @@ i18n
                 configCopied: 'Конфиг скопирован!',
               },
               replay: {
-                title: 'Повтор запроса',
+                title: 'Повтор запросов',
+                description: 'Повтор недавних запросов для отладки',
+                refresh: 'Обновить',
+                recentRequests: 'Недавние запросы',
+                clickToReplay: 'Нажмите кнопку воспроизведения, чтобы повторить любой запрос',
+                noRequests: 'Нет недавних запросов',
+                replay: 'Повторить',
+                success: 'Повтор успешен',
+                replayedSuccessfully: 'Запрос успешно повторен',
+                error: 'Ошибка повтора',
+                unknownError: 'Произошла неизвестная ошибка',
+                pending: 'В ожидании',
                 comingSoon: 'Скоро',
+              },
+              capabilities: {
+                title: 'Возможности моделей',
+                description: 'Узнайте, что может каждая модель',
+              },
+              tabs: {
+                tools: 'Инструменты',
+                replay: 'Повтор',
+                capabilities: 'Возможности',
               },
             },
           },
