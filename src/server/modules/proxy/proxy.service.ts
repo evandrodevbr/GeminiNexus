@@ -1906,6 +1906,7 @@ export class ProxyService {
             // When tool_calls are present, content must be null per OpenAI spec.
             content: toolCalls.length > 0 ? null : finalContent || '',
             tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+            reasoning_content: reasoningContent || undefined,
           },
           finish_reason: this.mapAnthropicStopReasonToOpenAIFinishReason(
             claudeResponse.stop_reason,

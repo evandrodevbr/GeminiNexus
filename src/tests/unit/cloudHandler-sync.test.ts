@@ -779,7 +779,12 @@ describe('cloud oauth client key backfill', () => {
     const { listCloudAccounts } = await import('../../ipc/cloud/handler');
     await listCloudAccounts();
 
-    expect(updateTokenMock).not.toHaveBeenCalled();
+    expect(updateTokenMock).toHaveBeenCalledWith(
+      'acc-legacy',
+      expect.objectContaining({
+        oauth_client_key: 'gemininexus_enterprise',
+      }),
+    );
     expect(setSettingMock).toHaveBeenCalledWith('oauth_client_key_backfill_v1_done', true);
   });
 });

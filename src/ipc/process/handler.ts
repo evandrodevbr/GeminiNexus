@@ -132,20 +132,20 @@ export async function isProcessRunning(): Promise<boolean> {
 
       if (platform === 'darwin') {
         // macOS: Check for Gemini Nexus.app in path
-        if (cmd.includes('geminiNexus.app')) {
+        if (cmd.includes('gemininexus.app')) {
           logger.debug(
             `Found Gemini Nexus process: PID=${proc.pid}, name=${name}, cmd=${cmd.substring(0, 100)}`,
           );
           return true;
         }
-        // Also check if the process name is exactly 'Gemini Nexus' (main process)
-        if (name === 'geminiNexus' && !isHelperProcess(name, cmd)) {
+        // Also check if the process name is exactly 'gemininexus' (main process)
+        if (name === 'gemininexus' && !isHelperProcess(name, cmd)) {
           logger.debug(`Found Gemini Nexus process: PID=${proc.pid}, name=${name}`);
           return true;
         }
       } else if (platform === 'win32') {
-        // Windows: Check for Gemini Nexus.exe
-        if (name === 'geminiNexus.exe' || name === 'geminiNexus') {
+        // Windows: Check for gemininexus.exe
+        if (name === 'gemininexus.exe' || name === 'gemininexus') {
           logger.debug(`Found Gemini Nexus process: PID=${proc.pid}, name=${name}`);
           return true;
         }
@@ -155,11 +155,11 @@ export async function isProcessRunning(): Promise<boolean> {
 
         if (nameLower === 'electron') {
           // Stricter check for AUR/Electron wrapper:
-          // Must include geminiNexus in command line but NOT manager or tools
+          // Must include gemininexus in command line but NOT manager or tools
           const isGeminiNexusApp =
-            (cmdLower.includes('/geminiNexus') ||
-              cmdLower.includes(' geminiNexus') ||
-              cmdLower.endsWith('geminiNexus')) &&
+            (cmdLower.includes('/gemininexus') ||
+              cmdLower.includes(' gemininexus') ||
+              cmdLower.endsWith('gemininexus')) &&
             !cmdLower.includes('manager') &&
             !cmdLower.includes('tools');
 
@@ -172,7 +172,7 @@ export async function isProcessRunning(): Promise<boolean> {
         }
 
         if (
-          (name.includes('geminiNexus') || cmd.includes('/geminiNexus')) &&
+          (name.includes('gemininexus') || cmd.includes('/gemininexus')) &&
           !name.includes('tools')
         ) {
           logger.debug(

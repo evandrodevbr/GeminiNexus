@@ -1,0 +1,8 @@
+{
+  "contains": [
+    "chat.completion.chunk",
+    "Hello world",
+    "finish_reason",
+    "data: [DONE]"
+  ]
+}

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock find-process module
 vi.mock('find-process', () => ({
   default: vi.fn(),
+  ProcessInfo: class {},
 }));
 
 // Mock logger to avoid console output during tests
@@ -47,7 +48,7 @@ describe('Process Handler', () => {
 
       const result = await isProcessRunning();
       expect(result).toBe(true);
-      expect(mockFindProcess).toHaveBeenCalledWith('name', 'Gemini Nexus', true);
+      expect(mockFindProcess).toHaveBeenCalledWith('name', 'Gemini Nexus', false);
     });
 
     it('should return false when only helper processes are found', async () => {

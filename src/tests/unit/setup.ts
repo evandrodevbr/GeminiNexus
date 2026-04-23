@@ -8,12 +8,12 @@ expect.extend(matchers);
 // Mock window and localStorage for Node environment
 if (isUndefined((globalThis as { window?: unknown }).window)) {
   global.window = {
-    matchMedia: vi.fn().mockImplementation((query) => ({
+    matchMedia: vi.fn().mockImplementation((query: string) => ({
       matches: false,
       media: query,
       onchange: null,
-      addListener: vi.fn(), // deprecated
-      removeListener: vi.fn(), // deprecated
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
@@ -27,6 +27,10 @@ if (isUndefined((globalThis as { window?: unknown }).window)) {
       key: vi.fn(),
     },
     postMessage: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    scrollTo: vi.fn(),
   } as any;
 
   (global as any).localStorage = (global as any).window.localStorage;
@@ -40,5 +44,18 @@ if (!process.env.APPDATA) {
   process.env.APPDATA = '/tmp/test-appdata';
 }
 
-// Mock child_process if not already mocked (though individual tests should mock it)
-// But some imports might trigger it early.
+// Mock ResizeObserver
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(globalThis as any).ResizeObserver = MockResizeObserver;
+
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(globalThis as any).IntersectionObserver = MockIntersectionObserver;

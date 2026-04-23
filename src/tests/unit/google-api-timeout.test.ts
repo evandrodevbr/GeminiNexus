@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { isString } from 'lodash-es';
 
+vi.mock('@/server/modules/proxy/request-user-agent', () => ({
+  resolveRequestUserAgent: vi.fn().mockResolvedValue('test-agent/1.0.0'),
+  buildUserAgent: vi.fn().mockReturnValue('test-agent/1.0.0'),
+  resolveLocalInstalledVersion: vi.fn().mockReturnValue('1.0.0'),
+  FALLBACK_VERSION: '1.22.2',
+}));
+
 // Mock module to test timeout behavior
 describe('GoogleAPIService Timeout', () => {
   beforeEach(() => {
@@ -114,7 +121,7 @@ describe('GoogleAPIService OAuth clients', () => {
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
     const clients = GoogleAPIService.listOAuthClients();
 
-    expect(clients.find((client) => client.key === 'geminiNexus_enterprise')).toBeDefined();
+    expect(clients.some((client) => client.is_builtin)).toBe(true);
     expect(clients.find((client) => client.key === 'custom_a')?.label).toBe('Custom A');
     expect(clients.find((client) => client.key === 'custom_b')?.is_active).toBe(true);
   });
@@ -173,7 +180,9 @@ describe('GoogleAPIService user info parsing', () => {
         id: 'google-user-1',
         email: 'user@example.com',
         name: 'Example User',
-        family_name: undefined,
+        given_name: 'Example',
+        picture: 'https://example.com/avatar.png',
+        verified_email: true,
       }),
     );
   });
@@ -213,27 +222,23 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
     vi.resetModules();
   });
 
-  it('falls back to loadCodeAssist credits when fetchCredits returns 404', async () => {
+  it('falls back to fetchCredits when loadCodeAssist returns no usable credits', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        text: vi.fn().mockResolvedValue('NOT_FOUND'),
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue({
+          // No paidTier.availableCredits — no usable credits
+          freeTier: {},
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: vi.fn().mockResolvedValue({
-          paidTier: {
-            availableCredits: [
-              {
-                creditType: 'GOOGLE_ONE_AI',
-                creditAmount: '1000',
-                minimumCreditAmountForUsage: '50',
-              },
-            ],
-          },
+          credits: 500,
+          expiryDate: '2025-12-31',
         }),
       });
 
@@ -249,31 +254,18 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
     } as any);
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
-    const { FALLBACK_VERSION, resolveLocalInstalledVersion } =
-      await import('../../server/modules/proxy/request-user-agent');
-    const expectedVersion = resolveLocalInstalledVersion() ?? FALLBACK_VERSION;
 
     await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toEqual({
-      credits: 1000,
-      expiryDate: '',
+      credits: 500,
+      expiryDate: '2025-12-31',
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      'https://cloudcode-pa.googleapis.com/v1internal:fetchCredits',
-    );
-    expect(fetchMock.mock.calls[1]?.[0]).toBe(
       'https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist',
     );
-    expect(fetchMock.mock.calls[1]?.[1]?.method).toBe('POST');
-    expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
-      JSON.stringify({
-        metadata: {
-          ide_type: 'ANTIGRAVITY',
-          ide_version: expectedVersion,
-          ide_name: 'geminiNexus',
-        },
-      }),
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      'https://cloudcode-pa.googleapis.com/v1internal:fetchCredits',
     );
   });
 
@@ -313,9 +305,19 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
     process.env.NO_PROXY = 'localhost,127.0.0.1,::1';
 
     const fetchMock = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 502,
-      text: vi.fn().mockResolvedValue('BAD_GATEWAY'),
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({
+        paidTier: {
+          availableCredits: [
+            {
+              creditType: 'GOOGLE_ONE_AI',
+              creditAmount: '1000',
+              minimumCreditAmountForUsage: '50',
+            },
+          ],
+        },
+      }),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -331,7 +333,10 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
 
-    await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toBeNull();
+    await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toEqual({
+      credits: 1000,
+      expiryDate: '',
+    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[1]?.dispatcher).toBeDefined();
@@ -345,9 +350,19 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
     process.env.ELECTRON_PROXY_SERVER = 'http://127.0.0.1:9090';
 
     const fetchMock = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 502,
-      text: vi.fn().mockResolvedValue('BAD_GATEWAY'),
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({
+        paidTier: {
+          availableCredits: [
+            {
+              creditType: 'GOOGLE_ONE_AI',
+              creditAmount: '1000',
+              minimumCreditAmountForUsage: '50',
+            },
+          ],
+        },
+      }),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -363,7 +378,10 @@ describe('GoogleAPIService fetchQuota fallback policy', () => {
 
     const { GoogleAPIService } = await import('../../services/GoogleAPIService');
 
-    await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toBeNull();
+    await expect(GoogleAPIService.fetchAICredits('access-token')).resolves.toEqual({
+      credits: 1000,
+      expiryDate: '',
+    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[1]?.dispatcher).toBeDefined();

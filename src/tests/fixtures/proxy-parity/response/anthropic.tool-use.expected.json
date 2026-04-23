@@ -1,0 +1,22 @@
+{
+  "model": "claude-3-sonnet",
+  "message": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "tool_1",
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"location\":\"NYC\"}"
+        }
+      }
+    ]
+  },
+  "finish_reason": "tool_calls",
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 20,
+    "total_tokens": 30
+  }
+}

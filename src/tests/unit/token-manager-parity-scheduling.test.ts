@@ -140,7 +140,7 @@ describe('TokenManagerService parity scheduling replay', () => {
       'geminiNexus_enterprise',
     );
 
-    expect(normalized).toBeUndefined();
+    expect(normalized).toBe('gemininexus_enterprise');
   });
 
   it('prioritizes preferred account in parity mode', async () => {

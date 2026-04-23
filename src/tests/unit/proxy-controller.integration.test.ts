@@ -110,6 +110,7 @@ describe('ProxyController Integration', () => {
         model: 'gpt-4o',
         messages: [{ role: 'user', content: 'hello world' }],
       }),
+      {},
     );
     expect(reply.status).toHaveBeenCalledWith(200);
     expect(reply.send).toHaveBeenCalledWith(

@@ -1,0 +1,18 @@
+{
+  "model": "gemini-pro",
+  "upstream": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Hello world"
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ]
+  }
+}
