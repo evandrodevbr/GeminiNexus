@@ -254,7 +254,10 @@ class NonStreamingProcessor {
 /**
  * Public API: Transform Gemini Response to Claude Response
  */
-export function transformResponse(geminiResponse: GeminiResponse, modelName?: string): ClaudeResponse {
+export function transformResponse(
+  geminiResponse: GeminiResponse,
+  modelName?: string,
+): ClaudeResponse {
   const processor = new NonStreamingProcessor();
   return processor.process(geminiResponse, modelName);
 }

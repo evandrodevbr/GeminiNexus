@@ -694,7 +694,13 @@ function buildGenerationConfig(
     if (maxTokens !== undefined) {
       config.maxOutputTokens = maxTokens;
     }
-    const defaultStopSequences = ['<|user|>', '<|endoftext|>', '<|end_of_turn|>', '[DONE]', '\n\nHuman:'];
+    const defaultStopSequences = [
+      '<|user|>',
+      '<|endoftext|>',
+      '<|end_of_turn|>',
+      '[DONE]',
+      '\n\nHuman:',
+    ];
     if (claudeReq.stop_sequences && claudeReq.stop_sequences.length > 0) {
       config.stopSequences = [...new Set([...claudeReq.stop_sequences, ...defaultStopSequences])];
     } else {
@@ -705,7 +711,10 @@ function buildGenerationConfig(
   if (claudeReq.response_format) {
     if (claudeReq.response_format.type === 'json_object') {
       config.responseMimeType = 'application/json';
-    } else if (claudeReq.response_format.type === 'json_schema' && claudeReq.response_format.json_schema) {
+    } else if (
+      claudeReq.response_format.type === 'json_schema' &&
+      claudeReq.response_format.json_schema
+    ) {
       config.responseMimeType = 'application/json';
       config.responseSchema = cleanJsonSchema(claudeReq.response_format.json_schema);
     }

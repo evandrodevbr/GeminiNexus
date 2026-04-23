@@ -15,6 +15,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { isEmpty, isFunction, isNil, isObjectLike, isPlainObject, isString } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { ProxyService } from './proxy.service';
+import { ProxyReplayService } from './proxy-replay.service';
 import { Observable } from 'rxjs';
 import { trafficLogger } from '../../../utils/traffic-logger';
 import {
@@ -33,6 +34,7 @@ import {
 } from '../../../lib/geminiNexus/ModelMapping';
 import { getServerConfig } from '../../server-config';
 import { TokenManagerService } from './token-manager.service';
+import { ProxyMetricsService } from './proxy-metrics.service';
 
 @Controller('v1')
 @UseGuards(ProxyGuard)
@@ -41,11 +43,15 @@ export class ProxyController {
 
   constructor(
     @Inject(ProxyService) private readonly proxyService: ProxyService,
+    @Optional() @Inject(ProxyReplayService) private readonly proxyReplayService?: ProxyReplayService,
     @Optional() @Inject(TokenManagerService) private readonly tokenManager?: TokenManagerService,
+    @Optional() @Inject(ProxyMetricsService) private readonly proxyMetrics?: ProxyMetricsService,
   ) {}
 
   @Get('models')
   listModels(@Res() res: FastifyReply) {
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
     try {
       const config = getServerConfig();
       const customMapping = config?.custom_mapping ?? {};
@@ -65,6 +71,12 @@ export class ProxyController {
         object: 'list',
         data,
       });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint: '/v1/models',
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to list models';
       this.logger.error(message, error instanceof Error ? error.stack : undefined);
@@ -80,6 +92,14 @@ export class ProxyController {
       res.status(status).send({
         error: errorPayload,
       });
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status,
+        endpoint: '/v1/models',
+      });
+    } finally {
+      this.proxyMetrics?.decrementActiveConnections();
     }
   }
 
@@ -89,6 +109,15 @@ export class ProxyController {
     @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/chat/completions',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
     await this.respondOpenAIChatCompletions(body, res, req);
   }
 
@@ -103,6 +132,15 @@ export class ProxyController {
     @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/messages/chat/completions',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
     await this.respondOpenAIChatCompletions(body, res, req);
   }
 
@@ -117,8 +155,20 @@ export class ProxyController {
       top_p?: number;
       stream?: boolean;
     },
+    @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/completions',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
     const request: OpenAIChatRequest = {
       model: body.model ?? 'gemini-3-flash',
       messages: [
@@ -132,17 +182,41 @@ export class ProxyController {
       top_p: body.top_p,
       stream: body.stream,
     };
+    let isStream = false;
     try {
       const result = await this.proxyService.handleChatCompletions(request);
-      if (body.stream && this.isObservableLike(result)) {
-        this.writeSseResponse(res, result);
+      isStream = !!(body.stream && this.isObservableLike(result));
+      if (isStream) {
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/completions', startTime);
         return;
       }
 
       const response = result as OpenAIChatResponse;
+      const duration = Date.now() - startTime;
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status: HttpStatus.OK,
+        endpoint: '/v1/completions',
+      });
+      if (response.usage?.total_tokens) {
+        this.proxyMetrics?.recordTokens(response.usage.total_tokens);
+      }
       res.status(HttpStatus.OK).send(this.toLegacyTextCompletionsResponse(response));
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const status = this.resolveErrorHttpStatus(error instanceof Error ? error.message : '');
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status,
+        endpoint: '/v1/completions',
+      });
       this.sendOpenAIErrorResponse(res, '/v1/completions', error);
+    } finally {
+      if (!isStream) {
+        this.proxyMetrics?.decrementActiveConnections();
+      }
     }
   }
 
@@ -159,21 +233,57 @@ export class ProxyController {
       top_p?: number;
       stream?: boolean;
     },
+    @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/responses',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
     const request = this.buildResponsesChatRequest(body);
+    let isStream = false;
 
     try {
       const result = await this.proxyService.handleChatCompletions(request);
-      if (body.stream && this.isObservableLike(result)) {
-        this.writeSseResponse(res, result);
+      isStream = !!(body.stream && this.isObservableLike(result));
+      if (isStream) {
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/responses', startTime);
         return;
       }
 
       const response = result as OpenAIChatResponse;
+      const duration = Date.now() - startTime;
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status: HttpStatus.OK,
+        endpoint: '/v1/responses',
+      });
+      if (response.usage?.total_tokens) {
+        this.proxyMetrics?.recordTokens(response.usage.total_tokens);
+      }
       res.status(HttpStatus.OK).send(this.toLegacyTextCompletionsResponse(response));
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const status = this.resolveErrorHttpStatus(error instanceof Error ? error.message : '');
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status,
+        endpoint: '/v1/responses',
+      });
       this.sendOpenAIErrorResponse(res, '/v1/responses', error);
+    } finally {
+      if (!isStream) {
+        this.proxyMetrics?.decrementActiveConnections();
+      }
     }
   }
 
@@ -186,8 +296,18 @@ export class ProxyController {
       size?: string;
       quality?: string;
     },
+    @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/images/generations',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
     const request: OpenAIChatRequest = {
       model: body.model ?? 'gemini-3-pro-image',
       messages: [
@@ -219,6 +339,15 @@ export class ProxyController {
     @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/images/edits',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
     if (!this.hasMultipartBoundary(req)) {
       res
         .status(HttpStatus.BAD_REQUEST)
@@ -270,7 +399,26 @@ export class ProxyController {
     @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
   ) {
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
+    const endpoint = '/v1/audio/transcriptions';
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/audio/transcriptions',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
     if (!this.hasMultipartBoundary(req)) {
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.BAD_REQUEST,
+        endpoint,
+      });
+      this.proxyMetrics?.decrementActiveConnections();
       res
         .status(HttpStatus.BAD_REQUEST)
         .send('Invalid `boundary` for `multipart/form-data` request');
@@ -279,6 +427,13 @@ export class ProxyController {
 
     const inlineAudio = this.resolveInlineData(body.file ?? body.audio);
     if (!inlineAudio) {
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.BAD_REQUEST,
+        endpoint,
+      });
+      this.proxyMetrics?.decrementActiveConnections();
       res.status(HttpStatus.BAD_REQUEST).send({
         error: {
           message: "Missing 'file' or 'audio' input. Provide base64 content or a data URL.",
@@ -313,11 +468,31 @@ export class ProxyController {
         .join('')
         .trim();
 
+      const duration = Date.now() - startTime;
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status: HttpStatus.OK,
+        endpoint,
+      });
+      if (result.usageMetadata?.totalTokenCount) {
+        this.proxyMetrics?.recordTokens(result.usageMetadata.totalTokenCount);
+      }
       res.status(HttpStatus.OK).send({
         text: text ?? '',
       });
     } catch (error) {
-      this.sendOpenAIErrorResponse(res, '/v1/audio/transcriptions', error);
+      const duration = Date.now() - startTime;
+      const status = this.resolveErrorHttpStatus(error instanceof Error ? error.message : '');
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status,
+        endpoint,
+      });
+      this.sendOpenAIErrorResponse(res, endpoint, error);
+    } finally {
+      this.proxyMetrics?.decrementActiveConnections();
     }
   }
 
@@ -326,9 +501,12 @@ export class ProxyController {
     res: FastifyReply,
     req?: FastifyRequest,
   ) {
+    this.proxyMetrics?.incrementActiveConnections();
     const requestId = uuidv4();
     const startTime = Date.now();
-    trafficLogger.logInbound(requestId, '/v1/chat/completions', body, undefined, { stream: body.stream });
+    trafficLogger.logInbound(requestId, '/v1/chat/completions', body, undefined, {
+      stream: body.stream,
+    });
 
     // Extract x-session-affinity header so OpenCode session stickiness works even when
     // the request body does not carry an explicit session_id field.
@@ -336,36 +514,106 @@ export class ProxyController {
       ? (req.headers['x-session-affinity'] as string | undefined)
       : undefined;
 
+    let isStream = false;
     try {
-      const result = await this.proxyService.handleChatCompletions(body, requestId, headerSessionKey);
+      const result = await this.proxyService.handleChatCompletions(
+        body,
+        requestId,
+        headerSessionKey,
+      );
 
-      if (body.stream && this.isObservableLike(result)) {
-        this.writeSseResponse(res, result, requestId, '/v1/chat/completions', startTime);
+      isStream = !!(body.stream && this.isObservableLike(result));
+      if (isStream) {
+        this.writeSseResponse(res, result as Observable<unknown>, requestId, '/v1/chat/completions', startTime);
         return;
       } else {
         const duration = Date.now() - startTime;
-        trafficLogger.logOutbound(requestId, '/v1/chat/completions', HttpStatus.OK, result, duration);
+        trafficLogger.logOutbound(
+          requestId,
+          '/v1/chat/completions',
+          HttpStatus.OK,
+          result,
+          duration,
+        );
+        this.proxyMetrics?.recordRequest({
+          timestamp: startTime,
+          duration,
+          status: HttpStatus.OK,
+          endpoint: '/v1/chat/completions',
+        });
+        const response = result as OpenAIChatResponse;
+        if (response.usage?.total_tokens) {
+          this.proxyMetrics?.recordTokens(response.usage.total_tokens);
+        }
         res.status(HttpStatus.OK).send(result);
       }
     } catch (error) {
       trafficLogger.logError(requestId, '/v1/chat/completions', error);
+      const duration = Date.now() - startTime;
+      const status = this.resolveErrorHttpStatus(error instanceof Error ? error.message : '');
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status,
+        endpoint: '/v1/chat/completions',
+      });
       this.sendOpenAIErrorResponse(res, '/v1/chat/completions', error);
+    } finally {
+      if (!isStream) {
+        this.proxyMetrics?.decrementActiveConnections();
+      }
     }
   }
 
   @Post('messages')
-  async anthropicMessages(@Body() body: AnthropicChatRequest, @Res() res: FastifyReply) {
+  async anthropicMessages(
+    @Body() body: AnthropicChatRequest,
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ) {
+    this.proxyReplayService?.recordRequest({
+      requestId: uuidv4(),
+      timestamp: Date.now(),
+      endpoint: '/v1/messages',
+      method: 'POST',
+      body,
+      headers: req.headers as Record<string, unknown>,
+      model: body.model,
+    });
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
+    let isStream = false;
     try {
       const result = await this.proxyService.handleAnthropicMessages(body);
+      isStream = !!(body.stream && this.isObservableLike(result));
 
-      if (body.stream && this.isObservableLike(result)) {
-        this.writeSseResponse(res, result);
+      if (isStream) {
+        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/messages', startTime);
         return;
       } else {
+        const duration = Date.now() - startTime;
+        this.proxyMetrics?.recordRequest({
+          timestamp: startTime,
+          duration,
+          status: HttpStatus.OK,
+          endpoint: '/v1/messages',
+        });
         res.status(HttpStatus.OK).send(result);
       }
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const status = this.resolveErrorHttpStatus(error instanceof Error ? error.message : '');
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration,
+        status,
+        endpoint: '/v1/messages',
+      });
       this.sendAnthropicErrorResponse(res, '/v1/messages', error);
+    } finally {
+      if (!isStream) {
+        this.proxyMetrics?.decrementActiveConnections();
+      }
     }
   }
 
@@ -762,6 +1010,35 @@ export class ProxyController {
     return isObjectLike(value) && isFunction((value as { subscribe?: unknown }).subscribe);
   }
 
+  private extractAndRecordTokens(payload: string): void {
+    try {
+      const lines = payload.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) {
+          continue;
+        }
+        const jsonStr = trimmed.slice(6).trim();
+        if (jsonStr === '[DONE]') {
+          continue;
+        }
+        const parsed = JSON.parse(jsonStr);
+        const usageMetadata = parsed?.usageMetadata;
+        if (usageMetadata && typeof usageMetadata.totalTokenCount === 'number') {
+          this.proxyMetrics?.recordTokens(usageMetadata.totalTokenCount);
+          return;
+        }
+        const usage = parsed?.usage;
+        if (usage && typeof usage.total_tokens === 'number') {
+          this.proxyMetrics?.recordTokens(usage.total_tokens);
+          return;
+        }
+      }
+    } catch {
+      // Ignore parse errors for token extraction
+    }
+  }
+
   private writeSseResponse(
     res: FastifyReply,
     stream: Observable<unknown>,
@@ -774,6 +1051,7 @@ export class ProxyController {
       res.header('Cache-Control', 'no-cache');
       res.header('Connection', 'keep-alive');
       res.send(stream);
+      this.proxyMetrics?.decrementActiveConnections();
       return;
     }
 
@@ -791,6 +1069,23 @@ export class ProxyController {
       res.raw.flushHeaders();
     }
 
+    let finished = false;
+    const finish = (status: number) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      if (startTime && endpoint) {
+        this.proxyMetrics?.recordRequest({
+          timestamp: startTime,
+          duration: Date.now() - startTime,
+          status,
+          endpoint,
+        });
+      }
+      this.proxyMetrics?.decrementActiveConnections();
+    };
+
     const subscription = stream.subscribe({
       next: (chunk) => {
         if (res.raw.writableEnded) {
@@ -801,6 +1096,7 @@ export class ProxyController {
         if (requestId && endpoint) {
           trafficLogger.logSseChunk(requestId, endpoint, chunk);
         }
+        this.extractAndRecordTokens(payload);
         if (isFunction((res.raw as any).flush)) {
           (res.raw as any).flush();
         }
@@ -826,16 +1122,19 @@ export class ProxyController {
 \n\n`,
         );
         res.raw.end();
+        finish(status);
       },
       complete: () => {
         if (!res.raw.writableEnded) {
           res.raw.end();
         }
+        finish(HttpStatus.OK);
       },
     });
 
     res.raw.on('close', () => {
       subscription.unsubscribe();
+      finish(HttpStatus.OK);
     });
   }
 
@@ -844,14 +1143,23 @@ export class ProxyController {
     prompt: string,
     res: FastifyReply,
   ): Promise<void> {
+    this.proxyMetrics?.incrementActiveConnections();
+    const startTime = Date.now();
+    const endpoint = '/v1/images/generations';
     try {
       const result = await this.proxyService.handleChatCompletions(request);
       if (result instanceof Observable) {
         this.logProxyEndpointError(
-          '/v1/images/generations',
+          endpoint,
           HttpStatus.INTERNAL_SERVER_ERROR,
           'Streaming image generation is not supported by this endpoint',
         );
+        this.proxyMetrics?.recordRequest({
+          timestamp: startTime,
+          duration: Date.now() - startTime,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          endpoint,
+        });
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
           error: {
             message: 'Streaming image generation is not supported by this endpoint',
@@ -865,10 +1173,16 @@ export class ProxyController {
       const image = this.extractInlineBase64Image(isString(content) ? content : '');
       if (!image) {
         this.logProxyEndpointError(
-          '/v1/images/generations',
+          endpoint,
           HttpStatus.BAD_GATEWAY,
           'Upstream did not return inline image data',
         );
+        this.proxyMetrics?.recordRequest({
+          timestamp: startTime,
+          duration: Date.now() - startTime,
+          status: HttpStatus.BAD_GATEWAY,
+          endpoint,
+        });
         res.status(HttpStatus.BAD_GATEWAY).send({
           error: {
             message: 'Upstream did not return inline image data',
@@ -878,6 +1192,15 @@ export class ProxyController {
         return;
       }
 
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status: HttpStatus.OK,
+        endpoint,
+      });
+      if (result.usage?.total_tokens) {
+        this.proxyMetrics?.recordTokens(result.usage.total_tokens);
+      }
       res.status(HttpStatus.OK).send({
         created: Math.floor(Date.now() / 1000),
         data: [
@@ -898,6 +1221,15 @@ export class ProxyController {
           );
           const fallbackImage = this.extractInlineBase64ImageFromGeminiResponse(geminiResult);
           if (fallbackImage) {
+            this.proxyMetrics?.recordRequest({
+              timestamp: startTime,
+              duration: Date.now() - startTime,
+              status: HttpStatus.OK,
+              endpoint,
+            });
+            if (geminiResult.usageMetadata?.totalTokenCount) {
+              this.proxyMetrics?.recordTokens(geminiResult.usageMetadata.totalTokenCount);
+            }
             res.status(HttpStatus.OK).send({
               created: Math.floor(Date.now() / 1000),
               data: [
@@ -914,7 +1246,16 @@ export class ProxyController {
         }
       }
 
-      this.sendOpenAIErrorResponse(res, '/v1/images/generations', error, message);
+      const status = this.resolveErrorHttpStatus(message);
+      this.proxyMetrics?.recordRequest({
+        timestamp: startTime,
+        duration: Date.now() - startTime,
+        status,
+        endpoint,
+      });
+      this.sendOpenAIErrorResponse(res, endpoint, error, message);
+    } finally {
+      this.proxyMetrics?.decrementActiveConnections();
     }
   }
 
@@ -1132,7 +1473,11 @@ export class ProxyController {
     if (status === HttpStatus.SERVICE_UNAVAILABLE) {
       return { type: 'server_error', code: 'temporarily_unavailable' };
     }
-    if (lowered.includes('invalid') || lowered.includes('malformed') || lowered.includes('bad request')) {
+    if (
+      lowered.includes('invalid') ||
+      lowered.includes('malformed') ||
+      lowered.includes('bad request')
+    ) {
       return { type: 'invalid_request_error', code: 'invalid_request_error' };
     }
     return { type: 'server_error', code: 'internal_error' };

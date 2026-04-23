@@ -6,11 +6,14 @@ import { GeminiClient } from './clients/gemini.client';
 import { GeminiController } from './gemini.controller';
 import { ProxyGuard } from './proxy.guard';
 import { TokenUsageService } from '../usage/token-usage.service';
+import { ProxyReplayService } from './proxy-replay.service';
+import { ProxyMetricsService } from './proxy-metrics.service';
+import { ProxyIdeConfigService } from './proxy-ide-config.service';
 
 @Module({
   imports: [],
   controllers: [ProxyController, GeminiController],
-  providers: [ProxyService, TokenManagerService, GeminiClient, ProxyGuard, TokenUsageService],
+  providers: [ProxyService, TokenManagerService, GeminiClient, ProxyGuard, TokenUsageService, ProxyReplayService, ProxyMetricsService, ProxyIdeConfigService],
   exports: [TokenManagerService],
 })
 export class ProxyModule {}

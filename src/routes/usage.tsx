@@ -2,19 +2,8 @@ import { useMemo, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from 'recharts';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsivePie } from '@nivo/pie';
 import {
   Select,
   SelectContent,
@@ -27,7 +16,15 @@ import { ipc } from '@/ipc/manager';
 import { useCloudAccounts } from '@/hooks/useCloudAccounts';
 import { StatCard } from '@/components/usage/StatCard';
 import { ChartCard } from '@/components/usage/ChartCard';
-import { CustomTooltip } from '@/components/usage/CustomTooltip';
+import {
+  COLOR_PROMPT,
+  COLOR_COMPLETION,
+  COLOR_TOTAL,
+  PIE_COLORS,
+  BarTooltip,
+  PieTooltip,
+} from '@/components/usage/NivoTooltip';
+import { nivoTheme } from '@/lib/nivo-theme';
 import {
   Activity,
   ArrowUpRight,
@@ -37,23 +34,6 @@ import {
   MessageSquare,
   Zap,
 } from 'lucide-react';
-
-/* ------------------------------------------------------------------ */
-/*  Color tokens — muted, dark-background-friendly palette               */
-/* ------------------------------------------------------------------ */
-const COLOR_PROMPT = '#5b9bd5';
-const COLOR_COMPLETION = '#70ad47';
-const COLOR_TOTAL = '#a5a5a5';
-const PIE_COLORS = [
-  '#5b9bd5',
-  '#ed7d31',
-  '#70ad47',
-  '#a5a5a5',
-  '#ffc000',
-  '#4472c4',
-  '#91d1c2',
-  '#c55a5a',
-];
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -106,6 +86,13 @@ function formatBucketLabel(bucket: string, range: TimeRange): string {
   // 30d
   const d = new Date(bucket + 'T00:00:00');
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function barColor(bar: any): string {
+  if (bar.id === 'Prompt') return COLOR_PROMPT;
+  if (bar.id === 'Completion') return COLOR_COMPLETION;
+  if (bar.id === 'Total') return COLOR_TOTAL;
+  return '#a5a5a5';
 }
 
 /* ------------------------------------------------------------------ */
@@ -201,7 +188,7 @@ function UsagePage() {
 
   const pieData = useMemo(() => {
     return (modelData || []).map((d) => ({
-      name: d.model,
+      id: d.model,
       value: d.totalTokens,
     }));
   }, [modelData]);
@@ -214,6 +201,10 @@ function UsagePage() {
       Total: d.totalTokens,
     }));
   }, [hourlyData]);
+
+  const hourlyTickValues = useMemo(() => {
+    return hourlyChartData.filter((_, i) => i % 3 === 0).map((d) => d.name);
+  }, [hourlyChartData]);
 
   const isDailyEmpty = !dailyLoading && !dailyError && (!dailyData || dailyData.length === 0);
   const isModelEmpty = !modelLoading && !modelError && (!modelData || modelData.length === 0);
@@ -343,35 +334,52 @@ function UsagePage() {
             errorMessage={t('usage.loadFailed')}
             retryLabel={t('usage.retry')}
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData} barCategoryGap="20%">
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.06)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-                  iconType="circle"
-                  iconSize={8}
-                />
-                <Bar dataKey="Prompt" fill={COLOR_PROMPT} radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Completion" fill={COLOR_COMPLETION} radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[280px]">
+              <ResponsiveBar
+                data={chartData}
+                keys={['Prompt', 'Completion']}
+                indexBy="name"
+                groupMode="grouped"
+                theme={nivoTheme}
+                colors={barColor}
+                margin={{ top: 10, right: 10, bottom: 40, left: 50 }}
+                padding={0.2}
+                innerPadding={2}
+                borderRadius={2}
+                enableGridY={true}
+                enableGridX={false}
+                gridYValues={5}
+                axisBottom={{
+                  tickSize: 0,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                }}
+                axisLeft={{
+                  tickSize: 0,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  format: (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`),
+                }}
+                tooltip={BarTooltip}
+                legends={[
+                  {
+                    dataFrom: 'keys',
+                    anchor: 'bottom',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: 30,
+                    itemsSpacing: 16,
+                    itemWidth: 80,
+                    itemHeight: 16,
+                    itemDirection: 'left-to-right',
+                    symbolSize: 8,
+                    symbolShape: 'circle',
+                  },
+                ]}
+                animate={true}
+              />
+            </div>
           </ChartCard>
 
           {/* Model Usage Donut Chart */}
@@ -386,30 +394,34 @@ function UsagePage() {
             errorMessage={t('usage.loadFailed')}
             retryLabel={t('usage.retry')}
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={3}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-                  iconType="circle"
-                  iconSize={8}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="h-[280px]">
+              <ResponsivePie
+                data={pieData}
+                innerRadius={0.55}
+                padAngle={2}
+                colors={PIE_COLORS}
+                borderWidth={0}
+                theme={nivoTheme}
+                margin={{ top: 10, right: 10, bottom: 40, left: 10 }}
+                tooltip={PieTooltip}
+                legends={[
+                  {
+                    anchor: 'bottom',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: 30,
+                    itemsSpacing: 16,
+                    itemWidth: 80,
+                    itemHeight: 16,
+                    itemDirection: 'left-to-right',
+                    symbolSize: 8,
+                    symbolShape: 'circle',
+                  },
+                ]}
+                animate={true}
+              />
+            </div>
           </ChartCard>
         </div>
 
@@ -426,37 +438,53 @@ function UsagePage() {
             errorMessage={t('usage.loadFailed')}
             retryLabel={t('usage.retry')}
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={hourlyChartData} barCategoryGap="20%">
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.06)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickLine={false}
-                  interval={2}
-                />
-                <YAxis
-                  tick={{ fill: '#a1a1aa', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-                  iconType="circle"
-                  iconSize={8}
-                />
-                <Bar dataKey="Prompt" fill={COLOR_PROMPT} radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Completion" fill={COLOR_COMPLETION} radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Total" fill={COLOR_TOTAL} radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[280px]">
+              <ResponsiveBar
+                data={hourlyChartData}
+                keys={['Prompt', 'Completion', 'Total']}
+                indexBy="name"
+                groupMode="grouped"
+                theme={nivoTheme}
+                colors={barColor}
+                margin={{ top: 10, right: 10, bottom: 40, left: 50 }}
+                padding={0.2}
+                innerPadding={2}
+                borderRadius={2}
+                enableGridY={true}
+                enableGridX={false}
+                gridYValues={5}
+                axisBottom={{
+                  tickSize: 0,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  tickValues: hourlyTickValues,
+                }}
+                axisLeft={{
+                  tickSize: 0,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  format: (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`),
+                }}
+                tooltip={BarTooltip}
+                legends={[
+                  {
+                    dataFrom: 'keys',
+                    anchor: 'bottom',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: 30,
+                    itemsSpacing: 16,
+                    itemWidth: 80,
+                    itemHeight: 16,
+                    itemDirection: 'left-to-right',
+                    symbolSize: 8,
+                    symbolShape: 'circle',
+                  },
+                ]}
+                animate={true}
+              />
+            </div>
           </ChartCard>
         )}
       </div>

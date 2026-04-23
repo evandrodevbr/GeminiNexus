@@ -57,6 +57,7 @@ Crie ou edite o arquivo de configuração (recomendado: `~/.config/opencode/open
 Depois de salvar, reinicie o OpenCode ou use `/models` para selecionar.
 
 **Comando rápido para adicionar chave:**
+
 ```bash
 opencode /connect
 # Escolha "Other" → digite o provider_id (ex: minha-ia-custom) → cole a API key
@@ -73,6 +74,7 @@ POST {baseURL}/chat/completions
 ```
 
 **Headers enviados:**
+
 - `Authorization: Bearer <sua-api-key>`
 - `Content-Type: application/json`
 - Headers customizados que você definir em `options.headers`
@@ -95,12 +97,15 @@ POST {baseURL}/chat/completions
   "stream": true,
   "temperature": 0.7,
   "max_tokens": 8192,
-  "tools": [ /* array de tools se o agente estiver usando ferramentas */ ],
+  "tools": [
+    /* array de tools se o agente estiver usando ferramentas */
+  ],
   "tool_choice": "auto"
 }
 ```
 
 **Parâmetros comuns que o OpenCode envia:**
+
 - `messages` (array completo do histórico)
 - `stream: true` (quase sempre, para UX em tempo real)
 - `temperature`, `max_tokens`, `top_p`
@@ -165,19 +170,23 @@ Se sua API suportar `tools`, o OpenCode pode:
 
 ```json
 {
-  "choices": [{
-    "message": {
-      "role": "assistant",
-      "tool_calls": [{
-        "id": "call_123",
-        "type": "function",
-        "function": {
-          "name": "read_file",
-          "arguments": "{\"path\": \"src/app.ts\"}"
-        }
-      }]
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_123",
+            "type": "function",
+            "function": {
+              "name": "read_file",
+              "arguments": "{\"path\": \"src/app.ts\"}"
+            }
+          }
+        ]
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -198,15 +207,15 @@ O OpenCode usa o TUI (Terminal User Interface) baseado em React/Ink para renderi
 
 ### 5. Requisitos Mínimos da Sua API para Funcionar Perfeitamente
 
-| Recurso              | Obrigatório? | Recomendado? | Observação |
-|----------------------|--------------|--------------|----------|
-| `/v1/chat/completions` | Sim         | -            | Endpoint principal |
-| Streaming (SSE)      | Sim         | -            | Essencial para UX |
-| Tool Calling         | Não         | Sim          | Para agentes completos |
-| System messages      | Sim         | -            | - |
-| Multi-turn history   | Sim         | -            | - |
-| Usage stats          | Não         | Sim          | Mostra tokens gastos |
-| Error handling       | Sim         | -            | Retorne JSON de erro padrão OpenAI |
+| Recurso                | Obrigatório? | Recomendado? | Observação                         |
+| ---------------------- | ------------ | ------------ | ---------------------------------- |
+| `/v1/chat/completions` | Sim          | -            | Endpoint principal                 |
+| Streaming (SSE)        | Sim          | -            | Essencial para UX                  |
+| Tool Calling           | Não          | Sim          | Para agentes completos             |
+| System messages        | Sim          | -            | -                                  |
+| Multi-turn history     | Sim          | -            | -                                  |
+| Usage stats            | Não          | Sim          | Mostra tokens gastos               |
+| Error handling         | Sim          | -            | Retorne JSON de erro padrão OpenAI |
 
 **Endpoint exato esperado:**  
 `POST https://sua-api.com/v1/chat/completions`
@@ -256,6 +265,7 @@ O OpenCode usa o TUI (Terminal User Interface) baseado em React/Ink para renderi
 
 Sua API **precisa ser 100% compatível** com o endpoint OpenAI `/v1/chat/completions` (streaming + tool calling recomendado).  
 O OpenCode vai:
+
 1. Configurar via `opencode.json` (baseURL + apiKey)
 2. Enviar requisições padrão OpenAI
 3. Receber streaming ou resposta completa

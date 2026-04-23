@@ -449,8 +449,7 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       setupIcon: 'images/icon.ico',
-      iconUrl:
-        'https://raw.githubusercontent.com/evandrodevbr/GeminiNexus/main/images/icon.ico',
+      iconUrl: 'https://raw.githubusercontent.com/evandrodevbr/GeminiNexus/main/images/icon.ico',
     }),
     ...(process.platform === 'win32' && process.arch === 'x64'
       ? [

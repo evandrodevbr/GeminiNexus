@@ -24,7 +24,10 @@ export interface RecordUsageParams {
   isEstimated?: boolean;
 }
 
-let usageDbConnection: { raw: Database.Database; orm: BetterSQLite3Database<typeof import('./schema')> } | null = null;
+let usageDbConnection: {
+  raw: Database.Database;
+  orm: BetterSQLite3Database<typeof import('./schema')>;
+} | null = null;
 
 function getUsageDb() {
   if (!usageDbConnection) {
@@ -57,9 +60,7 @@ function buildDateFilter(start?: number, end?: number): { sql: string; params: n
 }
 
 function buildAccountFilter(accountId?: string): { sql: string; params: unknown[] } {
-  return accountId
-    ? { sql: 'AND account_id = ?', params: [accountId] }
-    : { sql: '', params: [] };
+  return accountId ? { sql: 'AND account_id = ?', params: [accountId] } : { sql: '', params: [] };
 }
 
 export class TokenUsageRepo {

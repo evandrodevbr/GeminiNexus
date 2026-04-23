@@ -21,7 +21,7 @@ describe('ProxyController Integration', () => {
       handleChatCompletions: vi.fn().mockResolvedValue({ ok: true }),
       handleAnthropicMessages: vi.fn(),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
     const req = createReqMock();
 
@@ -46,7 +46,7 @@ describe('ProxyController Integration', () => {
       handleChatCompletions: vi.fn().mockResolvedValue(stream),
       handleAnthropicMessages: vi.fn(),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
     const req = createReqMock();
 
@@ -91,8 +91,9 @@ describe('ProxyController Integration', () => {
       }),
       handleAnthropicMessages: vi.fn(),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.completions(
       {
@@ -100,6 +101,7 @@ describe('ProxyController Integration', () => {
         prompt: 'hello world',
         stream: false,
       },
+      req,
       reply as any,
     );
 
@@ -148,8 +150,9 @@ describe('ProxyController Integration', () => {
       }),
     };
 
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.responses(
       {
@@ -174,6 +177,7 @@ describe('ProxyController Integration', () => {
           },
         ],
       },
+      req,
       reply as any,
     );
 
@@ -214,8 +218,9 @@ describe('ProxyController Integration', () => {
       handleChatCompletions: vi.fn().mockResolvedValue(stream),
     };
 
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.responses(
       {
@@ -224,6 +229,7 @@ describe('ProxyController Integration', () => {
         input: 'hello',
         stream: true,
       },
+      req,
       reply as any,
     );
 
@@ -245,8 +251,9 @@ describe('ProxyController Integration', () => {
       }),
     };
 
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.responses(
       {
@@ -264,6 +271,7 @@ describe('ProxyController Integration', () => {
           },
         ],
       },
+      req,
       reply as any,
     );
 
@@ -291,14 +299,16 @@ describe('ProxyController Integration', () => {
         ],
       }),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.imageGenerations(
       {
         model: 'gemini-3-pro-image',
         prompt: 'draw a cat',
       },
+      req,
       reply as any,
     );
 
@@ -318,14 +328,16 @@ describe('ProxyController Integration', () => {
     const proxyService = {
       handleChatCompletions: vi.fn().mockRejectedValue(new Error('429 quota exceeded')),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.imageGenerations(
       {
         model: 'gemini-3-pro-image',
         prompt: 'draw a dog',
       },
+      req,
       reply as any,
     );
 
@@ -358,14 +370,16 @@ describe('ProxyController Integration', () => {
         ],
       }),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.imageGenerations(
       {
         model: 'gemini-3-pro-image',
         prompt: 'draw a fox',
       },
+      req,
       reply as any,
     );
 
@@ -395,7 +409,7 @@ describe('ProxyController Integration', () => {
         ],
       }),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
 
     await controller.imageEdits(
@@ -422,7 +436,7 @@ describe('ProxyController Integration', () => {
     const proxyService = {
       handleChatCompletions: vi.fn(),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
 
     await controller.imageEdits(
@@ -456,7 +470,7 @@ describe('ProxyController Integration', () => {
         ],
       }),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
 
     await controller.audioTranscriptions(
@@ -481,7 +495,7 @@ describe('ProxyController Integration', () => {
     const proxyService = {
       handleGeminiGenerateContent: vi.fn(),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
 
     await controller.audioTranscriptions(
@@ -509,8 +523,9 @@ describe('ProxyController Integration', () => {
         type: 'message',
       }),
     };
-    const controller = new ProxyController(proxyService as any);
+    const controller = new ProxyController(proxyService as any, undefined, undefined, undefined);
     const reply = createReplyMock();
+    const req = createReqMock();
 
     await controller.anthropicMessages(
       {
@@ -518,6 +533,7 @@ describe('ProxyController Integration', () => {
         stream: false,
         messages: [{ role: 'user', content: 'hello' }],
       } as any,
+      req,
       reply as any,
     );
 

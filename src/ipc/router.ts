@@ -7,6 +7,7 @@ import { cloudRouter } from './cloud/router';
 import { configRouter } from './config/router';
 import { gatewayRouter } from './gateway/router';
 import { usageRouter } from './usage/router';
+import { proxyAdvancedRouter } from './proxy-advanced/router';
 
 import { os } from '@orpc/server';
 import { z } from 'zod';
@@ -55,5 +56,6 @@ export const router = os.use(logMiddleware).router({
   config: configRouter,
   gateway: gatewayRouter,
   usage: usageRouter,
+  proxyAdvanced: proxyAdvancedRouter,
   system: systemHandler,
 });

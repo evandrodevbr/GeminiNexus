@@ -82,12 +82,17 @@ export function safeApiLogValue(value: unknown, maxLength = 50_000): unknown {
   const sanitized = sanitizeObject(value);
 
   if (typeof sanitized === 'string' && sanitized.length > maxLength) {
-    return sanitized.substring(0, maxLength) + `... [truncated ${sanitized.length - maxLength} chars]`;
+    return (
+      sanitized.substring(0, maxLength) + `... [truncated ${sanitized.length - maxLength} chars]`
+    );
   }
 
   const stringified = JSON.stringify(sanitized);
   if (stringified.length > maxLength) {
-    return stringified.substring(0, maxLength) + `... [truncated ${stringified.length - maxLength} chars]`;
+    return (
+      stringified.substring(0, maxLength) +
+      `... [truncated ${stringified.length - maxLength} chars]`
+    );
   }
 
   return sanitized;

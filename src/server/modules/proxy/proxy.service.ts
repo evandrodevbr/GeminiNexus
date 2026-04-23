@@ -50,7 +50,10 @@ export class ProxyService {
   private async recordUsage(
     accountId: string,
     model: string,
-    usage: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined | null,
+    usage:
+      | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+      | undefined
+      | null,
     requestType: string,
     isEstimated?: boolean,
   ): Promise<void> {
@@ -79,12 +82,15 @@ export class ProxyService {
 
   private extractUsageFromMetadata(
     meta: unknown,
-  ): { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined {
+  ):
+    | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+    | undefined {
     if (!meta || typeof meta !== 'object') return undefined;
     const m = meta as Record<string, unknown>;
     return {
       promptTokenCount: typeof m.promptTokenCount === 'number' ? m.promptTokenCount : undefined,
-      candidatesTokenCount: typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : undefined,
+      candidatesTokenCount:
+        typeof m.candidatesTokenCount === 'number' ? m.candidatesTokenCount : undefined,
       totalTokenCount: typeof m.totalTokenCount === 'number' ? m.totalTokenCount : undefined,
     };
   }
@@ -332,13 +338,17 @@ export class ProxyService {
           );
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
-          this.recordUsage(accountId, _model, {
-            promptTokenCount: 0,
-            candidatesTokenCount: estimated,
-            totalTokenCount: estimated,
-          }, 'anthropic', true).catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(
+            accountId,
+            _model,
+            {
+              promptTokenCount: 0,
+              candidatesTokenCount: estimated,
+              totalTokenCount: estimated,
+            },
+            'anthropic',
+            true,
+          ).catch((err) => this.logger.error('Usage recording failed', err));
         }
         subscriber.complete();
       });
@@ -504,7 +514,7 @@ export class ProxyService {
           token.token.upstream_proxy_url,
           extraHeaders,
         );
-            return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
+        return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
       } catch (err) {
         if (err instanceof Error && this.isProjectContextError(err.message)) {
           this.logger.warn(
@@ -526,7 +536,7 @@ export class ProxyService {
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-        return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
+            return this.passthroughSseStream(stream, token.id, effectiveTargetModel);
           } catch (fallbackErr) {
             lastError = fallbackErr;
           }
@@ -579,7 +589,9 @@ export class ProxyService {
             if (typeof text === 'string') {
               accumulatedText += text;
             }
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
 
         subscriber.next(chunk.toString());
@@ -597,13 +609,17 @@ export class ProxyService {
           );
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
-          this.recordUsage(accountId, model, {
-            promptTokenCount: 0,
-            candidatesTokenCount: estimated,
-            totalTokenCount: estimated,
-          }, 'gemini', true).catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(
+            accountId,
+            model,
+            {
+              promptTokenCount: 0,
+              candidatesTokenCount: estimated,
+              totalTokenCount: estimated,
+            },
+            'gemini',
+            true,
+          ).catch((err) => this.logger.error('Usage recording failed', err));
         }
         subscriber.complete();
       });
@@ -859,14 +875,26 @@ export class ProxyService {
         // Use v1internal API (same as Anthropic handler)
         if (request.stream) {
           try {
-            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', geminiBody, extraHeaders, { model: effectiveTargetModel });
+            trafficLogger.logUpstream(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              geminiBody,
+              extraHeaders,
+              { model: effectiveTargetModel },
+            );
             const stream = await this.geminiClient.streamGenerateInternal(
               geminiBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-              return this.processStreamResponse(stream, request.model, requestId, token.id, effectiveTargetModel);
+            return this.processStreamResponse(
+              stream,
+              request.model,
+              requestId,
+              token.id,
+              effectiveTargetModel,
+            );
           } catch (streamError) {
             this.logger.warn(
               `Stream path failed for model=${request.model}; falling back to non-stream generation: ${
@@ -874,14 +902,26 @@ export class ProxyService {
               }`,
             );
 
-            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', geminiBody, extraHeaders, { model: effectiveTargetModel });
+            trafficLogger.logUpstream(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              geminiBody,
+              extraHeaders,
+              { model: effectiveTargetModel },
+            );
             const response = await this.generateInternalWithStreamFallback(
               geminiBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
+            trafficLogger.logUpstreamResponse(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              200,
+              response,
+              0,
+            );
             this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             this.logger.log(
               `Upstream response snippet after stream fallback: ${JSON.stringify(response).substring(0, 500)}`,
@@ -923,24 +963,48 @@ export class ProxyService {
             fallbackBody.model = effectiveTargetModel;
             this.applyInternalGenerationConstraints(fallbackBody, effectiveTargetModel, token.id);
             if (request.stream) {
-              trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', fallbackBody, extraHeaders, { model: effectiveTargetModel });
+              trafficLogger.logUpstream(
+                requestId || 'unknown',
+                '/v1/chat/completions',
+                fallbackBody,
+                extraHeaders,
+                { model: effectiveTargetModel },
+              );
               const stream = await this.geminiClient.streamGenerateInternal(
                 fallbackBody,
                 token.token.access_token,
                 token.token.upstream_proxy_url,
                 extraHeaders,
               );
-            return this.processStreamResponse(stream, request.model, requestId, token.id, effectiveTargetModel);
+              return this.processStreamResponse(
+                stream,
+                request.model,
+                requestId,
+                token.id,
+                effectiveTargetModel,
+              );
             }
 
-            trafficLogger.logUpstream(requestId || 'unknown', '/v1/chat/completions', fallbackBody, extraHeaders, { model: effectiveTargetModel });
+            trafficLogger.logUpstream(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              fallbackBody,
+              extraHeaders,
+              { model: effectiveTargetModel },
+            );
             const response = await this.generateInternalWithStreamFallback(
               fallbackBody,
               token.token.access_token,
               token.token.upstream_proxy_url,
               extraHeaders,
             );
-            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, response, 0);
+            trafficLogger.logUpstreamResponse(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              200,
+              response,
+              0,
+            );
             this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
             return this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
@@ -1135,7 +1199,14 @@ export class ProxyService {
 
           try {
             const json = JSON.parse(dataStr);
-            trafficLogger.logUpstreamResponse(requestId || 'unknown', '/v1/chat/completions', 200, json, 0, { rawLine: trimmed });
+            trafficLogger.logUpstreamResponse(
+              requestId || 'unknown',
+              '/v1/chat/completions',
+              200,
+              json,
+              0,
+              { rawLine: trimmed },
+            );
             // v1internal API wraps response in {"response": {"candidates": [...]}}
             const responsePayload = json.response ?? json;
             if (responsePayload.usageMetadata) {
@@ -1300,13 +1371,17 @@ export class ProxyService {
           );
         } else if (accumulatedText) {
           const estimated = this.estimateTokens(accumulatedText);
-          this.recordUsage(accountId, effectiveTargetModel, {
-            promptTokenCount: 0,
-            candidatesTokenCount: estimated,
-            totalTokenCount: estimated,
-          }, 'openai', true).catch((err) =>
-            this.logger.error('Usage recording failed', err),
-          );
+          this.recordUsage(
+            accountId,
+            effectiveTargetModel,
+            {
+              promptTokenCount: 0,
+              candidatesTokenCount: estimated,
+              totalTokenCount: estimated,
+            },
+            'openai',
+            true,
+          ).catch((err) => this.logger.error('Usage recording failed', err));
         }
         subscriber.complete();
       });
@@ -1776,7 +1851,7 @@ export class ProxyService {
           message: {
             role: 'assistant',
             // When tool_calls are present, content must be null per OpenAI spec.
-            content: toolCalls.length > 0 ? null : (finalContent || ''),
+            content: toolCalls.length > 0 ? null : finalContent || '',
             tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
           },
           finish_reason: this.mapAnthropicStopReasonToOpenAIFinishReason(
@@ -1844,7 +1919,9 @@ export class ProxyService {
     if (error instanceof UpstreamRequestError) {
       const status = error.status;
       if (status === 401) {
-        this.logger.warn(`Upstream returned 401 for account ${accountId}; attempting token refresh`);
+        this.logger.warn(
+          `Upstream returned 401 for account ${accountId}; attempting token refresh`,
+        );
         const refreshed = await this.tokenManager.forceRefreshToken(accountId);
         if (refreshed) {
           this.logger.log(`Token refreshed successfully for account ${accountId}; retry permitted`);

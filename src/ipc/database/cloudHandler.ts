@@ -144,7 +144,11 @@ export function ensureDatabaseInitialized(dbPath: string): void {
 
     // Migration: Check if request_type column exists on token_usage
     const tokenUsageTableInfoRaw = db.pragma('table_info(token_usage)') as any[];
-    const tokenUsageTableInfo = parseRows(TableInfoRowSchema, tokenUsageTableInfoRaw, 'cloud.token_usage.tableInfo');
+    const tokenUsageTableInfo = parseRows(
+      TableInfoRowSchema,
+      tokenUsageTableInfoRaw,
+      'cloud.token_usage.tableInfo',
+    );
     const hasRequestType = tokenUsageTableInfo.some((col) => col.name === 'request_type');
     if (!hasRequestType) {
       db.exec('ALTER TABLE token_usage ADD COLUMN request_type TEXT');
@@ -154,7 +158,9 @@ export function ensureDatabaseInitialized(dbPath: string): void {
     db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_account ON token_usage(account_id);`);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_timestamp ON token_usage(timestamp);`);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_model ON token_usage(model);`);
-    db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_account_timestamp ON token_usage(account_id, timestamp);`);
+    db.exec(
+      `CREATE INDEX IF NOT EXISTS idx_token_usage_account_timestamp ON token_usage(account_id, timestamp);`,
+    );
   } catch (error) {
     logger.error('Failed to initialize cloud database schema', error);
     throw error;
@@ -551,9 +557,7 @@ export class CloudAccountRepo {
       const rows = orm.select().from(accounts).orderBy(desc(accounts.lastUsed)).all();
 
       const activeRows = rows.filter((r) => r.isActive);
-      logger.debug(
-        `getAccounts: Found ${rows.length} accounts, ${activeRows.length} active.`,
-      );
+      logger.debug(`getAccounts: Found ${rows.length} accounts, ${activeRows.length} active.`);
 
       // Auto-activate the single account if none are active
       if (rows.length > 0 && activeRows.length === 0) {

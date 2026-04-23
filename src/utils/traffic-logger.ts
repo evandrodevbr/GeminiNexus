@@ -4,8 +4,15 @@ import { isObjectLike } from 'lodash-es';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { getAgentDir } from './paths';
+import { TrafficLogsRepo } from '../ipc/database/proxyMetricsHandler';
 
-export type TrafficDirection = 'inbound' | 'outbound' | 'upstream' | 'upstream_response' | 'sse_chunk' | 'error';
+export type TrafficDirection =
+  | 'inbound'
+  | 'outbound'
+  | 'upstream'
+  | 'upstream_response'
+  | 'sse_chunk'
+  | 'error';
 
 export interface TrafficLogEntry {
   timestamp: string;
@@ -113,9 +120,34 @@ class TrafficLogger {
       level: 'debug',
       message: line,
     });
+
+    try {
+      TrafficLogsRepo.insert({
+        timestamp: new Date(entry.timestamp).getTime(),
+        direction: entry.direction,
+        requestId: entry.requestId,
+        endpoint: entry.endpoint,
+        method: entry.method,
+        status: entry.status,
+        headers: entry.headers,
+        body: entry.body,
+        chunk: entry.chunk,
+        durationMs: entry.durationMs,
+        error: entry.error,
+        metadata: entry.metadata,
+      });
+    } catch (dbError) {
+      console.error('Failed to persist traffic log to DB', dbError);
+    }
   }
 
-  logInbound(requestId: string, endpoint: string, body: unknown, headers?: Record<string, unknown>, metadata?: Record<string, unknown>): void {
+  logInbound(
+    requestId: string,
+    endpoint: string,
+    body: unknown,
+    headers?: Record<string, unknown>,
+    metadata?: Record<string, unknown>,
+  ): void {
     this.log({
       timestamp: new Date().toISOString(),
       direction: 'inbound',
@@ -128,7 +160,14 @@ class TrafficLogger {
     });
   }
 
-  logOutbound(requestId: string, endpoint: string, status: number, body: unknown, durationMs: number, headers?: Record<string, unknown>): void {
+  logOutbound(
+    requestId: string,
+    endpoint: string,
+    status: number,
+    body: unknown,
+    durationMs: number,
+    headers?: Record<string, unknown>,
+  ): void {
     this.log({
       timestamp: new Date().toISOString(),
       direction: 'outbound',
@@ -141,7 +180,13 @@ class TrafficLogger {
     });
   }
 
-  logUpstream(requestId: string, endpoint: string, body: unknown, headers?: Record<string, unknown>, metadata?: Record<string, unknown>): void {
+  logUpstream(
+    requestId: string,
+    endpoint: string,
+    body: unknown,
+    headers?: Record<string, unknown>,
+    metadata?: Record<string, unknown>,
+  ): void {
     this.log({
       timestamp: new Date().toISOString(),
       direction: 'upstream',
@@ -153,7 +198,14 @@ class TrafficLogger {
     });
   }
 
-  logUpstreamResponse(requestId: string, endpoint: string, status: number, body: unknown, durationMs: number, headers?: Record<string, unknown>): void {
+  logUpstreamResponse(
+    requestId: string,
+    endpoint: string,
+    status: number,
+    body: unknown,
+    durationMs: number,
+    headers?: Record<string, unknown>,
+  ): void {
     this.log({
       timestamp: new Date().toISOString(),
       direction: 'upstream_response',
@@ -166,7 +218,12 @@ class TrafficLogger {
     });
   }
 
-  logSseChunk(requestId: string, endpoint: string, chunk: unknown, metadata?: Record<string, unknown>): void {
+  logSseChunk(
+    requestId: string,
+    endpoint: string,
+    chunk: unknown,
+    metadata?: Record<string, unknown>,
+  ): void {
     this.log({
       timestamp: new Date().toISOString(),
       direction: 'sse_chunk',
@@ -177,7 +234,14 @@ class TrafficLogger {
     });
   }
 
-  logError(requestId: string, endpoint: string, error: Error | unknown, status?: number, body?: unknown, metadata?: Record<string, unknown>): void {
+  logError(
+    requestId: string,
+    endpoint: string,
+    error: Error | unknown,
+    status?: number,
+    body?: unknown,
+    metadata?: Record<string, unknown>,
+  ): void {
     const err = error instanceof Error ? error : new Error(String(error));
     this.log({
       timestamp: new Date().toISOString(),

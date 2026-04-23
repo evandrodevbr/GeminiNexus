@@ -6,6 +6,7 @@ import { GoogleAPIService } from '../../../services/GoogleAPIService';
 import { getServerConfig } from '../../server-config';
 import { RateLimitReason, RateLimitTracker } from './rate-limit-tracker';
 import { updateDynamicForwardingRules } from '../../../lib/geminiNexus/ModelMapping';
+import { registerProxyAdvancedService } from '../../../ipc/proxy-advanced/service-registry';
 
 interface TokenData {
   email: string;
@@ -35,6 +36,14 @@ interface GetNextTokenOptions {
 }
 
 type TokenEntry = [string, TokenData];
+
+interface CircuitBreakerEntry {
+  failureCount: number;
+  lastFailureTime: number | null;
+  state: 'healthy' | 'degraded' | 'unhealthy';
+  failureRate: number;
+  requestLog: Array<{ timestamp: number; success: boolean }>;
+}
 
 function normalizeProjectId(projectId: string | null | undefined): string | undefined {
   if (!isString(projectId)) {
@@ -89,12 +98,21 @@ export class TokenManagerService implements OnModuleInit {
   private accountCooldowns: Map<string, number> = new Map();
   private sessionBindings: Map<string, { accountId: string; expiresAt: number }> = new Map();
   private rateLimitTracker = new RateLimitTracker();
+  private circuitBreakerStates = new Map<string, CircuitBreakerEntry>();
+  private readonly circuitBreakerWindowMs = 5 * 60 * 1000;
+  private readonly circuitBreakerUnhealthyThreshold = 5;
+  private readonly circuitBreakerDegradedThreshold = 2;
+  private readonly circuitBreakerFailureRateThreshold = 0.5;
 
   private shadowComparisonCount = 0;
   private shadowMismatchCount = 0;
   private parityRequestCount = 0;
   private parityErrorCount = 0;
   private noGoBlocked = false;
+
+  constructor() {
+    registerProxyAdvancedService('tokenManager', this);
+  }
 
   async onModuleInit() {
     await this.loadAccounts();
@@ -112,6 +130,13 @@ export class TokenManagerService implements OnModuleInit {
         if (tokenData) {
           this.tokens.set(account.id, tokenData);
           count++;
+        }
+      }
+
+      // Prune circuit breaker states for removed accounts
+      for (const accountId of this.circuitBreakerStates.keys()) {
+        if (!this.tokens.has(accountId)) {
+          this.circuitBreakerStates.delete(accountId);
         }
       }
 
@@ -331,18 +356,24 @@ export class TokenManagerService implements OnModuleInit {
         );
       }
 
-      if (candidateAccountPool.length === 0) {
+      // Circuit breaker: skip unhealthy accounts unless all are unhealthy
+      const healthyPool = candidateAccountPool.filter(
+        ([accountId]) => this.getOrCreateCircuitBreakerEntry(accountId).state !== 'unhealthy',
+      );
+      const finalCandidatePool = healthyPool.length > 0 ? healthyPool : candidateAccountPool;
+
+      if (finalCandidatePool.length === 0) {
         this.logger.warn('No eligible account found after exclusion filtering');
         return null;
       }
 
       if (this.shouldExecuteShadowComparison()) {
-        this.executeShadowComparison(candidateAccountPool, sessionKey, model);
+        this.executeShadowComparison(finalCandidatePool, sessionKey, model);
       }
 
       const selectedTokenEntry = this.isParitySchedulingEnabled()
-        ? await this.selectParityTokenCandidate(candidateAccountPool, sessionKey, model, now)
-        : this.selectLegacyTokenCandidate(candidateAccountPool, sessionKey, now);
+        ? await this.selectParityTokenCandidate(finalCandidatePool, sessionKey, model, now)
+        : this.selectLegacyTokenCandidate(finalCandidatePool, sessionKey, now);
 
       if (!selectedTokenEntry) {
         return null;
@@ -976,6 +1007,95 @@ export class TokenManagerService implements OnModuleInit {
 
   getAccountCount(): number {
     return this.tokens.size;
+  }
+
+  recordSuccess(accountId: string): void {
+    const resolvedId = this.resolveAccountId(accountId) ?? accountId;
+    const entry = this.getOrCreateCircuitBreakerEntry(resolvedId);
+    entry.failureCount = 0;
+    entry.requestLog.push({ timestamp: Date.now(), success: true });
+    this.computeCircuitBreakerState(entry);
+  }
+
+  recordFailure(accountId: string, error?: string): void {
+    const resolvedId = this.resolveAccountId(accountId) ?? accountId;
+    const entry = this.getOrCreateCircuitBreakerEntry(resolvedId);
+    entry.failureCount++;
+    entry.lastFailureTime = Date.now();
+    entry.requestLog.push({ timestamp: Date.now(), success: false });
+    this.computeCircuitBreakerState(entry);
+
+    if (entry.state === 'unhealthy') {
+      this.logger.warn(
+        `Account ${resolvedId} circuit breaker opened: failureCount=${entry.failureCount}, failureRate=${entry.failureRate.toFixed(2)}${error ? `, error=${error}` : ''}`,
+      );
+    } else if (entry.state === 'degraded') {
+      this.logger.warn(
+        `Account ${resolvedId} circuit breaker degraded: failureCount=${entry.failureCount}, failureRate=${entry.failureRate.toFixed(2)}${error ? `, error=${error}` : ''}`,
+      );
+    }
+  }
+
+  getCircuitBreakerStatus(): Record<string, { state: 'healthy' | 'degraded' | 'unhealthy'; failureCount: number; lastFailureTime: number | null; failureRate: number }> {
+    const result: Record<string, { state: 'healthy' | 'degraded' | 'unhealthy'; failureCount: number; lastFailureTime: number | null; failureRate: number }> = {};
+    for (const accountId of this.tokens.keys()) {
+      const entry = this.getOrCreateCircuitBreakerEntry(accountId);
+      this.computeCircuitBreakerState(entry);
+      result[accountId] = {
+        state: entry.state,
+        failureCount: entry.failureCount,
+        lastFailureTime: entry.lastFailureTime,
+        failureRate: entry.failureRate,
+      };
+    }
+    return result;
+  }
+
+  getParityCounters(): { totalRequests: number; matchedRequests: number; parityViolations: number; lastUpdated: string } {
+    return {
+      totalRequests: this.parityRequestCount,
+      matchedRequests: this.shadowComparisonCount,
+      parityViolations: this.parityErrorCount,
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  private getOrCreateCircuitBreakerEntry(accountId: string): CircuitBreakerEntry {
+    let entry = this.circuitBreakerStates.get(accountId);
+    if (!entry) {
+      entry = {
+        failureCount: 0,
+        lastFailureTime: null,
+        state: 'healthy',
+        failureRate: 0,
+        requestLog: [],
+      };
+      this.circuitBreakerStates.set(accountId, entry);
+    }
+    return entry;
+  }
+
+  private pruneCircuitBreakerLog(entry: CircuitBreakerEntry): void {
+    const cutoff = Date.now() - this.circuitBreakerWindowMs;
+    entry.requestLog = entry.requestLog.filter((r) => r.timestamp > cutoff);
+  }
+
+  private computeCircuitBreakerState(entry: CircuitBreakerEntry): void {
+    this.pruneCircuitBreakerLog(entry);
+    const total = entry.requestLog.length;
+    const failures = entry.requestLog.filter((r) => !r.success).length;
+    entry.failureRate = total > 0 ? failures / total : 0;
+
+    if (entry.failureCount >= this.circuitBreakerUnhealthyThreshold) {
+      entry.state = 'unhealthy';
+    } else if (
+      entry.failureCount >= this.circuitBreakerDegradedThreshold &&
+      entry.failureRate >= this.circuitBreakerFailureRateThreshold
+    ) {
+      entry.state = 'degraded';
+    } else {
+      entry.state = 'healthy';
+    }
   }
 
   private normalizeRefreshedOauthClientKey(
