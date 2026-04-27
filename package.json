@@ -76,7 +76,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^16.5.0",
-    "happy-dom": "^20.8.9",
+    "happy-dom": "^20.9.0",
     "icon-gen": "^5.0.0",
     "jsdom": "^27.1.0",
     "node-abi": "^4.28.0",
