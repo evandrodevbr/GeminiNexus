@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import crypto from 'crypto';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import type {
@@ -17,15 +18,25 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import MakerAppImage from '@pengx17/electron-forge-maker-appimage';
+// @ts-ignore
 import setLanguages from 'electron-packager-languages';
 import * as fs from 'fs';
 import * as path from 'path';
 import { stringify as yamlStringify } from 'yaml';
 
 const nativeModules = ['better-sqlite3', 'keytar', 'bindings', 'file-uri-to-path'];
-const ResolvedMakerAppImage = MakerAppImage;
+const ResolvedMakerAppImage: any = (MakerAppImage as any).default || MakerAppImage;
 const keepLanguages = new Set(['en', 'en-US', 'zh-CN', 'ru']);
 const windowsExecutableName = 'gemini-nexus';
+
+function isWixAvailable(): boolean {
+  try {
+    execSync('candle -?', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const isStartCommand = process.argv.some((arg) => arg.includes('start'));
 
@@ -176,25 +187,8 @@ function getChecksumArchLabel(platform: string, arch: string) {
 }
 
 const appImageMaker = new ResolvedMakerAppImage({
-  config: {
-    icons: [
-      {
-        file: 'images/32x32.png',
-        size: 32,
-      },
-      {
-        file: 'images/64x64.png',
-        size: 64,
-      },
-      {
-        file: 'images/128x128.png',
-        size: 128,
-      },
-      {
-        file: 'images/128x128@2x.png',
-        size: 256,
-      },
-    ],
+  options: {
+    icon: 'images/128x128.png',
   },
 });
 appImageMaker.name = '@pengx17/electron-forge-maker-appimage';
@@ -451,7 +445,7 @@ const config: ForgeConfig = {
       setupIcon: 'images/icon.ico',
       iconUrl: 'https://raw.githubusercontent.com/evandrodevbr/GeminiNexus/main/images/icon.ico',
     }),
-    ...(process.platform === 'win32' && process.arch === 'x64'
+    ...(process.platform === 'win32' && process.arch === 'x64' && isWixAvailable()
       ? [
           new MakerWix({
             language: 1033,

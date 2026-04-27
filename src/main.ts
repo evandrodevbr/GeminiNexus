@@ -235,7 +235,7 @@ function createWindow({ startHidden }: { startHidden: boolean }) {
     // Use process.cwd() in dev to find the icon reliably
     icon: inDevelopment
       ? path.join(process.cwd(), 'src/assets/icon.png')
-      : path.join(__dirname, '../assets/icon.png'),
+      : path.join(process.resourcesPath, 'assets', 'icon.png'),
   });
   globalMainWindow = mainWindow;
   logger.info('createWindow: BrowserWindow instance created');

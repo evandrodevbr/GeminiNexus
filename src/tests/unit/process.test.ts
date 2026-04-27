@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock find-process module
-vi.mock('find-process', () => ({
-  default: vi.fn(),
-  ProcessInfo: class {},
+// Mock server/main module
+vi.mock('../../server/main', () => ({
+  isNestServerRunning: vi.fn(),
+  stopNestServer: vi.fn(),
+  bootstrapNestServer: vi.fn(),
 }));
 
 // Mock logger to avoid console output during tests
@@ -16,160 +17,82 @@ vi.mock('../../utils/logger', () => ({
   },
 }));
 
-// Mock paths module to avoid child_process issues
-vi.mock('../../utils/paths', () => ({
-  getGeminiNexusExecutablePath: vi.fn(() => '/path/to/geminiNexus'),
-  isWsl: vi.fn(() => false),
+// Mock ConfigManager
+vi.mock('../../ipc/config/manager', () => ({
+  ConfigManager: {
+    loadConfig: vi.fn(),
+  },
 }));
 
 // Import after mocks are set up
-import { isProcessRunning, closeGeminiNexus, startGeminiNexus } from '../../ipc/process/handler';
-import findProcess from 'find-process';
+import {
+  isProcessRunning,
+  closeGeminiNexus,
+  startGeminiNexus,
+} from '../../ipc/process/handler';
+import {
+  isNestServerRunning,
+  stopNestServer,
+  bootstrapNestServer,
+} from '../../server/main';
+import { ConfigManager } from '../../ipc/config/manager';
 
 describe('Process Handler', () => {
-  const mockFindProcess = findProcess as unknown as ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('isProcessRunning', () => {
-    it('should return true when Gemini Nexus main process is found on macOS', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12345,
-          name: 'Gemini Nexus',
-          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus',
-        },
-      ]);
+    it('should return true when NestJS server is running', async () => {
+      vi.mocked(isNestServerRunning).mockReturnValue(true);
 
       const result = await isProcessRunning();
       expect(result).toBe(true);
-      expect(mockFindProcess).toHaveBeenCalledWith('name', 'Gemini Nexus', false);
+      expect(isNestServerRunning).toHaveBeenCalled();
     });
 
-    it('should return false when only helper processes are found', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12346,
-          name: 'Gemini Nexus Helper (Renderer)',
-          cmd: '/Applications/GeminiNexus.app/Contents/Frameworks/Gemini Nexus Helper (Renderer).app --type=renderer',
-        },
-        {
-          pid: 12347,
-          name: 'Gemini Nexus Helper (GPU)',
-          cmd: '/Applications/GeminiNexus.app/Contents/Frameworks/Gemini Nexus Helper (GPU).app --type=gpu-process',
-        },
-      ]);
+    it('should return false when NestJS server is not running', async () => {
+      vi.mocked(isNestServerRunning).mockReturnValue(false);
 
       const result = await isProcessRunning();
       expect(result).toBe(false);
+      expect(isNestServerRunning).toHaveBeenCalled();
+    });
+  });
+
+  describe('closeGeminiNexus', () => {
+    it('should stop the NestJS server', async () => {
+      vi.mocked(stopNestServer).mockResolvedValue(true);
+
+      await closeGeminiNexus();
+      expect(stopNestServer).toHaveBeenCalled();
+    });
+  });
+
+  describe('startGeminiNexus', () => {
+    it('should start the NestJS server when not running and proxy config exists', async () => {
+      vi.mocked(isNestServerRunning).mockReturnValue(false);
+      vi.mocked(ConfigManager.loadConfig).mockReturnValue({
+        proxy: { port: 8045, enabled: true },
+      } as any);
+      vi.mocked(bootstrapNestServer).mockResolvedValue(true);
+
+      await startGeminiNexus();
+      expect(bootstrapNestServer).toHaveBeenCalledWith({ port: 8045, enabled: true });
     });
 
-    it('should return false when only manager process is found', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
+    it('should not start the server if already running', async () => {
+      vi.mocked(isNestServerRunning).mockReturnValue(true);
 
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12348,
-          name: 'Gemini Nexus',
-          cmd: '/Applications/Gemini Nexus.app/Contents/MacOS/Gemini Nexus',
-        },
-      ]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(false);
+      await startGeminiNexus();
+      expect(bootstrapNestServer).not.toHaveBeenCalled();
     });
 
-    it('should return false when no processes are found', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
+    it('should throw if proxy configuration is missing', async () => {
+      vi.mocked(isNestServerRunning).mockReturnValue(false);
+      vi.mocked(ConfigManager.loadConfig).mockReturnValue({} as any);
 
-      mockFindProcess.mockResolvedValue([]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(false);
-    });
-
-    it('should skip self process', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 12345, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12345, // Same as current PID
-          name: 'Gemini Nexus',
-          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/GeminiNexus',
-        },
-      ]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(false);
-    });
-
-    it('should return true when Gemini Nexus.exe is found on Windows', async () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12345,
-          name: 'GeminiNexus.exe',
-          cmd: 'C:\\Program Files\\GeminiNexus\\GeminiNexus.exe',
-        },
-      ]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(true);
-    });
-
-    it('should return true when geminiNexus is found on Linux', async () => {
-      Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12345,
-          name: 'geminiNexus',
-          cmd: '/usr/bin/geminiNexus',
-        },
-      ]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(true);
-    });
-
-    it('should handle find-process errors gracefully', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockRejectedValue(new Error('Process enumeration failed'));
-
-      const result = await isProcessRunning();
-      expect(result).toBe(false);
-    });
-
-    it('should exclude processes with --type= argument', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-      Object.defineProperty(process, 'pid', { value: 1000, configurable: true });
-
-      mockFindProcess.mockResolvedValue([
-        {
-          pid: 12345,
-          name: 'Gemini Nexus',
-          cmd: '/Applications/GeminiNexus.app/Contents/MacOS/Gemini Nexus --type=utility',
-        },
-      ]);
-
-      const result = await isProcessRunning();
-      expect(result).toBe(false);
+      await expect(startGeminiNexus()).rejects.toThrow('Proxy configuration not found');
     });
   });
 

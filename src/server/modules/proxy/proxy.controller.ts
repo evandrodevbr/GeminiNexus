@@ -21,7 +21,7 @@ import { ProxyService, ProxyRequestContext, ProxyConfigOverride } from './proxy.
 import { ProxyReplayService } from './proxy-replay.service';
 import { Observable, interval, map } from 'rxjs';
 import { trafficLogger } from '../../../utils/traffic-logger';
-import {
+import type {
   OpenAIChatRequest,
   AnthropicChatRequest,
   OpenAIChatResponse,
@@ -223,15 +223,7 @@ export class ProxyController {
         this.tokenManager?.getAllCollectedModels(),
       );
 
-      const capabilitiesMap: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {
-        'gemini-3-pro': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: true },
-        'gemini-3-pro-image': { vision: true, streaming: false, jsonMode: false, audio: false, imageGeneration: true },
-        'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-        'gemini-3-flash-lite': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-        'claude-3-5-sonnet': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-        'claude-3-5-haiku': { vision: false, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-        'claude-3-opus': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-      };
+      const capabilitiesMap = this.buildCapabilitiesMap();
 
       const data = modelIds.map((id) => {
         const baseId = Object.keys(capabilitiesMap).find((key) => id.includes(key)) ?? 'gemini-3-flash';
@@ -263,6 +255,34 @@ export class ProxyController {
         endpoint: '/v1/models/capabilities',
       });
     }
+  }
+
+  private buildCapabilitiesMap(): Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> {
+    const allTokens = this.tokenManager?.getAllTokens() ?? [];
+    const map: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {};
+
+    for (const [, tokenData] of allTokens) {
+      for (const [modelId, modelInfo] of Object.entries(tokenData.quota?.models ?? {})) {
+        if (map[modelId]) continue;
+        const baseId = modelId.toLowerCase();
+        const isProImage = baseId.includes('gemini-3-pro') && baseId.includes('image');
+        map[baseId] = {
+          vision: modelInfo.supports_images ?? false,
+          streaming: isProImage ? false : true,
+          jsonMode: isProImage ? false : true,
+          audio: false,
+          imageGeneration: baseId.includes('gemini-3-pro') && !baseId.includes('flash'),
+        };
+      }
+    }
+
+    if (Object.keys(map).length === 0) {
+      return {
+        'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+      };
+    }
+
+    return map;
   }
 
   @Post('batch/completions')

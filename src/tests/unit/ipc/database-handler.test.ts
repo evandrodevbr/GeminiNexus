@@ -56,7 +56,7 @@ vi.mock('../../../ipc/database/dbConnection', () => ({
   openDrizzleConnection: vi.fn().mockImplementation(() => ({
     raw: { close: mockClose },
     orm: createMockOrm(),
-  })),
+  }) as any),
 }));
 
 vi.mock('fs', () => ({
@@ -86,8 +86,8 @@ describe('Database Handler', () => {
     vi.mocked(getGeminiNexusDbPaths).mockReturnValue(['/tmp/test.vscdb']);
     vi.mocked(openDrizzleConnection).mockImplementation(() => ({
       raw: { close: mockClose },
-      orm: createMockOrm() as any,
-    }));
+      orm: createMockOrm(),
+    }) as any);
     vi.mocked(fs.existsSync).mockReturnValue(true);
   });
 
@@ -146,8 +146,8 @@ describe('Database Handler', () => {
         raw: { close: mockClose },
         orm: createMockOrm([
           { value: JSON.stringify({ user: { email: 'auth@test.com', name: 'Auth User' } }) },
-        ]) as any,
-      });
+        ]),
+      } as any);
 
       const info = getCurrentAccountInfo();
       expect(info.email).toBe('auth@test.com');
@@ -162,8 +162,8 @@ describe('Database Handler', () => {
         orm: createMockOrm([
           { value: null },
           { value: JSON.stringify({ user: { email: 'init@test.com', name: 'Init User' } }) },
-        ]) as any,
-      });
+        ]),
+      } as any);
 
       const info = getCurrentAccountInfo();
       expect(info.email).toBe('init@test.com');
@@ -174,8 +174,8 @@ describe('Database Handler', () => {
     it('should return empty info when no keys found', () => {
       vi.mocked(openDrizzleConnection).mockReturnValueOnce({
         raw: { close: mockClose },
-        orm: createMockOrm([{ value: null }, { value: null }, { value: null }, { value: null }]) as any,
-      });
+        orm: createMockOrm([{ value: null }, { value: null }, { value: null }, { value: null }]),
+      } as any);
 
       const info = getCurrentAccountInfo();
       expect(info.email).toBe('');
@@ -192,8 +192,8 @@ describe('Database Handler', () => {
           { value: JSON.stringify({ status: 'active' }) },
           { value: JSON.stringify({ state: 'ready' }) },
           { value: JSON.stringify({ token: 'abc' }) },
-        ]) as any,
-      });
+        ]),
+      } as any);
 
       const account = {
         id: 'acc-1',
@@ -219,8 +219,8 @@ describe('Database Handler', () => {
     it('should restore keys to existing database', () => {
       vi.mocked(openDrizzleConnection).mockReturnValueOnce({
         raw: { close: mockClose },
-        orm: createMockOrm() as any,
-      });
+        orm: createMockOrm(),
+      } as any);
 
       const backup = {
         version: '1.0',

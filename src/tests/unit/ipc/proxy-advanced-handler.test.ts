@@ -31,14 +31,33 @@ vi.mock('../../../ipc/database/proxyMetricsHandler', () => ({
   },
 }));
 
-vi.mock('../../../ipc/proxy-advanced/service-registry', () => ({
-  proxyAdvancedRegistry: {
+vi.mock('../../../ipc/database/cloudHandler', () => ({
+  CloudAccountRepo: {
+    getAccounts: vi.fn().mockResolvedValue([]),
+  },
+}));
+
+vi.mock('../../../ipc/proxy-advanced/service-registry', () => {
+  const proxyAdvancedRegistry = {
     tokenManager: null,
     proxyMetrics: null,
     proxyReplay: null,
     proxyIdeConfig: null,
-  },
-}));
+  };
+
+  function getServiceOrThrow(key: string) {
+    const service = (proxyAdvancedRegistry as Record<string, unknown>)[key];
+    if (!service) {
+      throw new Error(`${key} is not registered`);
+    }
+    return service;
+  }
+
+  return {
+    proxyAdvancedRegistry,
+    getServiceOrThrow,
+  };
+});
 
 describe('Proxy Advanced Handler', () => {
   beforeEach(() => {
@@ -147,12 +166,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getParityCounters', () => {
-    it('should return zero counters when tokenManager is null', async () => {
+    it('should return error when tokenManager is null', async () => {
       const result = await getParityCounters();
-      expect(result.success).toBe(true);
-      expect(result.data?.totalRequests).toBe(0);
-      expect(result.data?.matchedRequests).toBe(0);
-      expect(result.data?.parityViolations).toBe(0);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should return counters from tokenManager', async () => {
@@ -173,11 +190,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getCircuitBreakerStatus', () => {
-    it('should return empty states when tokenManager is null', async () => {
+    it('should return error when tokenManager is null', async () => {
       const result = await getCircuitBreakerStatus();
-      expect(result.success).toBe(true);
-      expect(result.data?.states).toEqual({});
-      expect(result.data?.globalEnabled).toBe(true);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should return mapped status from tokenManager', async () => {
@@ -196,11 +212,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getProxyMetrics', () => {
-    it('should return zero metrics when proxyMetrics is null', async () => {
+    it('should return error when proxyMetrics is null', async () => {
       const result = await getProxyMetrics();
-      expect(result.success).toBe(true);
-      expect(result.data?.totalRequests).toBe(0);
-      expect(result.data?.activeConnections).toBe(0);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should return metrics from proxyMetrics service', async () => {
@@ -224,10 +239,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getRecentRequests', () => {
-    it('should return empty array when proxyReplay is null', async () => {
+    it('should return error when proxyReplay is null', async () => {
       const result = await getRecentRequests();
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual([]);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should return recent requests from proxyReplay', async () => {
@@ -246,7 +261,7 @@ describe('Proxy Advanced Handler', () => {
     it('should return error when proxyReplay is null', async () => {
       const result = await replayRequest('req-1');
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Replay service not available');
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should replay request through proxyReplay', async () => {
@@ -265,16 +280,122 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getModelCapabilities', () => {
-    it('should return capabilities for all models', async () => {
+    it('should return empty array when no accounts have quota', async () => {
+      const { CloudAccountRepo } = await import('../../../ipc/database/cloudHandler');
+      vi.mocked(CloudAccountRepo.getAccounts).mockResolvedValueOnce([]);
+
       const result = await getModelCapabilities();
       expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data!.length).toBeGreaterThan(0);
+      expect(result.data).toEqual([]);
+    });
 
-      const model = result.data!.find((m) => m.id === 'gemini-3-flash');
-      expect(model).toBeDefined();
-      expect(model!.capabilities.vision).toBe(true);
-      expect(model!.capabilities.streaming).toBe(true);
+    it('should aggregate unique models across accounts', async () => {
+      const { CloudAccountRepo } = await import('../../../ipc/database/cloudHandler');
+      vi.mocked(CloudAccountRepo.getAccounts).mockResolvedValueOnce([
+        {
+          id: 'acc-1',
+          provider: 'google',
+          email: 'a@example.com',
+          token: {} as any,
+          quota: {
+            models: {
+              'gemini-pro': {
+                percentage: 80,
+                resetTime: new Date().toISOString(),
+                display_name: 'Gemini Pro',
+                supports_images: true,
+                supports_thinking: false,
+                recommended: true,
+                max_tokens: 1000000,
+                max_output_tokens: 8192,
+              },
+            },
+          },
+          created_at: Date.now(),
+          last_used: Date.now(),
+        },
+        {
+          id: 'acc-2',
+          provider: 'google',
+          email: 'b@example.com',
+          token: {} as any,
+          quota: {
+            models: {
+              'gemini-pro': {
+                percentage: 60,
+                resetTime: new Date().toISOString(),
+                display_name: 'Gemini Pro Duplicate',
+                supports_images: true,
+                supports_thinking: false,
+                recommended: true,
+                max_tokens: 1000000,
+                max_output_tokens: 8192,
+              },
+              'gemini-flash': {
+                percentage: 90,
+                resetTime: new Date().toISOString(),
+                display_name: 'Gemini Flash',
+                supports_images: true,
+                supports_thinking: true,
+                thinking_budget: 24000,
+                recommended: false,
+                max_tokens: 500000,
+                max_output_tokens: 4096,
+              },
+            },
+          },
+          created_at: Date.now(),
+          last_used: Date.now(),
+        },
+      ]);
+
+      const result = await getModelCapabilities();
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(2);
+
+      const pro = result.data!.find((m) => m.id === 'gemini-pro');
+      expect(pro).toBeDefined();
+      expect(pro!.displayName).toBe('Gemini Pro');
+      expect(pro!.capabilities.vision).toBe(true);
+      expect(pro!.capabilities.thinking).toBe(false);
+      expect(pro!.capabilities.streaming).toBe(true);
+      expect(pro!.capabilities.jsonMode).toBe(true);
+      expect(pro!.capabilities.recommended).toBe(true);
+      expect(pro!.limits.maxTokens).toBe(1000000);
+      expect(pro!.limits.maxOutputTokens).toBe(8192);
+
+      const flash = result.data!.find((m) => m.id === 'gemini-flash');
+      expect(flash).toBeDefined();
+      expect(flash!.displayName).toBe('Gemini Flash');
+      expect(flash!.capabilities.thinking).toBe(true);
+      expect(flash!.limits.thinkingBudget).toBe(24000);
+    });
+
+    it('should handle accounts without quota gracefully', async () => {
+      const { CloudAccountRepo } = await import('../../../ipc/database/cloudHandler');
+      vi.mocked(CloudAccountRepo.getAccounts).mockResolvedValueOnce([
+        {
+          id: 'acc-1',
+          provider: 'google',
+          email: 'a@example.com',
+          token: {} as any,
+          created_at: Date.now(),
+          last_used: Date.now(),
+        },
+      ]);
+
+      const result = await getModelCapabilities();
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([]);
+    });
+
+    it('should handle errors from CloudAccountRepo', async () => {
+      const { CloudAccountRepo } = await import('../../../ipc/database/cloudHandler');
+      vi.mocked(CloudAccountRepo.getAccounts).mockRejectedValueOnce(new Error('DB failure'));
+
+      const result = await getModelCapabilities();
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('DB failure');
     });
   });
 
@@ -282,7 +403,7 @@ describe('Proxy Advanced Handler', () => {
     it('should return error when proxyIdeConfig is null', async () => {
       const result = await generateIdeConfig('vscode');
       expect(result.success).toBe(false);
-      expect(result.error).toBe('IDE config service not available');
+      expect(result.error).toBe('Proxy advanced service not initialized');
     });
 
     it('should return error for unsupported IDE', async () => {

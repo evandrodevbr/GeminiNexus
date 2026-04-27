@@ -8,7 +8,7 @@ import { RateLimitReason, RateLimitTracker } from './rate-limit-tracker';
 import { updateDynamicForwardingRules } from '../../../lib/geminiNexus/ModelMapping';
 import { registerProxyAdvancedService } from '../../../ipc/proxy-advanced/service-registry';
 
-interface TokenData {
+export interface TokenData {
   email: string;
   account_id: string;
   access_token: string;
@@ -36,7 +36,7 @@ interface GetNextTokenOptions {
   accountId?: string;
 }
 
-type TokenEntry = [string, TokenData];
+export type TokenEntry = [string, TokenData];
 
 interface CircuitBreakerEntry {
   failureCount: number;
@@ -1156,6 +1156,10 @@ export class TokenManagerService implements OnModuleInit {
     refreshedClientKey?: string,
   ): string | undefined {
     return GoogleAPIService.normalizeRefreshedOAuthClientKey(currentToken, refreshedClientKey);
+  }
+
+  getAllTokens(): TokenEntry[] {
+    return Array.from(this.tokens.entries());
   }
 
   getAllCollectedModels(): Set<string> {

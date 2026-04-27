@@ -60,6 +60,7 @@ vi.mock('../../ipc/database/dbConnection', () => ({
 vi.mock('../../utils/paths', () => ({
   getGeminiNexusDbPaths: () => ['mock-db'],
   getCloudAccountsDbPath: () => 'mock-cloud-db',
+  getAgentDir: vi.fn(() => '/mock/agent/dir'),
 }));
 
 vi.mock('../../utils/logger', () => ({

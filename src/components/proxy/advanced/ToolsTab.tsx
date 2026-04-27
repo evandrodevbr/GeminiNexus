@@ -4,7 +4,6 @@ import { useQuery, useQueries } from '@tanstack/react-query';
 import { ipc } from '@/ipc/manager';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { StatCard } from '@/components/usage/StatCard';
 import { Loader2, Copy, CheckCircle, ShieldAlert, XCircle, Terminal, Code2, Braces } from 'lucide-react';

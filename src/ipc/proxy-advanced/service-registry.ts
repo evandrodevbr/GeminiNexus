@@ -29,3 +29,11 @@ export function registerProxyAdvancedService<K extends keyof ProxyAdvancedRegist
 ): void {
   proxyAdvancedRegistry[key] = instance;
 }
+
+export function getServiceOrThrow<K extends keyof ProxyAdvancedRegistry>(
+  key: K,
+): NonNullable<ProxyAdvancedRegistry[K]> {
+  const svc = proxyAdvancedRegistry[key];
+  if (!svc) throw new Error(`ProxyAdvanced service '${key}' is not registered`);
+  return svc;
+}

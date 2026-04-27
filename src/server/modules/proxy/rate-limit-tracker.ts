@@ -180,6 +180,12 @@ export class RateLimitTracker {
         deleted++;
       }
     }
+    for (const [key, entry] of this.failureCounts.entries()) {
+      if (entry.lastFailureMs + FAILURE_COUNT_EXPIRY_MS <= now) {
+        this.failureCounts.delete(key);
+        deleted++;
+      }
+    }
     return deleted;
   }
 

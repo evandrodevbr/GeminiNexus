@@ -61,8 +61,8 @@ export class QuotaService {
       } else {
         logger.warn(`⚠️  [${email}] loadCodeAssist failed: Status: ${res.status}`);
       }
-    } catch (error: any) {
-      logger.error(`❌ [${email}] loadCodeAssist Network Error: ${error.message}`);
+    } catch (error: unknown) {
+      logger.error(`❌ [${email}] loadCodeAssist Network Error: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return [undefined, undefined];
@@ -138,7 +138,7 @@ export class QuotaService {
         }
 
         return { quotaData, projectId };
-      } catch (error: any) {
+      } catch (error: unknown) {
         let shouldFallback = true;
 
         if (axios.isAxiosError(error)) {
@@ -174,7 +174,7 @@ export class QuotaService {
           lastError = new Error(`HTTP ${status} - ${text}`);
           shouldFallback = !isNumber(status);
         } else {
-          logger.warn(`Request Failed at ${endpoint}: ${error.message}`);
+          logger.warn(`Request Failed at ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
           lastError = error instanceof Error ? error : new Error(String(error));
         }
 
@@ -182,7 +182,7 @@ export class QuotaService {
           logger.warn(`Quota API request failed at ${endpoint}, falling back to next endpoint`);
           await new Promise((r) => setTimeout(r, 1000));
         } else {
-          throw lastError ?? new Error(`Quota query failed: ${error.message}`);
+          throw lastError ?? new Error(`Quota query failed: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
     }

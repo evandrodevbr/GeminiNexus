@@ -22,6 +22,15 @@ interface TrafficLogTableProps {
 type SortKey = 'timestamp' | 'direction' | 'endpoint' | 'method' | 'status' | 'duration';
 type SortDir = 'asc' | 'desc';
 
+function SortIcon({ column, sortKey, sortDir }: { column: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (sortKey !== column) return <span className="ml-1 inline-block w-3" />;
+  return sortDir === 'asc' ? (
+    <ArrowUp className="ml-1 inline h-3 w-3" />
+  ) : (
+    <ArrowDown className="ml-1 inline h-3 w-3" />
+  );
+}
+
 export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoading }) => {
   const { t } = useTranslation();
   const [sortKey, setSortKey] = useState<SortKey>('timestamp');
@@ -64,15 +73,6 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
     });
   }, [logs, sortKey, sortDir]);
 
-  const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="ml-1 inline-block w-3" />;
-    return sortDir === 'asc' ? (
-      <ArrowUp className="ml-1 inline h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 inline h-3 w-3" />
-    );
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -99,42 +99,42 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                     onClick={() => toggleSort('timestamp')}
                   >
                     {t('proxy.advanced.trafficLog.timestamp')}
-                    <SortIcon column="timestamp" />
+                    <SortIcon column="timestamp" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                   <th
                     className="cursor-pointer pb-2 pr-4 font-medium select-none"
                     onClick={() => toggleSort('direction')}
                   >
                     {t('proxy.advanced.trafficLog.direction')}
-                    <SortIcon column="direction" />
+                    <SortIcon column="direction" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                   <th
                     className="cursor-pointer pb-2 pr-4 font-medium select-none"
                     onClick={() => toggleSort('endpoint')}
                   >
                     {t('proxy.advanced.trafficLog.endpoint')}
-                    <SortIcon column="endpoint" />
+                    <SortIcon column="endpoint" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                   <th
                     className="cursor-pointer pb-2 pr-4 font-medium select-none"
                     onClick={() => toggleSort('method')}
                   >
                     {t('proxy.advanced.trafficLog.method')}
-                    <SortIcon column="method" />
+                    <SortIcon column="method" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                   <th
                     className="cursor-pointer pb-2 pr-4 font-medium select-none"
                     onClick={() => toggleSort('status')}
                   >
                     {t('proxy.advanced.trafficLog.status')}
-                    <SortIcon column="status" />
+                    <SortIcon column="status" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                   <th
                     className="cursor-pointer pb-2 font-medium select-none"
                     onClick={() => toggleSort('duration')}
                   >
                     {t('proxy.advanced.trafficLog.duration')}
-                    <SortIcon column="duration" />
+                    <SortIcon column="duration" sortKey={sortKey} sortDir={sortDir} />
                   </th>
                 </tr>
               </thead>

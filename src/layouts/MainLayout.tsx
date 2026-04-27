@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ErrorBoundary } from 'react-error-boundary';
 import { useToast } from '@/components/ui/use-toast';
 import { getLocalizedErrorMessage } from '@/utils/errorMessages';
+import iconPng from '@/assets/icon.png';
 
 export const MainLayout: React.FC = () => {
   const location = useLocation();
@@ -85,7 +86,7 @@ export const MainLayout: React.FC = () => {
             <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded bg-transparent">
                 <img
-                  src="/src/assets/icon.png"
+                  src={iconPng}
                   alt="Gemini Nexus Logo"
                   className="h-full w-full object-contain"
                 />

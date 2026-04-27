@@ -10,10 +10,11 @@ export class MockDatabase {
   prepare = vi.fn().mockImplementation((sql: string) => {
     const table = this._extractTable(sql);
     return {
-      run: vi.fn().mockImplementation((params: any) => {
+      run: vi.fn().mockImplementation((...params: any[]) => {
+        const values = params.length === 1 && typeof params[0] === 'object' ? params[0] : params;
         const rows = this.data.get(table) || [];
         if (sql.toLowerCase().includes('insert')) {
-          rows.push(params);
+          rows.push(values);
           this.data.set(table, rows);
           return { lastInsertRowid: rows.length, changes: 1 };
         }
@@ -25,17 +26,20 @@ export class MockDatabase {
         }
         return { changes: 0 };
       }),
-      get: vi.fn().mockImplementation((params: any) => {
+      get: vi.fn().mockImplementation((...params: any[]) => {
+        const values = params.length === 1 && typeof params[0] === 'object' ? params[0] : params;
         const rows = this.data.get(table) || [];
+        if (!values || (Array.isArray(values) && values.length === 0)) return rows[0] ?? null;
         return rows.find((row) =>
-          Object.keys(params).every((key) => row[key] === params[key]),
+          Object.keys(values).every((key) => row[key] === values[key]),
         );
       }),
-      all: vi.fn().mockImplementation((params?: any) => {
+      all: vi.fn().mockImplementation((...params: any[]) => {
+        const values = params.length === 1 && typeof params[0] === 'object' ? params[0] : params;
         const rows = this.data.get(table) || [];
-        if (!params) return rows;
+        if (!values || (Array.isArray(values) && values.length === 0)) return rows;
         return rows.filter((row) =>
-          Object.keys(params).every((key) => row[key] === params[key]),
+          Object.keys(values).every((key) => row[key] === values[key]),
         );
       }),
     };
@@ -68,3 +72,5 @@ export class MockDatabase {
 export function createMockDb() {
   return new MockDatabase();
 }
+
+export default MockDatabase;

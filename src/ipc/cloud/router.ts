@@ -192,8 +192,8 @@ export const cloudRouter = os.router({
     .handler(async ({ input }) => {
       try {
         await CloudAccountRepo.setAccountProxy(input.accountId, input.proxyUrl);
-      } catch (error: any) {
-        logger.error('[ORPC] setAccountProxy error:', error.message, error.stack);
+      } catch (error: unknown) {
+        logger.error('[ORPC] setAccountProxy error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
         throw error;
       }
     }),
@@ -203,8 +203,8 @@ export const cloudRouter = os.router({
       const result = await CloudAccountRepo.syncFromIDE();
 
       return result;
-    } catch (error: any) {
-      logger.error('[ORPC] syncLocalAccount error:', error.message, error.stack);
+    } catch (error: unknown) {
+      logger.error('[ORPC] syncLocalAccount error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
       throw toSyncLocalAccountORPCError(error);
     }
   }),
@@ -273,8 +273,8 @@ export const cloudRouter = os.router({
     .handler(async ({ input }) => {
       try {
         return await exportCloudAccounts(input.stripTokens);
-      } catch (error: any) {
-        logger.error('[ORPC] exportCloudAccounts error:', error.message, error.stack);
+      } catch (error: unknown) {
+        logger.error('[ORPC] exportCloudAccounts error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
         throw error;
       }
     }),
@@ -297,8 +297,8 @@ export const cloudRouter = os.router({
     .handler(async ({ input }) => {
       try {
         return await importCloudAccounts(input.jsonContent, input.strategy);
-      } catch (error: any) {
-        logger.error('[ORPC] importCloudAccounts error:', error.message, error.stack);
+      } catch (error: unknown) {
+        logger.error('[ORPC] importCloudAccounts error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
         throw error;
       }
     }),

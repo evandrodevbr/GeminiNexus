@@ -266,9 +266,7 @@ export function CloudAccountList() {
   // Listen for Google Auth Code
   useEffect(() => {
     if (window.electron?.onGoogleAuthCode) {
-      console.log('[OAuth] Registering Google auth code IPC listener');
       const cleanup = window.electron.onGoogleAuthCode((code) => {
-        console.log('[OAuth] Received Google auth code via IPC:', code?.substring(0, 10) + '...');
         lastSubmittedAuthCodeRef.current = null;
         setAuthCode(code);
       });
@@ -286,7 +284,6 @@ export function CloudAccountList() {
         lastSubmittedAuthCode: lastSubmittedAuthCodeRef.current,
       })
     ) {
-      console.log('[OAuth] Auto-submitting Google auth code');
       submitAuthCode(authCode);
     }
   }, [addMutation.isPending, authCode, isAddDialogOpen, submitAuthCode]);
@@ -308,7 +305,6 @@ export function CloudAccountList() {
   }, [error, errorUpdatedAt, isError, t, toast]);
 
   const handleRefresh = (id: string) => {
-    console.log(`[Renderer] Triggering refresh for: ${id}`);
     refreshMutation.mutate(
       { accountId: id },
       {

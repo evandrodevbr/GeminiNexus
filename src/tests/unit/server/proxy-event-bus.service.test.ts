@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProxyEventBus, ProxyEvent } from '@/server/modules/proxy/proxy-event-bus.service';
 import { take } from 'rxjs/operators';
 

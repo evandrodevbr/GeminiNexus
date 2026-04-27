@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/tests/unit/test-utils';
 import { StatCard } from '@/components/usage/StatCard';

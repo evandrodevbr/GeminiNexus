@@ -151,7 +151,7 @@ export function useSetAccountProxy() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cloudAccounts });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('[Mutation] setAccountProxy failed:', error);
     },
   });
@@ -176,7 +176,7 @@ export function useImportCloudAccounts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cloudAccounts });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('[Mutation] importCloudAccounts failed:', error);
     },
   });

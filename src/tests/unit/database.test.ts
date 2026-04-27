@@ -1,26 +1,42 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getDatabaseConnection,
   getCurrentAccountInfo,
   backupAccount,
   restoreAccount,
 } from '../../ipc/database/handler';
-import Database from 'better-sqlite3';
+import { openDrizzleConnection } from '../../ipc/database/dbConnection';
+import { getGeminiNexusDbPaths } from '../../utils/paths';
 import fs from 'fs';
-import path from 'path';
 
-// Mock paths to use a temp DB
-const tempDbPath = path.join(process.cwd(), 'temp_test.vscdb');
+const mockClose = vi.fn();
+const mockRun = vi.fn();
 
-vi.mock('../../utils/paths', async () => {
-  const path = await import('path');
-  const tempDbPath = path.join(process.cwd(), 'temp_test.vscdb');
-  return {
-    getGeminiNexusDbPath: () => tempDbPath,
-    getGeminiNexusDbPaths: () => [tempDbPath],
-    getAgentDir: () => path.join(process.cwd(), 'temp_test_agent'),
+function createMockOrm(rows: Record<string, unknown>[] = []) {
+  let callIndex = 0;
+  const chain = {
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    all: vi.fn().mockImplementation(() => {
+      const row = rows[callIndex] ?? null;
+      callIndex++;
+      return row ? [row] : [];
+    }),
+    values: vi.fn().mockReturnThis(),
+    onConflictDoUpdate: vi.fn().mockReturnThis(),
+    run: mockRun,
   };
-});
+  return {
+    select: vi.fn().mockReturnValue(chain),
+    insert: vi.fn().mockReturnValue(chain),
+    transaction: vi.fn().mockImplementation((fn: (...args: any[]) => any) => {
+      const tx = {
+        insert: vi.fn().mockReturnValue(chain),
+      };
+      return fn(tx);
+    }),
+  };
+}
 
 vi.mock('../../utils/logger', () => ({
   logger: {
@@ -31,85 +47,133 @@ vi.mock('../../utils/logger', () => ({
   },
 }));
 
-// NOTE: These tests are skipped because better-sqlite3 is compiled for Electron, not Node.js.
-// Run these tests manually in an Electron environment.
-describe.skip('Database Handler', () => {
+vi.mock('../../utils/paths', () => ({
+  getGeminiNexusDbPaths: vi.fn().mockReturnValue(['/tmp/test.vscdb']),
+}));
+
+vi.mock('../../ipc/database/dbConnection', () => ({
+  openDrizzleConnection: vi.fn().mockImplementation(() => ({
+    raw: { close: mockClose } as any,
+    orm: createMockOrm() as any,
+  })),
+}));
+
+vi.mock('fs', () => ({
+  default: {
+    existsSync: vi.fn().mockReturnValue(true),
+    mkdirSync: vi.fn(),
+  },
+  existsSync: vi.fn().mockReturnValue(true),
+  mkdirSync: vi.fn(),
+}));
+
+vi.mock('../../utils/sqlite', () => ({
+  parseRow: vi.fn().mockImplementation((_schema, row) => row ?? null),
+}));
+
+vi.mock('../../ipc/database/schema', () => ({
+  itemTable: {},
+}));
+
+vi.mock('drizzle-orm', () => ({
+  eq: vi.fn().mockReturnValue({}),
+}));
+
+describe('Database Handler', () => {
   beforeEach(() => {
-    // Create a fresh DB for each test
-    const db = new Database(tempDbPath);
-    db.exec('CREATE TABLE IF NOT EXISTS ItemTable (key TEXT PRIMARY KEY, value TEXT)');
-    db.prepare('INSERT INTO ItemTable (key, value) VALUES (?, ?)').run(
-      'geminiNexusAuthStatus',
-      JSON.stringify({
-        user: { email: 'test@example.com', name: 'Test User' },
-      }),
-    );
-    db.close();
+    vi.clearAllMocks();
+    vi.mocked(getGeminiNexusDbPaths).mockReturnValue(['/tmp/test.vscdb']);
+    vi.mocked(openDrizzleConnection).mockImplementation(() => ({
+      raw: { close: mockClose } as any,
+      orm: createMockOrm() as any,
+    }));
+    vi.mocked(fs.existsSync).mockReturnValue(true);
   });
 
-  afterEach(() => {
-    if (fs.existsSync(tempDbPath)) {
-      fs.unlinkSync(tempDbPath);
-    }
+  describe('getDatabaseConnection', () => {
+    it('should connect to database', () => {
+      const conn = getDatabaseConnection();
+      expect(conn).toBeDefined();
+      expect(conn.raw).toBeDefined();
+      expect(conn.orm).toBeDefined();
+      conn.raw.close();
+      expect(mockClose).toHaveBeenCalled();
+    });
   });
 
-  it('should connect to database', () => {
-    const { raw } = getDatabaseConnection();
-    expect(raw).toBeDefined();
-    raw.close();
+  describe('getCurrentAccountInfo', () => {
+    it('should get current account info', () => {
+      vi.mocked(openDrizzleConnection).mockReturnValueOnce({
+        raw: { close: mockClose } as any,
+        orm: createMockOrm([
+          { value: JSON.stringify({ user: { email: 'test@example.com', name: 'Test User' } }) },
+        ]) as any,
+      });
+
+      const info = getCurrentAccountInfo();
+      expect(info.email).toBe('test@example.com');
+      expect(info.name).toBe('Test User');
+      expect(info.isAuthenticated).toBe(true);
+      expect(mockClose).toHaveBeenCalled();
+    });
   });
 
-  it('should get current account info', () => {
-    const info = getCurrentAccountInfo();
-    expect(info.email).toBe('test@example.com');
-    expect(info.name).toBe('Test User');
-    expect(info.isAuthenticated).toBe(true);
-  });
+  describe('backupAccount', () => {
+    it('should backup account', () => {
+      vi.mocked(openDrizzleConnection).mockReturnValueOnce({
+        raw: { close: mockClose } as any,
+        orm: createMockOrm([
+          { value: JSON.stringify({ user: { email: 'test@example.com', name: 'Test User' } }) },
+          { value: JSON.stringify({ state: 'ready' }) },
+          { value: JSON.stringify({ token: 'abc' }) },
+        ]) as any,
+      });
 
-  it('should backup account', () => {
-    const account = {
-      id: '123',
-      name: 'Test User',
-      email: 'test@example.com',
-      created_at: new Date().toISOString(),
-      last_used: new Date().toISOString(),
-    };
-    const backup = backupAccount(account);
-    expect(backup.account).toEqual(account);
-    expect(backup.data['geminiNexusAuthStatus']).toBeDefined();
-  });
-
-  it('should restore account', () => {
-    const backup = {
-      version: '1.0',
-      account: {
+      const account = {
         id: '123',
-        name: 'Restored User',
-        email: 'restored@example.com',
+        name: 'Test User',
+        email: 'test@example.com',
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString(),
-      },
-      data: {
-        geminiNexusAuthStatus: JSON.stringify({
-          user: { email: 'restored@example.com' },
-        }),
-        newKey: 'newValue',
-      },
-    };
+      };
+      const backup = backupAccount(account);
+      expect(backup.account).toEqual(account);
+      expect(backup.data['geminiNexusAuthStatus']).toEqual({
+        user: { email: 'test@example.com', name: 'Test User' },
+      });
+      expect(backup.data['account_email']).toBe('test@example.com');
+      expect(backup.data['backup_time']).toBeDefined();
+      expect(mockClose).toHaveBeenCalled();
+    });
+  });
 
-    restoreAccount(backup);
+  describe('restoreAccount', () => {
+    it('should restore account', () => {
+      vi.mocked(openDrizzleConnection).mockReturnValueOnce({
+        raw: { close: mockClose } as any,
+        orm: createMockOrm() as any,
+      });
 
-    const db = new Database(tempDbPath);
-    const row = db
-      .prepare("SELECT value FROM ItemTable WHERE key = 'geminiNexusAuthStatus'")
-      .get() as { value: string };
-    const value = JSON.parse(row.value);
-    expect(value.user.email).toBe('restored@example.com');
+      const backup = {
+        version: '1.0',
+        account: {
+          id: '123',
+          name: 'Restored User',
+          email: 'restored@example.com',
+          created_at: new Date().toISOString(),
+          last_used: new Date().toISOString(),
+        },
+        data: {
+          geminiNexusAuthStatus: JSON.stringify({
+            user: { email: 'restored@example.com' },
+          }),
+          newKey: 'newValue',
+        },
+      };
 
-    const newRow = db.prepare("SELECT value FROM ItemTable WHERE key = 'newKey'").get() as {
-      value: string;
-    };
-    expect(newRow.value).toBe('newValue'); // JSON stringified
-    db.close();
+      expect(() => restoreAccount(backup as any)).not.toThrow();
+      expect(mockRun).toHaveBeenCalled();
+      expect(mockClose).toHaveBeenCalled();
+    });
   });
 });

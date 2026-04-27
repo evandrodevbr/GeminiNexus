@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { registerProxyAdvancedService } from '../../../ipc/proxy-advanced/service-registry';
 import { ProxyService } from './proxy.service';
-import { v4 as uuidv4 } from 'uuid';
 import {
   OpenAIChatRequest,
   AnthropicChatRequest,

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { syncWithLocalTheme } from './actions/theme';
 import { useTranslation } from 'react-i18next';
@@ -29,12 +29,10 @@ const queryClient = new QueryClient();
 
 const root = createRoot(document.getElementById('app')!);
 root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider storageKey={LOCAL_STORAGE_KEYS.THEME} defaultTheme="system">
-        <App />
-        <Toaster />
-      </ThemeProvider>
-    </QueryClientProvider>
-  </React.StrictMode>,
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider storageKey={LOCAL_STORAGE_KEYS.THEME} defaultTheme="system">
+      <App />
+      <Toaster />
+    </ThemeProvider>
+  </QueryClientProvider>,
 );

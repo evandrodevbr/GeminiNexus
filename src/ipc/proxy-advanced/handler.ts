@@ -1,7 +1,8 @@
 import { logger } from '../../utils/logger';
-import { proxyAdvancedRegistry } from './service-registry';
+import { getServiceOrThrow } from './service-registry';
 import type { IdeConfigResult } from '../../server/modules/proxy/proxy-ide-config.service';
 import { TrafficLogsRepo } from '../database/proxyMetricsHandler';
+import { CloudAccountRepo } from '../database/cloudHandler';
 
 export interface TrafficLogEntryParsed {
   timestamp: string;
@@ -21,6 +22,13 @@ export interface TrafficLogEntryParsed {
     body?: unknown;
   };
   metadata?: Record<string, unknown>;
+}
+
+function normalizeServiceError(error: unknown): string {
+  if (error instanceof Error && error.message.includes('is not registered')) {
+    return 'Proxy advanced service not initialized';
+  }
+  return error instanceof Error ? error.message : String(error);
 }
 
 export async function getRecentTrafficLogs(
@@ -104,24 +112,13 @@ export async function getParityCounters(): Promise<{
   error?: string;
 }> {
   try {
-    const tokenManager = proxyAdvancedRegistry.tokenManager;
-    if (!tokenManager) {
-      return {
-        success: true,
-        data: {
-          totalRequests: 0,
-          matchedRequests: 0,
-          parityViolations: 0,
-          lastUpdated: new Date().toISOString(),
-        },
-      };
-    }
+    const tokenManager = getServiceOrThrow('tokenManager');
     return {
       success: true,
       data: tokenManager.getParityCounters(),
     };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
 }
 
@@ -131,16 +128,7 @@ export async function getCircuitBreakerStatus(): Promise<{
   error?: string;
 }> {
   try {
-    const tokenManager = proxyAdvancedRegistry.tokenManager;
-    if (!tokenManager) {
-      return {
-        success: true,
-        data: {
-          states: {},
-          globalEnabled: true,
-        },
-      };
-    }
+    const tokenManager = getServiceOrThrow('tokenManager');
 
     const rawStatus = tokenManager.getCircuitBreakerStatus();
     const states: Record<string, { state: string; failures: number; lastFailure: string | null }> = {};
@@ -160,7 +148,7 @@ export async function getCircuitBreakerStatus(): Promise<{
       },
     };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
 }
 
@@ -178,21 +166,7 @@ export async function getProxyMetrics(): Promise<{
   error?: string;
 }> {
   try {
-    const proxyMetrics = proxyAdvancedRegistry.proxyMetrics;
-    if (!proxyMetrics) {
-      return {
-        success: true,
-        data: {
-          uptimeSeconds: 0,
-          totalRequests: 0,
-          activeConnections: 0,
-          avgLatency: 0,
-          errorRate: 0,
-          requestsPerMinute: 0,
-          cacheHitRate: 0,
-        },
-      };
-    }
+    const proxyMetrics = getServiceOrThrow('proxyMetrics');
 
     const metrics = proxyMetrics.getMetrics();
     return {
@@ -209,25 +183,19 @@ export async function getProxyMetrics(): Promise<{
     };
   } catch (error) {
     logger.error('Failed to get proxy metrics', error);
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
 }
 
 export async function getRecentRequests(): Promise<{ success: boolean; data?: unknown[]; error?: string }> {
   try {
-    const proxyReplay = proxyAdvancedRegistry.proxyReplay;
-    if (!proxyReplay) {
-      return {
-        success: true,
-        data: [],
-      };
-    }
+    const proxyReplay = getServiceOrThrow('proxyReplay');
     return {
       success: true,
       data: proxyReplay.getRecentRequests(20),
     };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
 }
 
@@ -235,50 +203,77 @@ export async function replayRequest(
   requestId: string,
 ): Promise<{ success: boolean; data?: { original: unknown; newResponse: unknown }; error?: string }> {
   try {
-    const proxyReplay = proxyAdvancedRegistry.proxyReplay;
-    if (!proxyReplay) {
-      return { success: false, error: 'Replay service not available' };
-    }
+    const proxyReplay = getServiceOrThrow('proxyReplay');
     const result = await proxyReplay.replayRequest(requestId);
     return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
+}
+
+export interface ModelCapabilityEntry {
+  id: string;
+  object: string;
+  displayName?: string;
+  capabilities: {
+    vision: boolean;
+    thinking: boolean;
+    streaming: boolean;
+    jsonMode: boolean;
+    recommended: boolean;
+  };
+  limits: {
+    maxTokens?: number;
+    maxOutputTokens?: number;
+    thinkingBudget?: number;
+  };
 }
 
 export async function getModelCapabilities(): Promise<{
   success: boolean;
-  data?: { id: string; object: string; capabilities: { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean } }[];
+  data?: ModelCapabilityEntry[];
   error?: string;
 }> {
   try {
-    const capabilitiesMap: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {
-      'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-      'gemini-3.1-pro-low': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-      'gemini-3.1-pro-high': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-      'claude-sonnet-4-6-thinking': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-      'claude-opus-4-6-thinking': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
-    };
+    const accounts = await CloudAccountRepo.getAccounts();
 
-    const models = [
-      { id: 'gemini-3-flash', object: 'model' },
-      { id: 'gemini-3.1-pro-low', object: 'model' },
-      { id: 'gemini-3.1-pro-high', object: 'model' },
-      { id: 'claude-sonnet-4-6-thinking', object: 'model' },
-      { id: 'claude-opus-4-6-thinking', object: 'model' },
-    ];
+    const modelMap = new Map<string, ModelCapabilityEntry>();
 
-    const data = models.map((m) => {
-      const baseId = Object.keys(capabilitiesMap).find((key) => m.id.includes(key)) ?? 'gemini-3-flash';
-      return {
-        id: m.id,
-        object: m.object,
-        capabilities: capabilitiesMap[baseId] ?? capabilitiesMap['gemini-3-flash'],
-      };
-    });
+    for (const account of accounts) {
+      if (!account.quota || !account.quota.models) {
+        continue;
+      }
+
+      for (const [modelId, modelInfo] of Object.entries(account.quota.models)) {
+        if (modelMap.has(modelId)) {
+          continue;
+        }
+
+        modelMap.set(modelId, {
+          id: modelId,
+          object: 'model',
+          displayName: modelInfo.display_name,
+          capabilities: {
+            vision: modelInfo.supports_images ?? false,
+            thinking: modelInfo.supports_thinking ?? false,
+            streaming: true,
+            jsonMode: true,
+            recommended: modelInfo.recommended ?? false,
+          },
+          limits: {
+            maxTokens: modelInfo.max_tokens,
+            maxOutputTokens: modelInfo.max_output_tokens,
+            thinkingBudget: modelInfo.thinking_budget,
+          },
+        });
+      }
+    }
+
+    const data = Array.from(modelMap.values()).sort((a, b) => a.id.localeCompare(b.id));
 
     return { success: true, data };
   } catch (error) {
+    logger.error('Failed to get model capabilities', error);
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
@@ -354,10 +349,7 @@ export async function generateIdeConfig(
   error?: string;
 }> {
   try {
-    const proxyIdeConfig = proxyAdvancedRegistry.proxyIdeConfig;
-    if (!proxyIdeConfig) {
-      return { success: false, error: 'IDE config service not available' };
-    }
+    const proxyIdeConfig = getServiceOrThrow('proxyIdeConfig');
 
     const supportedIdes = ['cursor', 'vscode', 'claude-code', 'jetbrains', 'opencide'] as const;
     const normalizedIde = ide.toLowerCase() as typeof supportedIdes[number];
@@ -375,6 +367,6 @@ export async function generateIdeConfig(
       data: mapIdeConfigResult(result),
     };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return { success: false, error: normalizeServiceError(error) };
   }
 }

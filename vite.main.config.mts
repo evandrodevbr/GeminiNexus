@@ -35,14 +35,20 @@ export default defineConfig(({ mode }) => {
         ioredis: path.resolve(process.cwd(), './src/mocks/empty.ts'),
         '@fastify/static': path.resolve(process.cwd(), './src/mocks/empty.ts'),
         '@fastify/view': path.resolve(process.cwd(), './src/mocks/empty.ts'),
-        '@nestjs/microservices': path.resolve(process.cwd(), './src/mocks/nestjs-microservices'),
-        '@nestjs/websockets': path.resolve(process.cwd(), './src/mocks/nestjs-websockets'),
       },
     },
     build: {
       sourcemap: true,
       rollupOptions: {
-        external: ['better-sqlite3', 'keytar'],
+        external: [
+          'better-sqlite3',
+          'keytar',
+          'winston',
+          'winston-daily-rotate-file',
+          'moment',
+          '@nestjs/microservices',
+          '@nestjs/websockets'
+        ],
       },
     },
   };

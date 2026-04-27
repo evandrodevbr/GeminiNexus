@@ -393,8 +393,8 @@ export async function refreshAccountQuota(accountId: string): Promise<CloudAccou
     await clearAccountStatus(account);
     notifyTrayUpdate(account);
     return account;
-  } catch (error: any) {
-    if (error.message === 'UNAUTHORIZED') {
+  } catch (error: unknown) {
+    if (extractErrorMessage(error) === 'UNAUTHORIZED') {
       logger.warn(`Got 401 Unauthorized for ${account.email}, forcing token refresh...`);
       try {
         const newTokenData = await GoogleAPIService.refreshAccessToken(
@@ -462,7 +462,7 @@ export async function refreshAccountQuota(accountId: string): Promise<CloudAccou
         await markAccountStatusFromError(account, refreshError);
         throw refreshError;
       }
-    } else if (error.message === 'FORBIDDEN') {
+    } else if (extractErrorMessage(error) === 'FORBIDDEN') {
       logger.warn(
         `Got 403 Forbidden for ${account.email}, marking as rate limited (if implemented) or just ignoring.`,
       );
@@ -574,9 +574,9 @@ export async function switchCloudAccount(accountId: string): Promise<void> {
           notifyTrayUpdate(account);
         },
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Failed to switch cloud account', err);
-      throw new Error(`Switch failed: ${err.message || 'Unknown error'}`);
+      throw new Error(`Switch failed: ${extractErrorMessage(err) || 'Unknown error'}`);
     }
   });
 }
@@ -685,7 +685,7 @@ export async function setAutoSwitchEnabled(enabled: boolean): Promise<void> {
   // Trigger an immediate check if enabled
   if (enabled) {
     const { CloudMonitorService } = await import('../../services/CloudMonitorService');
-    CloudMonitorService.poll().catch((err: any) =>
+      CloudMonitorService.poll().catch((err: unknown) =>
       logger.error('Failed to poll after enabling auto-switch', err),
     );
   }
@@ -834,8 +834,8 @@ export async function importCloudAccounts(
         await CloudAccountRepo.addAccount(newAccount);
         result.imported++;
       }
-    } catch (error: any) {
-      result.errors.push(`Failed to import ${acc.email}: ${error.message}`);
+    } catch (error: unknown) {
+      result.errors.push(`Failed to import ${acc.email}: ${extractErrorMessage(error)}`);
     }
   }
 

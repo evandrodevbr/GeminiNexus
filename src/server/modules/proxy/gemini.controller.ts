@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
 
 import { ProxyGuard } from './proxy.guard';
 import { ProxyService } from './proxy.service';
-import { GeminiRequest, GeminiResponse } from './interfaces/request-interfaces';
+import type { GeminiRequest, GeminiResponse } from './interfaces/request-interfaces';
 import { getServerConfig } from '../../server-config';
 import { getAllDynamicModels } from '../../../lib/geminiNexus/ModelMapping';
 import { TokenManagerService } from './token-manager.service';

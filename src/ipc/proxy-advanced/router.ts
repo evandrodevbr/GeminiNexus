@@ -130,12 +130,18 @@ const ModelCapabilitiesResponseSchema = z.object({
       z.object({
         id: z.string(),
         object: z.string(),
+        displayName: z.string().optional(),
         capabilities: z.object({
           vision: z.boolean(),
+          thinking: z.boolean(),
           streaming: z.boolean(),
           jsonMode: z.boolean(),
-          audio: z.boolean(),
-          imageGeneration: z.boolean(),
+          recommended: z.boolean(),
+        }),
+        limits: z.object({
+          maxTokens: z.number().optional(),
+          maxOutputTokens: z.number().optional(),
+          thinkingBudget: z.number().optional(),
         }),
       }),
     )

@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/tests/unit/test-utils';
 import { Button, buttonVariants } from '@/components/ui/button';

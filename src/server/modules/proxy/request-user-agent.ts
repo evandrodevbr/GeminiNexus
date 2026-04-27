@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { isString } from 'lodash-es';
+import { version } from '../../../../package.json';
 import { getGeminiNexusVersion } from '../../../utils/geminiNexusVersion';
 import { logger } from '../../../utils/logger';
 
 const REMOTE_VERSION_URL = 'https://antigravity-auto-updater-974169037036.us-central1.run.app';
 const CHANGELOG_URL = 'https://antigravity.google/changelog';
-export const FALLBACK_VERSION = '1.22.2';
+export const FALLBACK_VERSION = version;
 const DEFAULT_REMOTE_TIMEOUT_MS = 2500;
 const VERSION_REGEX = /\d+\.\d+\.\d+/g;
 
