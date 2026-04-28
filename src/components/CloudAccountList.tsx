@@ -663,26 +663,26 @@ export function CloudAccountList() {
 
   return (
     <div className="space-y-5 pb-20">
-      <div className="bg-card rounded-lg border p-5">
+      <div className="rounded-lg border border-white/5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex shrink-0 flex-col gap-1">
             <h2 className="text-2xl font-bold tracking-tight">{t('cloud.title')}</h2>
             <p className="text-muted-foreground max-w-2xl">{t('cloud.description')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="bg-muted/10 rounded-md border border-white/5 px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.actions')}
               </div>
               <div className="text-base font-semibold">{totalAccounts}</div>
             </div>
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="bg-muted/10 rounded-md border border-white/5 px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.active')}
               </div>
               <div className="text-base font-semibold text-emerald-600">{activeAccounts}</div>
             </div>
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="bg-muted/10 rounded-md border border-white/5 px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.rateLimited')}
               </div>
@@ -690,7 +690,7 @@ export function CloudAccountList() {
             </div>
             {/* Global Quota */}
             {overallQuotaPercentage !== null && (
-              <div className="bg-muted/50 rounded-md border px-3 py-2">
+              <div className="bg-muted/10 rounded-md border border-white/5 px-3 py-2">
                 <div className="text-muted-foreground text-[11px] uppercase">
                   {t('cloud.globalQuota')}
                 </div>
