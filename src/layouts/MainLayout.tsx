@@ -65,7 +65,7 @@ export const MainLayout: React.FC = () => {
         {/* Sidebar */}
         <aside
           className={cn(
-            'bg-muted/10 group relative flex flex-col border-r transition-all duration-300 ease-in-out',
+            'bg-background group relative flex flex-col border-r border-white/5 transition-all duration-300 ease-in-out',
             isCollapsed ? 'w-[70px]' : 'w-64',
           )}
         >
