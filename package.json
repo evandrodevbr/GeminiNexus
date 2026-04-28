@@ -48,7 +48,7 @@
     "@semantic-release/github": "^12.0.6",
     "@sentry/vite-plugin": "^4.8.0",
     "@swc/core": "^1.15.8",
-    "@tailwindcss/vite": "^4.1.17",
+    "@tailwindcss/vite": "^4.2.4",
     "@tanstack/router-plugin": "^1.135.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -65,7 +65,7 @@
     "code-inspector-plugin": "^1.3.3",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "cross-env": "^10.1.0",
-    "electron": "^37.3.1",
+    "electron": "^39.8.5",
     "electron-devtools-installer": "^4.0.0",
     "electron-packager-languages": "^0.6.0",
     "electron-playwright-helpers": "^1.8.2",
@@ -90,7 +90,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
     "unplugin-swc": "^1.5.9",
-    "vite": "^5.4.21",
+    "vite": "^6.4.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.8"
   },
@@ -128,7 +128,6 @@
     "@tanstack/react-query": "^5.90.7",
     "@tanstack/react-router": "^1.139.3",
     "@tanstack/react-router-devtools": "^1.135.0",
-    "@types/uuid": "^11.0.0",
     "axios": "^1.15.0",
     "better-sqlite3": "^12.4.6",
     "class-transformer": "^0.5.1",
@@ -138,7 +137,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.2",
     "electron-squirrel-startup": "^1.0.1",
-    "fastify": "^5.8.4",
+    "fastify": "^5.8.5",
     "find-process": "^2.0.0",
     "gpt-tokenizer": "^3.4.0",
     "i18next": "^25.6.3",
@@ -156,7 +155,7 @@
     "tailwindcss-animate": "^1.0.7",
     "undici": "^7.16.0",
     "update-electron-app": "^3.1.1",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
     "yaml": "^2.8.2",
@@ -168,5 +167,17 @@
     "@sentry/cli",
     "@swc/core",
     "protobufjs"
-  ]
+  ],
+  "pnpm": {
+    "overrides": {
+      "fastify": "^5.8.5",
+      "tar": "^7.5.13",
+      "@octokit/request-error": "^5.1.1",
+      "@octokit/plugin-paginate-rest": "^9.2.2",
+      "@octokit/request": "^8.4.1",
+      "tmp": "^0.2.4",
+      "@tootallnate/once": "^3.0.1",
+      "esbuild": "^0.25.0"
+    }
+  }
 }
