@@ -114,8 +114,8 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       <Card
         className={cn(
           'relative overflow-hidden transition-all duration-200',
-          'hover:shadow-primary/10 hover:shadow-xl',
-          isCurrent ? 'border-primary/50 bg-primary/5' : 'hover:border-primary/20 cursor-pointer',
+          
+          isCurrent ? 'border-primary/50 bg-primary/10' : 'hover:bg-accent/10 cursor-pointer border-white/5',
           (isSwitching || isDeleting) && 'pointer-events-none opacity-60',
         )}
         onClick={() => !isCurrent && !isSwitching && !isDeleting && onSwitch(account.id)}
