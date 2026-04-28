@@ -30,7 +30,7 @@ const queryClient = new QueryClient();
 const root = createRoot(document.getElementById('app')!);
 root.render(
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider storageKey={LOCAL_STORAGE_KEYS.THEME} defaultTheme="system">
+    <ThemeProvider storageKey={LOCAL_STORAGE_KEYS.THEME} defaultTheme="dark">
       <App />
       <Toaster />
     </ThemeProvider>

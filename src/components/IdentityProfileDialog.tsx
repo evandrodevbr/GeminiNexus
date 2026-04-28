@@ -134,8 +134,7 @@ export function IdentityProfileDialog({ account, open, onOpenChange }: IdentityP
     if (!open) {
       return;
     }
-    void refreshProfiles();
-  }, [open, refreshProfiles]);
+    setTimeout(() => { void refreshProfiles(); }, 0); }, [open, refreshProfiles]);
 
   const runAction = async (key: string, action: () => Promise<void>) => {
     if (actionLockRef.current) {

@@ -259,9 +259,7 @@ export function CloudAccountList() {
       return;
     }
     const activeClientKey = oauthClients.find((client) => client.is_active)?.key;
-    if (activeClientKey) {
-      setSelectedOAuthClientKey(activeClientKey);
-    }
+    if (activeClientKey && activeClientKey !== selectedOAuthClientKey) { setTimeout(() => setSelectedOAuthClientKey(activeClientKey), 0); }
   }, [oauthClients, selectedOAuthClientKey]);
   // Listen for Google Auth Code
   useEffect(() => {

@@ -48,12 +48,8 @@ export function ModelVisibilitySettings() {
 
   // Initialize model visibility and provider groupings from config
   useEffect(() => {
-    if (config?.model_visibility) {
-      setModelVisibilityMap(config.model_visibility);
-    }
-    if (config?.provider_groupings_enabled !== undefined) {
-      setProviderGroupingEnabled(config.provider_groupings_enabled);
-    }
+    if (config?.model_visibility) { setTimeout(() => setModelVisibilityMap(config.model_visibility), 0); }
+    if (config?.provider_groupings_enabled !== undefined) { setTimeout(() => setProviderGroupingEnabled(config.provider_groupings_enabled), 0); }
   }, [config?.model_visibility, config?.provider_groupings_enabled]);
 
   // Get all unique models from all accounts

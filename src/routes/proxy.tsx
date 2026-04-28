@@ -107,7 +107,7 @@ function ProxyPage() {
   useEffect(() => {
     if (localIps && localIps.length > 0 && !selectedIp) {
       const recommended = localIps.find((ip) => ip.isRecommended);
-      setSelectedIp(recommended?.address || localIps[0].address);
+      setTimeout(() => setSelectedIp(recommended?.address || localIps[0].address), 0);
     }
   }, [localIps, selectedIp]);
 
@@ -208,7 +208,7 @@ function ProxyPage() {
 
   useEffect(() => {
     if (!availableModelIds.includes(activeModelTab) && availableModelIds.length > 0) {
-      setActiveModelTab(availableModelIds[0]);
+      setTimeout(() => setActiveModelTab(availableModelIds[0]), 0);
     }
   }, [availableModelIds, activeModelTab]);
 
