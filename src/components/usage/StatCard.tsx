@@ -40,7 +40,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-border/60 bg-card/60 hover:bg-card backdrop-blur-none transition-colors',
+        'border border-white/5 bg-background hover:bg-muted/10 backdrop-blur-none transition-colors',
         className,
       )}
     >

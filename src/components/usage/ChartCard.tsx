@@ -30,7 +30,7 @@ export const ChartCard: React.FC<ChartStatesProps> = ({
   children,
 }) => {
   return (
-    <Card className="border-border/60 bg-card/60 flex flex-col">
+    <Card className="border border-white/5 bg-background flex flex-col">
       <CardContent className="flex flex-1 flex-col p-4">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-foreground text-sm font-semibold tracking-tight">{title}</h3>
