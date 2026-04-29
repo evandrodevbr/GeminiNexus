@@ -68,6 +68,20 @@ vi.mock('../../../utils/paths', () => ({
   getCloudAccountsDbPath: vi.fn(() => '/mock/db/path.sqlite'),
 }));
 
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<typeof import('fs')>('fs');
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      existsSync: vi.fn(() => true),
+      mkdirSync: vi.fn(),
+    },
+    existsSync: vi.fn(() => true),
+    mkdirSync: vi.fn(),
+  };
+});
+
 vi.mock('../../../utils/logger', () => ({
   logger: {
     info: vi.fn(),

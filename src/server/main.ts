@@ -34,7 +34,8 @@ export async function bootstrapNestServer(config: ProxyConfig): Promise<boolean>
     app.enableCors();
 
     // Register detailed API request/response logging
-    const fastifyInstance = app.getHttpAdapter().getInstance();
+    // Type cast required: @nestjs/platform-fastify bundles its own fastify types
+    const fastifyInstance = app.getHttpAdapter().getInstance() as any;
     await registerApiLogging(fastifyInstance);
 
     await app.listen(port, '0.0.0.0');

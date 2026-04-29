@@ -72,6 +72,19 @@ vi.mock('../../utils/logger', () => ({
   },
 }));
 
+vi.mock('../../utils/traffic-logger', () => ({
+  TrafficLogger: vi.fn().mockImplementation(() => ({
+    logRequest: vi.fn(),
+    logResponse: vi.fn(),
+    close: vi.fn(),
+  })),
+  trafficLogger: {
+    logRequest: vi.fn(),
+    logResponse: vi.fn(),
+    close: vi.fn(),
+  },
+}));
+
 vi.mock('../../services/GoogleAPIService', () => ({
   GoogleAPIService: {
     getUserInfo: vi.fn(),

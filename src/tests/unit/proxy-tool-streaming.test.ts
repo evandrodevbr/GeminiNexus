@@ -6,7 +6,11 @@ import { Observable } from 'rxjs';
 // Subclass to access private method
 class TestableProxyService extends ProxyService {
   constructor() {
-    super({} as any, {} as any);
+    super(
+      {} as any,
+      {} as any,
+      { recordUsage: () => {} } as any,
+    );
   }
 
   public testProcessStream(

@@ -63,47 +63,49 @@ describe('StatCard', () => {
     renderWithProviders(
       <StatCard label="Styled" value={1} icon={Activity} className="my-stat" />,
     );
-    expect(screen.getByText('Styled').closest('[class*="border-border"]')).toHaveClass('my-stat');
+    // The wrapper div uses rounded-xl, find it by that selector
+    const wrapper = screen.getByText('Styled').closest('.rounded-xl');
+    expect(wrapper).toHaveClass('my-stat');
   });
 
   it('applies default slate accent when accent prop is not provided', () => {
     const { container } = renderWithProviders(
       <StatCard label="Default Accent" value={1} icon={Activity} />,
     );
-    const iconContainer = container.querySelector('.rounded-md');
-    expect(iconContainer).toHaveClass('bg-slate-500/5');
+    const iconContainer = container.querySelector('.rounded-lg');
+    expect(iconContainer).toHaveClass('bg-white/[0.04]');
   });
 
   it('applies blue accent', () => {
     const { container } = renderWithProviders(
       <StatCard label="Blue" value={1} icon={Activity} accent="blue" />,
     );
-    const iconContainer = container.querySelector('.rounded-md');
-    expect(iconContainer).toHaveClass('bg-blue-500/5');
+    const iconContainer = container.querySelector('.rounded-lg');
+    expect(iconContainer).toHaveClass('bg-blue-500/8');
   });
 
   it('applies green accent', () => {
     const { container } = renderWithProviders(
       <StatCard label="Green" value={1} icon={Activity} accent="green" />,
     );
-    const iconContainer = container.querySelector('.rounded-md');
-    expect(iconContainer).toHaveClass('bg-emerald-500/5');
+    const iconContainer = container.querySelector('.rounded-lg');
+    expect(iconContainer).toHaveClass('bg-emerald-500/8');
   });
 
   it('applies amber accent', () => {
     const { container } = renderWithProviders(
       <StatCard label="Amber" value={1} icon={Activity} accent="amber" />,
     );
-    const iconContainer = container.querySelector('.rounded-md');
-    expect(iconContainer).toHaveClass('bg-amber-500/5');
+    const iconContainer = container.querySelector('.rounded-lg');
+    expect(iconContainer).toHaveClass('bg-amber-500/8');
   });
 
   it('applies purple accent', () => {
     const { container } = renderWithProviders(
       <StatCard label="Purple" value={1} icon={Activity} accent="purple" />,
     );
-    const iconContainer = container.querySelector('.rounded-md');
-    expect(iconContainer).toHaveClass('bg-purple-500/5');
+    const iconContainer = container.querySelector('.rounded-lg');
+    expect(iconContainer).toHaveClass('bg-violet-500/8');
   });
 
   it('has uppercase label styling', () => {

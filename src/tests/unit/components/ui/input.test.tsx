@@ -59,8 +59,8 @@ describe('Input', () => {
   it('has expected base styling classes', () => {
     const { container } = renderWithProviders(<Input />);
     const input = container.querySelector('input');
-    expect(input).toHaveClass('rounded-md');
+    expect(input).toHaveClass('rounded-lg');
     expect(input).toHaveClass('border');
-    expect(input).toHaveClass('bg-transparent');
+    expect(input).toHaveClass('bg-muted/50');
   });
 });

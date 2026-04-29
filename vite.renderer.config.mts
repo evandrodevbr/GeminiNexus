@@ -39,11 +39,7 @@ export default defineConfig(({ mode }) => {
         autoCodeSplitting: true,
       }),
       tailwindcss(),
-      react({
-        babel: {
-          plugins: ['babel-plugin-react-compiler'],
-        },
-      }),
+      react(),
       codeInspectorPlugin({ bundler: 'vite' }),
     ],
     optimizeDeps: {
