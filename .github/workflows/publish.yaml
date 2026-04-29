@@ -50,11 +50,16 @@ jobs:
       - name: Checkout git repo
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install Node and NPM
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install Linux dependencies
         if: matrix.platform == 'linux'
@@ -77,7 +82,7 @@ jobs:
           }
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Make Artifacts
         if: matrix.platform != 'darwin'
@@ -87,7 +92,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        run: npm run make -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+        run: pnpm run make -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
 
       # DMG creation may be flaky on GitHub macOS runners, so retry the full darwin make.
       - name: Make Artifacts (darwin with retry)
@@ -97,7 +102,7 @@ jobs:
           max_attempts: 3
           timeout_minutes: 20
           retry_wait_seconds: 20
-          command: npm run make -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+          command: pnpm run make -- --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
         env:
           NODE_OPTIONS: --max-old-space-size=8192
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -150,11 +155,16 @@ jobs:
           merge-multiple: true
           path: release-assets
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install Node and NPM
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Resolve release tag
         id: release_tag
