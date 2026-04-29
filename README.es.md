@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/v/release/Draculabo/GeminiNexus?style=flat-square" alt="Versión" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/v/release/evandrodevbr/GeminiNexus?style=flat-square" alt="Versión" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/downloads/Draculabo/GeminiNexus/total?style=flat-square&color=blue" alt="Descargas" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/downloads/evandrodevbr/GeminiNexus/total?style=flat-square&color=blue" alt="Descargas" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Draculabo/GeminiNexus?style=flat-square" alt="Licencia" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="Licencia" />
   </a>
   <img src="https://img.shields.io/badge/plataforma-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="Plataforma" />
 </p>
@@ -175,7 +175,7 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
 ### Compilar desde el Código Fuente
 
 ```bash
-git clone https://github.com/Draculabo/GeminiNexus.git
+git clone https://github.com/evandrodevbr/GeminiNexus.git
 cd GeminiNexus
 npm install
 npm start

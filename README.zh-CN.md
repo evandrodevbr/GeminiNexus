@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/v/release/Draculabo/GeminiNexus?style=flat-square" alt="版本" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/v/release/evandrodevbr/GeminiNexus?style=flat-square" alt="版本" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/downloads/Draculabo/GeminiNexus/total?style=flat-square&color=blue" alt="下载量" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/downloads/evandrodevbr/GeminiNexus/total?style=flat-square&color=blue" alt="下载量" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Draculabo/GeminiNexus?style=flat-square" alt="许可证" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="许可证" />
   </a>
   <img src="https://img.shields.io/badge/平台-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="平台" />
 </p>
@@ -173,7 +173,7 @@
 ### 从源码构建
 
 ```bash
-git clone https://github.com/Draculabo/GeminiNexus.git
+git clone https://github.com/evandrodevbr/GeminiNexus.git
 cd GeminiNexus
 npm install
 npm start

@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/v/release/Draculabo/GeminiNexus?style=flat-square" alt="Release" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/v/release/evandrodevbr/GeminiNexus?style=flat-square" alt="Release" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/downloads/Draculabo/GeminiNexus/total?style=flat-square&color=blue" alt="Downloads" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
+    <img src="https://img.shields.io/github/downloads/evandrodevbr/GeminiNexus/total?style=flat-square&color=blue" alt="Downloads" />
   </a>
-  <a href="https://github.com/Draculabo/GeminiNexus/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Draculabo/GeminiNexus?style=flat-square" alt="License" />
+  <a href="https://github.com/evandrodevbr/GeminiNexus/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="License" />
   </a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
@@ -195,7 +195,7 @@ When using AI-powered IDEs and coding tools, have you ever run into these proble
 
 ```bash
 # Clone the repository
-git clone https://github.com/Draculabo/GeminiNexus.git
+git clone https://github.com/evandrodevbr/GeminiNexus.git
 cd GeminiNexus
 
 # Install dependencies
