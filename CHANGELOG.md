@@ -1,3 +1,9 @@
+## [0.13.1](https://github.com/evandrodevbr/GeminiNexus/compare/v0.13.0...v0.13.1) (2026-04-29)
+
+### 🐛 Bug Fixes
+
+* lazy-initialize api-logger to prevent EACCES in CI environments ([9bf7c46](https://github.com/evandrodevbr/GeminiNexus/commit/9bf7c46ff6320f49cba80923c9e11eac35a7d4f0))
+
 <a name="readme-top"></a>
 
 # Changelog
