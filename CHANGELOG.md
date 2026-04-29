@@ -1,3 +1,9 @@
+## [0.14.0](https://github.com/evandrodevbr/GeminiNexus/compare/v0.13.1...v0.14.0) (2026-04-29)
+
+### 🚀 Features
+
+* **proxy:** add OpenAI Responses API compatibility for Open CoDesign ([68474b5](https://github.com/evandrodevbr/GeminiNexus/commit/68474b56dca9c9bcd7b06eaae04c521f475e8e2c))
+
 ## [0.13.1](https://github.com/evandrodevbr/GeminiNexus/compare/v0.13.0...v0.13.1) (2026-04-29)
 
 ### 🐛 Bug Fixes
