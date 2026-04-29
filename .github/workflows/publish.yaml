@@ -1,11 +1,9 @@
 name: Publish Release
 
 on:
-  push:
-    tags:
-      - 'v*'
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -20,7 +18,46 @@ on:
         default: false
 
 jobs:
+  check-release:
+    name: Check for new release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
+      has_release: ${{ steps.get_tag.outputs.has_release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest release tag
+        id: get_tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="$(node -e "process.stdout.write(require('./package.json').version)")"
+            tag="v$version"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "has_release=true" >> "$GITHUB_OUTPUT"
+          else
+            tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+            if [ -n "$tag" ]; then
+              echo "tag=$tag" >> "$GITHUB_OUTPUT"
+              echo "has_release=true" >> "$GITHUB_OUTPUT"
+              echo "Found release: $tag"
+            else
+              echo "has_release=false" >> "$GITHUB_OUTPUT"
+              echo "No release found, skipping build."
+            fi
+          fi
+
   build:
+    needs: check-release
+    if: needs.check-release.outputs.has_release == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -136,16 +173,12 @@ jobs:
           echo "Dry run enabled: build artifacts generated and uploaded; release publish step will be skipped."
 
   publish:
-    name: Publish Release (Manual Approval)
-    needs: build
+    name: Publish Release
+    needs: [check-release, build]
     runs-on: ubuntu-latest
     if: needs.build.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true')
     permissions:
       contents: write
-    # Configure the `release` environment with required reviewers in GitHub settings
-    # to enforce a manual approval gate before assets are uploaded.
-    environment:
-      name: release
 
     steps:
       - name: Checkout git repo
@@ -158,53 +191,16 @@ jobs:
           merge-multiple: true
           path: release-assets
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Install Node and NPM
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
       - name: Resolve release tag
         id: release_tag
-        env:
-          RELEASE_EVENT_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         run: |
-          if [ -n "$RELEASE_EVENT_TAG" ]; then
-            tag="$RELEASE_EVENT_TAG"
-          else
-            version="$(node -e "const v=require('./package.json').version; if (!v) { throw new Error('package.json version is empty'); } process.stdout.write(v);")"
+          tag="${{ needs.check-release.outputs.tag }}"
+          if [ -z "$tag" ]; then
+            version="$(node -e "process.stdout.write(require('./package.json').version)")"
             tag="v$version"
           fi
-
-          if [ -z "$tag" ]; then
-            echo "::error::Resolved release tag is empty"
-            exit 1
-          fi
-
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "Using release tag: $tag"
-
-      - name: Ensure release is safe to update
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
-          ALLOW_UPDATE_PUBLISHED_RELEASE: ${{ github.event_name == 'release' && 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_update_published_release) || 'false' }}
-        run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            is_draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')"
-            if [ "$is_draft" != "true" ] && [ "$ALLOW_UPDATE_PUBLISHED_RELEASE" != "true" ]; then
-              echo "::error::Release $RELEASE_TAG is already published. Refusing to upload assets."
-              echo "::error::Re-run with workflow_dispatch input allow_update_published_release=true if you explicitly want to update it."
-              exit 1
-            fi
-          else
-            gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --draft --notes "Automated release draft."
-          fi
 
       - name: Upload assets to release
         env:
