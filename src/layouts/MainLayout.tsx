@@ -65,14 +65,21 @@ export const MainLayout: React.FC = () => {
         {/* Sidebar */}
         <aside
           className={cn(
-            'bg-muted/10 group relative flex flex-col border-r transition-all duration-300 ease-in-out',
-            isCollapsed ? 'w-[70px]' : 'w-64',
+            'relative flex flex-col border-r border-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            isCollapsed ? 'w-[60px]' : 'w-56',
           )}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-background hover:bg-accent hover:text-accent-foreground absolute top-6 -right-3 z-10 h-6 w-6 rounded-full border opacity-0 shadow-md transition-opacity group-hover:opacity-100"
+          {/* Collapse toggle */}
+          <button
+            className={cn(
+              'absolute -right-3 top-7 z-10 flex h-6 w-6 items-center justify-center rounded-full',
+              'bg-muted border border-white/[0.1] text-muted-foreground',
+              'opacity-0 transition-all duration-200 hover:bg-white/[0.1] hover:text-foreground',
+              'group-hover:opacity-100',
+            )}
+            style={{ opacity: 0 }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {isCollapsed ? (
@@ -80,11 +87,12 @@ export const MainLayout: React.FC = () => {
             ) : (
               <ChevronLeft className="h-3 w-3" />
             )}
-          </Button>
+          </button>
 
-          <div className={cn('flex flex-col', isCollapsed ? 'items-center p-4' : 'p-6')}>
-            <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded bg-transparent">
+          {/* Brand */}
+          <div className={cn('flex flex-col', isCollapsed ? 'items-center p-3' : 'px-4 py-5')}>
+            <div className="flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
                 <img
                   src={iconPng}
                   alt="Gemini Nexus Logo"
@@ -97,12 +105,13 @@ export const MainLayout: React.FC = () => {
                   isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
                 )}
               >
-                <h1 className="text-xl font-bold tracking-tight">Gemini Nexus</h1>
+                <h1 className="text-[15px] font-semibold tracking-tight">Gemini Nexus</h1>
               </div>
             </div>
           </div>
 
-          <nav className="flex-1 space-y-2 px-2">
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1 px-2 pt-2">
             <TooltipProvider>
               {navItems.map((item) => {
                 const isActive = location.pathname === item.to;
@@ -114,17 +123,19 @@ export const MainLayout: React.FC = () => {
                         <Link
                           to={item.to}
                           className={cn(
-                            'mx-auto flex h-10 w-10 items-center justify-center rounded-md transition-colors',
+                            'mx-auto flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200',
                             isActive
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted text-muted-foreground hover:text-foreground',
+                              ? 'bg-white/[0.08] text-foreground'
+                              : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
                           )}
                         >
-                          <item.icon className="h-5 w-5" />
+                          <item.icon className="h-[18px] w-[18px]" />
                           <span className="sr-only">{item.label}</span>
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent side="right">{item.label}</TooltipContent>
+                      <TooltipContent side="right" className="text-xs">
+                        {item.label}
+                      </TooltipContent>
                     </Tooltip>
                   );
                 }
@@ -134,13 +145,13 @@ export const MainLayout: React.FC = () => {
                     key={item.to}
                     to={item.to}
                     className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200',
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground',
+                        ? 'bg-white/[0.08] text-foreground'
+                        : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="h-[18px] w-[18px]" />
                     {item.label}
                   </Link>
                 );
@@ -148,7 +159,8 @@ export const MainLayout: React.FC = () => {
             </TooltipProvider>
           </nav>
 
-          <div className="border-t p-2">
+          {/* Status bar */}
+          <div className="border-t border-white/[0.06] p-2">
             <StatusBar isCollapsed={isCollapsed} />
           </div>
         </aside>
@@ -174,9 +186,9 @@ export const MainLayout: React.FC = () => {
             }}
             fallbackRender={({ resetErrorBoundary }) => (
               <div className="mx-auto max-w-3xl p-6">
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                  <div className="text-lg font-semibold">{t('error.generic')}</div>
-                  <div className="text-muted-foreground mt-2 text-sm">{t('action.retry')}</div>
+                <div className="rounded-xl border border-white/[0.06] border-dashed p-8 text-center">
+                  <div className="text-sm font-semibold">{t('error.generic')}</div>
+                  <div className="text-muted-foreground mt-2 text-xs">{t('action.retry')}</div>
                   <Button className="mt-4" variant="outline" onClick={resetErrorBoundary}>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     {t('action.retry')}

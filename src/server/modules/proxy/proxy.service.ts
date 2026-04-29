@@ -77,12 +77,15 @@ export class ProxyService {
     if (!usage) {
       return;
     }
+    const prompt = usage.promptTokenCount ?? 0;
+    const completion = usage.candidatesTokenCount ?? 0;
+    const total = usage.totalTokenCount ?? (prompt + completion);
     this.tokenUsageService.recordUsage({
       accountId,
       model,
-      promptTokens: usage.promptTokenCount ?? 0,
-      completionTokens: usage.candidatesTokenCount ?? 0,
-      totalTokens: usage.totalTokenCount ?? 0,
+      promptTokens: prompt,
+      completionTokens: completion,
+      totalTokens: total,
       timestamp: Date.now(),
       requestType,
       isEstimated,
@@ -319,14 +322,15 @@ export class ProxyService {
               if (startMsg) subscriber.next(startMsg);
             }
 
-            const candidate = json.candidates?.[0];
+            const responsePayload = json.response ?? json;
+            const candidate = responsePayload.candidates?.[0];
             const part = candidate?.content?.parts?.[0];
 
             if (candidate?.finishReason) {
               lastFinishReason = candidate.finishReason;
             }
-            if (json.usageMetadata) {
-              lastUsageMetadata = json.usageMetadata;
+            if (responsePayload.usageMetadata) {
+              lastUsageMetadata = responsePayload.usageMetadata;
             }
 
             if (this.isGeminiPart(part)) {
@@ -605,10 +609,11 @@ export class ProxyService {
           if (dataStr === '[DONE]') continue;
           try {
             const parsed = JSON.parse(dataStr);
-            if (parsed?.usageMetadata) {
-              lastUsageMetadata = parsed.usageMetadata;
+            const responsePayload = parsed?.response ?? parsed;
+            if (responsePayload?.usageMetadata) {
+              lastUsageMetadata = responsePayload.usageMetadata;
             }
-            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const text = responsePayload?.candidates?.[0]?.content?.parts?.[0]?.text;
             if (typeof text === 'string') {
               accumulatedText += text;
             }

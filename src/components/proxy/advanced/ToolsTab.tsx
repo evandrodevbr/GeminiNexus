@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { ipc } from '@/ipc/manager';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { StatCard } from '@/components/usage/StatCard';
@@ -87,12 +87,12 @@ export const ToolsTab: React.FC = () => {
       </div>
 
       {/* IDE Quick Setup */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('proxy.advanced.tools.ideSetup')}</CardTitle>
-          <CardDescription>Quick configuration for popular IDEs</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card">
+        <div className="border-b border-white/[0.06] px-5 py-4 space-y-1">
+          <h4 className="text-[13px] font-semibold">{t('proxy.advanced.tools.ideSetup')}</h4>
+          <p className="text-xs text-muted-foreground">Quick configuration for popular IDEs</p>
+        </div>
+        <div className="p-5 space-y-3">
           {isIdeLoading ? (
             <div className="flex h-20 items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -101,11 +101,11 @@ export const ToolsTab: React.FC = () => {
             IDE_CONFIGS.map(({ key, label, icon: Icon }) => {
               const instructions = getIdeInstructions(key);
               return (
-                <div key={key} className="rounded-lg border">
+                <div key={key} className="overflow-hidden rounded-xl border border-white/[0.06]">
                   <div className="flex items-center justify-between p-3">
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{label}</span>
+                      <span className="text-[13px] font-medium">{label}</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -118,7 +118,7 @@ export const ToolsTab: React.FC = () => {
                     </Button>
                   </div>
                   {instructions && (
-                    <pre className="overflow-x-auto border-t bg-gray-900 p-3 font-mono text-xs whitespace-pre-wrap text-gray-100">
+                    <pre className="overflow-x-auto border-t border-white/[0.06] bg-card p-3 font-mono text-xs whitespace-pre-wrap text-foreground/90">
                       {instructions}
                     </pre>
                   )}
@@ -126,8 +126,8 @@ export const ToolsTab: React.FC = () => {
               );
             })
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
     </div>
   );

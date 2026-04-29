@@ -37,12 +37,12 @@ export const ProviderGroup: React.FC<ProviderGroupProps> = ({
   }
 
   return (
-    <div className="border-border/60 overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-xl border border-white/[0.06]">
       {/* Provider Header */}
       <button
         type="button"
         onClick={onToggleCollapse}
-        className="hover:bg-muted/60 flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors"
+        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-white/[0.03]"
       >
         {isCollapsed ? (
           <ChevronRight className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
@@ -87,7 +87,7 @@ export const ProviderGroup: React.FC<ProviderGroupProps> = ({
               </span>
             )}
           </div>
-          <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/[0.06]">
             <div
               className={`h-full rounded-full transition-all duration-300 ${getQuotaBarColorClass(avgPercentage)}`}
               style={{ width: `${clampQuotaPercentage(avgPercentage)}%` }}
@@ -98,12 +98,12 @@ export const ProviderGroup: React.FC<ProviderGroupProps> = ({
 
       {/* Individual model rows (shown when expanded) */}
       {!isCollapsed && (
-        <div className="border-border/40 border-t">
+        <div className="border-t border-white/[0.06]">
           {visibleModels.map((model, index) => (
             <div
               key={model.id}
-              className={`hover:bg-muted/60 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 px-3 py-2 pl-9 text-sm transition-colors ${
-                index < visibleModels.length - 1 ? 'border-border/20 border-b' : ''
+              className={`grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 px-3 py-2 pl-9 text-[13px] transition-colors hover:bg-white/[0.03] ${
+                index < visibleModels.length - 1 ? 'border-b border-white/[0.04]' : ''
               }`}
             >
               <span className="text-muted-foreground min-w-0 truncate" title={model.id}>
@@ -126,7 +126,7 @@ export const ProviderGroup: React.FC<ProviderGroupProps> = ({
                     <span className="text-muted-foreground text-[10px]">{leftLabel}</span>
                   )}
                 </div>
-                <div className="bg-muted h-1.5 w-24 overflow-hidden rounded-full">
+                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/[0.06]">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${getQuotaBarColorClass(model.percentage)}`}
                     style={{ width: `${clampQuotaPercentage(model.percentage)}%` }}

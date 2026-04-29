@@ -85,10 +85,10 @@ import { shouldAutoSubmitGoogleAuthCode } from '@/utils/googleAuthSubmission';
 export type GridLayout = 'auto' | '2-col' | '3-col' | 'list' | 'compact';
 
 const GRID_LAYOUT_CLASSES: Record<GridLayout, string> = {
-  auto: 'grid gap-4 md:grid-cols-2 xl:grid-cols-3',
-  '2-col': 'grid gap-4 grid-cols-2',
-  '3-col': 'grid gap-4 grid-cols-3',
-  list: 'grid gap-4 grid-cols-1',
+  auto: 'grid gap-3 md:grid-cols-2 xl:grid-cols-3',
+  '2-col': 'grid gap-3 grid-cols-2',
+  '3-col': 'grid gap-3 grid-cols-3',
+  list: 'grid gap-3 grid-cols-1',
   compact: 'flex flex-col gap-2',
 };
 
@@ -99,9 +99,9 @@ const GLOBAL_QUOTA_BAR_COLOR_CLASS_BY_STATUS: Record<QuotaStatus, string> = {
 };
 
 const GLOBAL_QUOTA_TEXT_COLOR_CLASS_BY_STATUS: Record<QuotaStatus, string> = {
-  high: 'text-emerald-600 dark:text-emerald-400',
-  medium: 'text-amber-600 dark:text-amber-400',
-  low: 'text-rose-600 dark:text-rose-400',
+  high: 'text-emerald-400',
+  medium: 'text-amber-400',
+  low: 'text-rose-400',
 };
 
 export function CloudAccountList() {
@@ -259,9 +259,7 @@ export function CloudAccountList() {
       return;
     }
     const activeClientKey = oauthClients.find((client) => client.is_active)?.key;
-    if (activeClientKey) {
-      setSelectedOAuthClientKey(activeClientKey);
-    }
+    if (activeClientKey && activeClientKey !== selectedOAuthClientKey) { setTimeout(() => setSelectedOAuthClientKey(activeClientKey), 0); }
   }, [oauthClients, selectedOAuthClientKey]);
   // Listen for Google Auth Code
   useEffect(() => {
@@ -665,34 +663,34 @@ export function CloudAccountList() {
 
   return (
     <div className="space-y-5 pb-20">
-      <div className="bg-card rounded-lg border p-5">
+      <div className="rounded-xl border border-white/[0.06] p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex shrink-0 flex-col gap-1">
-            <h2 className="text-2xl font-bold tracking-tight">{t('cloud.title')}</h2>
-            <p className="text-muted-foreground max-w-2xl">{t('cloud.description')}</p>
+            <h2 className="text-lg font-semibold tracking-tight">{t('cloud.title')}</h2>
+            <p className="text-muted-foreground max-w-2xl text-[13px]">{t('cloud.description')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.actions')}
               </div>
-              <div className="text-base font-semibold">{totalAccounts}</div>
+              <div className="text-sm font-semibold tabular-nums">{totalAccounts}</div>
             </div>
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.active')}
               </div>
-              <div className="text-base font-semibold text-emerald-600">{activeAccounts}</div>
+              <div className="text-sm font-semibold text-emerald-400">{activeAccounts}</div>
             </div>
-            <div className="bg-muted/50 rounded-md border px-3 py-2">
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
               <div className="text-muted-foreground text-[11px] uppercase">
                 {t('cloud.card.rateLimited')}
               </div>
-              <div className="text-base font-semibold text-rose-600">{rateLimitedAccounts}</div>
+              <div className="text-sm font-semibold text-rose-400">{rateLimitedAccounts}</div>
             </div>
             {/* Global Quota */}
             {overallQuotaPercentage !== null && (
-              <div className="bg-muted/50 rounded-md border px-3 py-2">
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                 <div className="text-muted-foreground text-[11px] uppercase">
                   {t('cloud.globalQuota')}
                 </div>
@@ -715,13 +713,13 @@ export function CloudAccountList() {
         </div>
       </div>
 
-      <div className="bg-card flex flex-wrap items-center gap-2 rounded-lg border p-3">
-        <div className="bg-muted/50 flex items-center gap-2 rounded-md border px-3 py-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.06] bg-card p-2.5">
+        <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] px-3 py-1.5">
           <div className="flex items-center gap-2">
             <Zap
               className={`h-4 w-4 ${autoSwitchEnabled ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
             />
-            <Label htmlFor="auto-switch" className="cursor-pointer text-sm font-medium">
+            <Label htmlFor="auto-switch" className="cursor-pointer text-[13px] font-medium">
               {t('cloud.autoSwitch')}
             </Label>
           </div>
@@ -1110,7 +1108,7 @@ export function CloudAccountList() {
         )}
 
         {sortedAccounts.length === 0 && (
-          <div className="text-muted-foreground bg-muted/20 col-span-full rounded-lg border border-dashed py-14 text-center">
+          <div className="text-muted-foreground col-span-full rounded-xl border border-dashed border-white/[0.1] py-14 text-center">
             <Cloud className="mx-auto mb-3 h-10 w-10 opacity-40" />
             <div className="text-sm">{t('cloud.list.noAccounts')}</div>
           </div>
@@ -1119,7 +1117,7 @@ export function CloudAccountList() {
 
       {/* Batch Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="bg-card animate-in fade-in slide-in-from-bottom-4 fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full border px-6 py-2 shadow-lg">
+        <div className="bg-card animate-in fade-in slide-in-from-bottom-4 fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full border border-white/[0.1] px-6 py-2 shadow-2xl shadow-black/30">
           <div className="flex items-center gap-2 border-r pr-4">
             <span className="text-sm font-semibold">
               {t('cloud.batch.selected', { count: selectedIds.size })}

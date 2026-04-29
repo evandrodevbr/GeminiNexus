@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { ipc } from '@/ipc/manager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -113,26 +112,25 @@ export const MonitorTab: React.FC = () => {
       </div>
 
       {/* Circuit Breakers */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">
+      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card">
+        <div className="border-b border-white/[0.06] px-5 py-4">
+          <h4 className="text-[13px] font-semibold">
             {t('proxy.advanced.circuitBreaker.title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h4>
+        </div>
+        <div className="p-5">
           {cbLoading ? (
             <div className="flex h-20 items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : !circuitBreakers ? (
-            <p className="text-sm text-muted-foreground">No data</p>
+            <p className="text-[13px] text-muted-foreground">No data</p>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {Object.entries(circuitBreakers.states).map(([api, state]) => (
-                <Card key={api} className="bg-muted/30">
-                  <CardContent className="p-4">
+                <div key={api} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{api}</span>
+                      <span className="text-[13px] font-medium">{api}</span>
                       <Badge variant={getCircuitBadgeVariant(state.state)}>
                         {state.state}
                       </Badge>
@@ -146,19 +144,18 @@ export const MonitorTab: React.FC = () => {
                         {new Date(state.lastFailure).toLocaleString()}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Traffic Logs */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold">
+            <h3 className="text-[13px] font-semibold">
               {t('proxy.advanced.trafficLog.title')}
             </h3>
             {stats && (

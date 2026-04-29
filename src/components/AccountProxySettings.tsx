@@ -67,7 +67,7 @@ function AccountProxyItem({ account }: { account: CloudAccount }) {
         />
         <div className="w-16">
           {proxySaved && (
-            <span className="text-[10px] whitespace-nowrap text-green-500">
+            <span className="text-[10px] whitespace-nowrap text-emerald-400">
               {t('cloud.card.proxySaved')}
             </span>
           )}

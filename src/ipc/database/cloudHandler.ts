@@ -153,6 +153,10 @@ export function ensureDatabaseInitialized(dbPath: string): void {
     if (!hasRequestType) {
       db.exec('ALTER TABLE token_usage ADD COLUMN request_type TEXT');
     }
+    const hasIsEstimated = tokenUsageTableInfo.some((col) => col.name === 'is_estimated');
+    if (!hasIsEstimated) {
+      db.exec('ALTER TABLE token_usage ADD COLUMN is_estimated INTEGER');
+    }
 
     // Create indexes for token_usage
     db.exec(`CREATE INDEX IF NOT EXISTS idx_token_usage_account ON token_usage(account_id);`);

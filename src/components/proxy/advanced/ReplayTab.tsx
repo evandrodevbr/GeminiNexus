@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ipc } from '@/ipc/manager';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
@@ -76,7 +76,7 @@ export const ReplayTab: React.FC = () => {
     if (!status) return <Badge variant="outline">{t('proxy.advanced.replay.pending')}</Badge>;
     if (status >= 200 && status < 300) {
       return (
-        <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+        <Badge variant="default" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20">
           <CheckCircle className="mr-1 h-3 w-3" />
           {status}
         </Badge>
@@ -98,8 +98,8 @@ export const ReplayTab: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">{t('proxy.advanced.replay.title')}</h3>
-          <p className="text-sm text-muted-foreground">{t('proxy.advanced.replay.description')}</p>
+          <h3 className="text-base font-semibold">{t('proxy.advanced.replay.title')}</h3>
+          <p className="text-[13px] text-muted-foreground">{t('proxy.advanced.replay.description')}</p>
         </div>
         <Button
           variant="outline"
@@ -107,26 +107,26 @@ export const ReplayTab: React.FC = () => {
           onClick={() => refetchRequests()}
           disabled={requestsLoading}
         >
-          <RefreshCw className={`mr-2 h-4 w-4 ${requestsLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${requestsLoading ? 'animate-spin' : ''}`} />
           {t('proxy.advanced.replay.refresh')}
         </Button>
       </div>
 
       {/* Requests List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('proxy.advanced.replay.recentRequests')}</CardTitle>
-          <CardDescription>{t('proxy.advanced.replay.clickToReplay')}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card">
+        <div className="border-b border-white/[0.06] px-5 py-4 space-y-1">
+          <h4 className="text-[13px] font-semibold">{t('proxy.advanced.replay.recentRequests')}</h4>
+          <p className="text-xs text-muted-foreground">{t('proxy.advanced.replay.clickToReplay')}</p>
+        </div>
+        <div className="p-5">
           {requestsLoading ? (
             <div className="flex h-32 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : requests.length === 0 ? (
-            <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed">
-              <Clock className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+            <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.1]">
+              <Clock className="h-6 w-6 text-muted-foreground/30" />
+              <p className="text-[13px] text-muted-foreground">
                 {t('proxy.advanced.replay.noRequests')}
               </p>
             </div>
@@ -135,12 +135,12 @@ export const ReplayTab: React.FC = () => {
               {requests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  className="flex items-center justify-between rounded-xl border border-white/[0.06] p-3 transition-colors hover:bg-white/[0.02]"
                 >
                   <div className="flex items-center gap-3">
                     {getStatusBadge(request.status)}
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">
+                      <span className="text-[13px] font-medium">
                         {request.method} {request.endpoint}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -166,8 +166,8 @@ export const ReplayTab: React.FC = () => {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
