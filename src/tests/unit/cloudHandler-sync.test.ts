@@ -85,6 +85,20 @@ vi.mock('../../utils/traffic-logger', () => ({
   },
 }));
 
+vi.mock('../../server/logging/api-logger', () => ({
+  apiLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  safeApiLogValue: vi.fn((v: unknown) => v),
+}));
+
+vi.mock('../../server/logging/api-logging.plugin', () => ({
+  registerApiLogging: vi.fn(),
+}));
+
 vi.mock('../../services/GoogleAPIService', () => ({
   GoogleAPIService: {
     getUserInfo: vi.fn(),
