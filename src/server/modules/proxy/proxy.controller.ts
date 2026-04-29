@@ -46,7 +46,9 @@ export class ProxyController {
 
   constructor(
     @Inject(ProxyService) private readonly proxyService: ProxyService,
-    @Optional() @Inject(ProxyReplayService) private readonly proxyReplayService?: ProxyReplayService,
+    @Optional()
+    @Inject(ProxyReplayService)
+    private readonly proxyReplayService?: ProxyReplayService,
     @Optional() @Inject(TokenManagerService) private readonly tokenManager?: TokenManagerService,
     @Optional() @Inject(ProxyMetricsService) private readonly proxyMetrics?: ProxyMetricsService,
   ) {}
@@ -113,7 +115,9 @@ export class ProxyController {
       const metrics = this.proxyMetrics?.getMetrics();
       const circuitBreakerStatus = this.tokenManager?.getCircuitBreakerStatus() ?? {};
       const accountCount = Object.keys(circuitBreakerStatus).length;
-      const healthyAccounts = Object.values(circuitBreakerStatus).filter(s => s.state === 'healthy').length;
+      const healthyAccounts = Object.values(circuitBreakerStatus).filter(
+        (s) => s.state === 'healthy',
+      ).length;
 
       res.status(HttpStatus.OK).send({
         status: 'healthy',
@@ -162,7 +166,8 @@ export class ProxyController {
     }
     const startTime = Date.now();
     try {
-      const requests = this.proxyReplayService?.getRecentRequests(limit ? parseInt(limit, 10) : undefined) ?? [];
+      const requests =
+        this.proxyReplayService?.getRecentRequests(limit ? parseInt(limit, 10) : undefined) ?? [];
       this.setProxyHeaders(res, { requestId: uuidv4(), accountId: '', retryCount: 0, model: '' });
       res.status(HttpStatus.OK).send({
         object: 'list',
@@ -226,7 +231,8 @@ export class ProxyController {
       const capabilitiesMap = this.buildCapabilitiesMap();
 
       const data = modelIds.map((id) => {
-        const baseId = Object.keys(capabilitiesMap).find((key) => id.includes(key)) ?? 'gemini-3-flash';
+        const baseId =
+          Object.keys(capabilitiesMap).find((key) => id.includes(key)) ?? 'gemini-3-flash';
         return {
           id,
           object: 'model_capability',
@@ -247,7 +253,9 @@ export class ProxyController {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to list model capabilities';
       this.logger.error(message, error instanceof Error ? error.stack : undefined);
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: { message, type: 'internal_server_error' } });
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send({ error: { message, type: 'internal_server_error' } });
       this.proxyMetrics?.recordRequest({
         timestamp: startTime,
         duration: Date.now() - startTime,
@@ -257,9 +265,27 @@ export class ProxyController {
     }
   }
 
-  private buildCapabilitiesMap(): Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> {
+  private buildCapabilitiesMap(): Record<
+    string,
+    {
+      vision: boolean;
+      streaming: boolean;
+      jsonMode: boolean;
+      audio: boolean;
+      imageGeneration: boolean;
+    }
+  > {
     const allTokens = this.tokenManager?.getAllTokens() ?? [];
-    const map: Record<string, { vision: boolean; streaming: boolean; jsonMode: boolean; audio: boolean; imageGeneration: boolean }> = {};
+    const map: Record<
+      string,
+      {
+        vision: boolean;
+        streaming: boolean;
+        jsonMode: boolean;
+        audio: boolean;
+        imageGeneration: boolean;
+      }
+    > = {};
 
     for (const [, tokenData] of allTokens) {
       for (const [modelId, modelInfo] of Object.entries(tokenData.quota?.models ?? {})) {
@@ -278,7 +304,13 @@ export class ProxyController {
 
     if (Object.keys(map).length === 0) {
       return {
-        'gemini-3-flash': { vision: true, streaming: true, jsonMode: true, audio: false, imageGeneration: false },
+        'gemini-3-flash': {
+          vision: true,
+          streaming: true,
+          jsonMode: true,
+          audio: false,
+          imageGeneration: false,
+        },
       };
     }
 
@@ -302,14 +334,14 @@ export class ProxyController {
         const request = requests[i];
         const proxyContext: ProxyRequestContext = {};
         try {
-          const result = await this.proxyService.handleChatCompletions(
-            request,
-            proxyContext,
-          );
+          const result = await this.proxyService.handleChatCompletions(request, proxyContext);
           if (this.isObservableLike(result)) {
             responses.push({
               index: i,
-              error: { message: 'Streaming not supported in batch mode', type: 'invalid_request_error' },
+              error: {
+                message: 'Streaming not supported in batch mode',
+                type: 'invalid_request_error',
+              },
             });
           } else {
             responses.push({
@@ -462,7 +494,14 @@ export class ProxyController {
       const result = await this.proxyService.handleChatCompletions(request, proxyContext);
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/completions', startTime, proxyContext);
+        this.writeSseResponse(
+          res,
+          result as Observable<unknown>,
+          undefined,
+          '/v1/completions',
+          startTime,
+          proxyContext,
+        );
         return;
       }
 
@@ -508,6 +547,7 @@ export class ProxyController {
       temperature?: number;
       top_p?: number;
       stream?: boolean;
+      reasoning?: { effort?: string };
     },
     @Req() req: FastifyRequest,
     @Res() res: FastifyReply,
@@ -527,11 +567,24 @@ export class ProxyController {
     const proxyContext: ProxyRequestContext = {};
     let isStream = false;
 
+    this.logger.log(
+      `[/v1/responses] Converted input: ${Array.isArray(body.input) ? body.input.length : 0} items → ${request.messages.length} messages, ` +
+        `model=${request.model}, stream=${body.stream}, tools=${request.tools?.length ?? 0}, ` +
+        `reasoning=${body.reasoning?.effort ?? 'default'}`,
+    );
+
     try {
       const result = await this.proxyService.handleChatCompletions(request, proxyContext);
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/responses', startTime, proxyContext);
+        this.writeSseResponse(
+          res,
+          result as Observable<unknown>,
+          undefined,
+          '/v1/responses',
+          startTime,
+          proxyContext,
+        );
         return;
       }
 
@@ -840,14 +893,18 @@ export class ProxyController {
     const proxyContext: ProxyRequestContext = {};
     let isStream = false;
     try {
-      const result = await this.proxyService.handleChatCompletions(
-        body,
-        proxyContext,
-      );
+      const result = await this.proxyService.handleChatCompletions(body, proxyContext);
 
       isStream = !!(body.stream && this.isObservableLike(result));
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, requestId, '/v1/chat/completions', startTime, proxyContext);
+        this.writeSseResponse(
+          res,
+          result as Observable<unknown>,
+          requestId,
+          '/v1/chat/completions',
+          startTime,
+          proxyContext,
+        );
         return;
       } else {
         const duration = Date.now() - startTime;
@@ -918,7 +975,14 @@ export class ProxyController {
       isStream = !!(body.stream && this.isObservableLike(result));
 
       if (isStream) {
-        this.writeSseResponse(res, result as Observable<unknown>, undefined, '/v1/messages', startTime, proxyContext);
+        this.writeSseResponse(
+          res,
+          result as Observable<unknown>,
+          undefined,
+          '/v1/messages',
+          startTime,
+          proxyContext,
+        );
         return;
       } else {
         const duration = Date.now() - startTime;
@@ -1017,6 +1081,7 @@ export class ProxyController {
     temperature?: number;
     top_p?: number;
     stream?: boolean;
+    reasoning?: { effort?: string };
   }): OpenAIChatRequest {
     const messages: OpenAIChatRequest['messages'] = [];
     if (isString(body.instructions) && !isEmpty(body.instructions.trim())) {
@@ -1054,21 +1119,59 @@ export class ProxyController {
         }
       }
 
-      for (const item of inputItems) {
+      for (let idx = 0; idx < inputItems.length; idx++) {
+        const item = inputItems[idx];
         const itemObj = this.toRecord(item);
         if (!itemObj) {
+          this.logger.debug(`[/v1/responses] input[${idx}]: skipped (not an object)`);
           continue;
         }
 
         const type = this.asString(itemObj.type);
+        const role = this.asString(itemObj.role);
+
+        // Items without a type but with role/content — treat as regular chat messages
+        // (common in clients like Open CoDesign that mix chat and responses formats)
         if (!type) {
+          if (role && itemObj.content !== undefined) {
+            const content = this.normalizeResponsesMessageContent(itemObj.content);
+            messages.push({ role, content });
+            this.logger.debug(`[/v1/responses] input[${idx}]: no-type fallback → role=${role}`);
+          } else {
+            this.logger.warn(
+              `[/v1/responses] input[${idx}]: dropped (no type, no role/content). Keys: ${Object.keys(itemObj).join(',')}`,
+            );
+          }
           continue;
         }
 
         if (type === 'message') {
-          const role = this.asString(itemObj.role) ?? 'user';
+          const messageRole = role ?? 'user';
           const content = this.normalizeResponsesMessageContent(itemObj.content);
-          messages.push({ role, content });
+          messages.push({ role: messageRole, content });
+          this.logger.debug(`[/v1/responses] input[${idx}]: type=message, role=${messageRole}`);
+          continue;
+        }
+
+        // Responses API text item types
+        if (type === 'input_text') {
+          const text = this.asString(itemObj.text) ?? '';
+          if (text) {
+            messages.push({ role: 'user', content: text });
+          }
+          continue;
+        }
+
+        if (type === 'output_text') {
+          const text = this.asString(itemObj.text) ?? '';
+          if (text) {
+            messages.push({ role: 'assistant', content: text });
+          }
+          continue;
+        }
+
+        // Reasoning items can be silently skipped — they are model-internal
+        if (type === 'reasoning') {
           continue;
         }
 
@@ -1105,6 +1208,13 @@ export class ProxyController {
           });
           continue;
         }
+
+        // Fallback: if the item has role + content but an unrecognized type, treat as message
+        const fallbackRole = this.asString(itemObj.role);
+        if (fallbackRole && itemObj.content !== undefined) {
+          const content = this.normalizeResponsesMessageContent(itemObj.content);
+          messages.push({ role: fallbackRole, content });
+        }
       }
     } else if (isString(body.input)) {
       messages.push({
@@ -1125,15 +1235,62 @@ export class ProxyController {
       });
     }
 
+    // Forward reasoning effort to the extra field so convertOpenAIToClaude can relay it
+    const extra: Record<string, unknown> = {};
+    if (body.reasoning?.effort) {
+      extra.reasoning_effort = body.reasoning.effort;
+    }
+
+    // Normalize Responses API tool format to Chat Completions format.
+    // Responses API: { type: "function", name: "...", parameters: {...} }
+    // Chat Completions: { type: "function", function: { name: "...", parameters: {...} } }
+    const normalizedTools = this.normalizeResponsesTools(body.tools);
+
     return {
       model: body.model ?? 'gemini-3-flash',
       messages,
-      tools: body.tools,
+      tools: normalizedTools,
       max_tokens: body.max_output_tokens,
       temperature: body.temperature,
       top_p: body.top_p,
       stream: body.stream,
+      ...(Object.keys(extra).length > 0 ? { extra } : {}),
     };
+  }
+
+  /**
+   * Convert tools from OpenAI Responses API format to Chat Completions format.
+   * Responses API puts name/description/parameters at the top level of the tool object,
+   * while Chat Completions nests them under a `.function` property.
+   */
+  private normalizeResponsesTools(tools?: OpenAIChatRequest['tools']): OpenAIChatRequest['tools'] {
+    if (!tools || tools.length === 0) {
+      return tools;
+    }
+
+    return tools.map((tool) => {
+      // Already in Chat Completions format (has .function.name)
+      if (tool.function?.name) {
+        return tool;
+      }
+
+      // Responses API format: name/description/parameters at top level
+      const topLevelName = this.asString((tool as Record<string, unknown>).name);
+      if (topLevelName) {
+        const raw = tool as Record<string, unknown>;
+        return {
+          type: 'function',
+          function: {
+            name: topLevelName,
+            description: this.asString(raw.description) ?? undefined,
+            parameters: (raw.parameters ?? raw.input_schema) as Record<string, unknown> | undefined,
+          },
+        };
+      }
+
+      // Unknown format — pass through as-is
+      return tool;
+    });
   }
 
   private normalizeResponsesMessageContent(content: unknown): string | OpenAIContentPart[] {

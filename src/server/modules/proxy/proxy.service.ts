@@ -55,7 +55,10 @@ export interface ProxyConfigOverride {
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
-  private readonly responseCache = new Map<string, { response: OpenAIChatResponse; expiry: number }>();
+  private readonly responseCache = new Map<
+    string,
+    { response: OpenAIChatResponse; expiry: number }
+  >();
   private readonly CACHE_TTL_MS = 60000; // 1 minute
 
   constructor(
@@ -79,7 +82,7 @@ export class ProxyService {
     }
     const prompt = usage.promptTokenCount ?? 0;
     const completion = usage.candidatesTokenCount ?? 0;
-    const total = usage.totalTokenCount ?? (prompt + completion);
+    const total = usage.totalTokenCount ?? prompt + completion;
     this.tokenUsageService.recordUsage({
       accountId,
       model,
@@ -995,7 +998,10 @@ export class ProxyService {
             `Transformed Claude response snippet: ${JSON.stringify(claudeResponse).substring(0, 500)}`,
           );
           const openaiResponse = this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
-          const transformedResponse = this.applyResponseFormatTransformation(openaiResponse, request);
+          const transformedResponse = this.applyResponseFormatTransformation(
+            openaiResponse,
+            request,
+          );
           this.setCachedResponse(this.buildCacheKey(request), transformedResponse);
           if (context) {
             context.cacheStatus = 'MISS';
@@ -1058,8 +1064,14 @@ export class ProxyService {
             );
             this.recordUsage(token.id, effectiveTargetModel, response.usageMetadata, 'openai');
             const claudeResponse = transformResponse(response);
-            const openaiResponse = this.convertClaudeToOpenAIResponse(claudeResponse, request.model);
-            const transformedResponse = this.applyResponseFormatTransformation(openaiResponse, request);
+            const openaiResponse = this.convertClaudeToOpenAIResponse(
+              claudeResponse,
+              request.model,
+            );
+            const transformedResponse = this.applyResponseFormatTransformation(
+              openaiResponse,
+              request,
+            );
             this.setCachedResponse(this.buildCacheKey(request), transformedResponse);
             if (context) {
               context.cacheStatus = 'MISS';
@@ -1636,7 +1648,8 @@ export class ProxyService {
     const anthropicMessages: ClaudeRequest['messages'] = [];
 
     for (const msg of messages) {
-      if (msg.role === 'system') {
+      // 'developer' is OpenAI's newer equivalent of 'system'
+      if (msg.role === 'system' || msg.role === 'developer') {
         const systemText = this.extractOpenAITextContent(msg.content);
         if (systemText) {
           systemPromptParts.push(systemText);
@@ -1679,11 +1692,30 @@ export class ProxyService {
       });
     }
 
-    if (request.response_format?.type === 'json_object' || request.response_format?.type === 'json_schema') {
-      systemPromptParts.push('You must format your entire response as a single valid JSON object. Do not include any markdown formatting, explanations, or text outside the JSON structure.');
+    if (
+      request.response_format?.type === 'json_object' ||
+      request.response_format?.type === 'json_schema'
+    ) {
+      systemPromptParts.push(
+        'You must format your entire response as a single valid JSON object. Do not include any markdown formatting, explanations, or text outside the JSON structure.',
+      );
     }
 
     const systemPrompt = systemPromptParts.length > 0 ? systemPromptParts.join('\n') : undefined;
+
+    // Map OpenAI reasoning_effort to Claude thinking config
+    const reasoningEffort = String(request.extra?.reasoning_effort ?? '').toLowerCase();
+    let thinking: ClaudeRequest['thinking'] | undefined;
+    if (reasoningEffort === 'none') {
+      // Explicitly disable thinking when client requests no reasoning
+      thinking = { type: 'disabled' };
+    } else if (
+      reasoningEffort === 'low' ||
+      reasoningEffort === 'medium' ||
+      reasoningEffort === 'high'
+    ) {
+      thinking = { type: 'adaptive', effort: reasoningEffort };
+    }
 
     return {
       model: request.model,
@@ -1694,6 +1726,7 @@ export class ProxyService {
       temperature: request.temperature,
       top_p: request.top_p,
       stream: request.stream,
+      ...(thinking ? { thinking } : {}),
       metadata: {
         ...(request.extra ?? {}),
         source: 'openai',
@@ -1704,8 +1737,17 @@ export class ProxyService {
   private convertOpenAIPartsToAnthropicContent(
     content: OpenAIChatRequest['messages'][number]['content'],
   ): AnthropicContent[] {
+    if (content == null) {
+      return [];
+    }
+
     if (isString(content)) {
       return content.trim() ? [{ type: 'text', text: content }] : [];
+    }
+
+    // Guard against non-array content (e.g. an object or number)
+    if (!Array.isArray(content)) {
+      return [{ type: 'text', text: String(content) }];
     }
 
     const blocks: AnthropicContent[] = [];
@@ -1738,8 +1780,16 @@ export class ProxyService {
   private extractOpenAITextContent(
     content: OpenAIChatRequest['messages'][number]['content'],
   ): string {
+    if (content == null) {
+      return '';
+    }
+
     if (isString(content)) {
       return content;
+    }
+
+    if (!Array.isArray(content)) {
+      return String(content);
     }
 
     return content

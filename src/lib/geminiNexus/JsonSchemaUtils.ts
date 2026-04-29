@@ -162,6 +162,11 @@ function cleanJsonSchemaRecursive(value: any) {
     // 4. Physically remove "hard" blacklist items that interfere with generation
     const hardRemoveFields = [
       '$schema',
+      '$id',
+      '$comment',
+      '$anchor',
+      '$dynamicRef',
+      '$dynamicAnchor',
       'additionalProperties',
       'enumCaseInsensitive',
       'enumNormalizeWhitespace',
@@ -170,7 +175,15 @@ function cleanJsonSchemaRecursive(value: any) {
       'const',
       'examples',
       // Advanced logic fields common in MCP tools but unsupported by Gemini
+      'patternProperties',
       'propertyNames',
+      'additionalItems',
+      'prefixItems',
+      'contains',
+      'minContains',
+      'maxContains',
+      'unevaluatedProperties',
+      'unevaluatedItems',
       'anyOf',
       'oneOf',
       'allOf',
