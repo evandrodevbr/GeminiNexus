@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, ArrowUp, ArrowDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 
 interface TrafficLogEntry {
@@ -74,26 +74,26 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
   }, [logs, sortKey, sortDir]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-semibold">
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card">
+      <div className="border-b border-white/[0.06] px-5 py-4">
+        <h4 className="text-[13px] font-semibold">
           {t('proxy.advanced.trafficLog.title')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h4>
+      </div>
+      <div className="p-5">
         {isLoading ? (
           <div className="flex h-32 items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div className="py-8 text-center text-[13px] text-muted-foreground">
             {t('proxy.advanced.trafficLog.noLogs')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
+                <tr className="border-b border-white/[0.06] text-left text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
                   <th
                     className="cursor-pointer pb-2 pr-4 font-medium select-none"
                     onClick={() => toggleSort('timestamp')}
@@ -142,7 +142,7 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                 {sortedLogs.map((log, i) => (
                   <tr
                     key={`${log.requestId}-${i}`}
-                    className="border-b border-border/40 last:border-0"
+                    className="border-b border-white/[0.04] last:border-0"
                   >
                     <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">
                       {new Date(log.timestamp).toLocaleTimeString()}
@@ -184,7 +184,7 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
             </table>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

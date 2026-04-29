@@ -52,36 +52,38 @@ export const StatusBar: React.FC<StatusBarProps> = ({ isCollapsed = false }) => 
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={handleToggle}
                 disabled={isLoading || isPending}
                 className={cn(
-                  'h-10 w-10 rounded-lg transition-all duration-300',
+                  'flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
                   isRunning
-                    ? 'bg-green-100/50 text-green-700 hover:bg-green-100 hover:text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'
-                    : 'bg-red-100/50 text-red-700 hover:bg-red-100 hover:text-red-800 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50',
+                    ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] hover:text-foreground',
                 )}
               >
                 {isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Power className="h-5 w-5" />
+                  <Power className="h-4 w-4" />
                 )}
-              </Button>
+              </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="flex items-center gap-2">
+            <TooltipContent side="right" className="flex items-center gap-2 text-xs">
               <div
-                className={cn('h-2 w-2 rounded-full', isRunning ? 'bg-green-500' : 'bg-red-500')}
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full',
+                  isRunning ? 'bg-emerald-400' : 'bg-muted-foreground',
+                )}
               />
-              <p>
+              <span>
                 {isLoading
                   ? t('status.checking')
                   : isRunning
                     ? t('status.running')
                     : t('status.stopped')}
-              </p>
+              </span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -93,23 +95,33 @@ export const StatusBar: React.FC<StatusBarProps> = ({ isCollapsed = false }) => 
   return (
     <div
       className={cn(
-        'flex items-center justify-between overflow-hidden rounded-lg px-3 py-2.5 text-sm font-medium ring-1 transition-colors ring-inset',
+        'flex items-center justify-between rounded-lg px-3 py-2 transition-all duration-200',
         isRunning
-          ? 'bg-green-100 text-green-900 ring-green-200 dark:bg-green-900/20 dark:text-green-100 dark:ring-green-900/50'
-          : 'bg-red-100 text-red-900 ring-red-200 dark:bg-red-900/20 dark:text-red-100 dark:ring-red-900/50',
+          ? 'bg-emerald-500/[0.08]'
+          : 'bg-white/[0.02]',
       )}
     >
-      <div className="flex flex-1 items-start gap-3">
+      <div className="flex items-center gap-2.5">
         {isLoading ? (
-          <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-        ) : isRunning ? (
-          <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+          <Loader2 className="h-3 w-3 shrink-0 animate-spin text-muted-foreground" />
         ) : (
-          <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+          <div
+            className={cn(
+              'h-2 w-2 shrink-0 rounded-full transition-colors duration-300',
+              isRunning
+                ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.4)]'
+                : 'bg-muted-foreground/50',
+            )}
+          />
         )}
-        <div className="flex flex-col gap-1 leading-none">
-          <span className="text-xs font-semibold tracking-wider uppercase opacity-80">Status</span>
-          <span className="text-sm leading-tight font-medium">
+        <div className="flex flex-col">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Status
+          </span>
+          <span className={cn(
+            'text-xs font-medium leading-tight',
+            isRunning ? 'text-emerald-400' : 'text-muted-foreground',
+          )}>
             {isLoading
               ? t('status.checking')
               : isRunning
@@ -124,22 +136,20 @@ export const StatusBar: React.FC<StatusBarProps> = ({ isCollapsed = false }) => 
         onClick={handleToggle}
         disabled={isLoading || isPending}
         className={cn(
-          'ml-2 h-8 shrink-0 rounded-md border px-3 transition-all',
+          'h-7 gap-1.5 rounded-md px-2.5 text-xs',
           isRunning
-            ? 'border-green-200 bg-green-200/50 text-green-900 hover:bg-green-200 dark:border-green-800 dark:bg-green-800/30 dark:text-green-100 dark:hover:bg-green-800/50'
-            : 'border-red-200 bg-red-200/50 text-red-900 hover:bg-red-200 dark:border-red-800 dark:bg-red-800/30 dark:text-red-100 dark:hover:bg-red-800/50',
+            ? 'text-emerald-400 hover:bg-emerald-500/10'
+            : 'text-muted-foreground hover:bg-white/[0.06]',
         )}
       >
         {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <Loader2 className="h-3 w-3 animate-spin" />
         ) : isRunning ? (
-          <Square className="h-3.5 w-3.5 fill-current" />
+          <Square className="h-3 w-3 fill-current" />
         ) : (
-          <Play className="h-3.5 w-3.5 fill-current" />
+          <Play className="h-3 w-3 fill-current" />
         )}
-        <span className="ml-2 font-semibold">
-          {isRunning ? t('action.stop') : t('action.start')}
-        </span>
+        <span>{isRunning ? t('action.stop') : t('action.start')}</span>
       </Button>
     </div>
   );

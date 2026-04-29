@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { groupBy } from 'lodash-es';
 import { ipc } from '@/ipc/manager';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Eye, Zap, Code, Brain, Star } from 'lucide-react';
+import { Loader2, Eye, Zap, Code, Brain, Star, Layers } from 'lucide-react';
 
 interface ModelCapability {
   id: string;
@@ -45,7 +44,8 @@ function getProvider(modelId: string): string {
   const id = modelId.toLowerCase();
   if (id.startsWith('gemini')) return 'Google';
   if (id.startsWith('claude')) return 'Anthropic';
-  if (id.startsWith('gpt') || id.startsWith('o1') || id.startsWith('o3') || id.startsWith('text-')) return 'OpenAI';
+  if (id.startsWith('gpt') || id.startsWith('o1') || id.startsWith('o3') || id.startsWith('text-'))
+    return 'OpenAI';
   if (id.startsWith('deepseek')) return 'DeepSeek';
   if (id.startsWith('meta-llama') || id.startsWith('llama')) return 'Meta';
   if (id.startsWith('mistral') || id.startsWith('mixtral')) return 'Mistral';
@@ -54,6 +54,17 @@ function getProvider(modelId: string): string {
   if (id.startsWith('sonar')) return 'Perplexity';
   if (id.startsWith('command')) return 'Cohere';
   return 'Other';
+}
+
+/** Format large token counts with K/M suffixes */
+function formatTokenCount(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(0)}K`;
+  }
+  return value.toLocaleString();
 }
 
 export const CapabilitiesTab: React.FC = () => {
@@ -73,7 +84,6 @@ export const CapabilitiesTab: React.FC = () => {
     return groupBy(models, (m) => getProvider(m.id));
   }, [models]);
 
-  // Sort providers alphabetically, but keep 'Other' at the bottom
   const sortedProviders = Object.keys(groupedModels).sort((a, b) => {
     if (a === 'Other') return 1;
     if (b === 'Other') return -1;
@@ -81,41 +91,80 @@ export const CapabilitiesTab: React.FC = () => {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h3 className="text-lg font-medium">{t('proxy.advanced.capabilities.title', 'Model Capabilities')}</h3>
-        <p className="text-sm text-muted-foreground">{t('proxy.advanced.capabilities.description', 'Discover what each model can do')}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold">
+            {t('proxy.advanced.capabilities.title', 'Model Capabilities')}
+          </h3>
+          <p className="text-[13px] text-muted-foreground">
+            {t('proxy.advanced.capabilities.description', 'Discover what each model can do')}
+          </p>
+        </div>
+        {models.length > 0 && (
+          <Badge variant="outline" className="text-xs tabular-nums">
+            <Layers className="mr-1.5 h-3 w-3" />
+            {models.length} models
+          </Badge>
+        )}
       </div>
 
-      {/* Capabilities Grid */}
+      {/* Content */}
       {isLoading ? (
-        <div className="flex h-32 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin" />
+        <div className="flex h-40 items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <div className="space-y-8">
           {sortedProviders.map((provider) => (
-            <div key={provider} className="space-y-4">
-              <h4 className="text-md font-semibold text-foreground border-b pb-2">
-                {provider}
-              </h4>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedModels[provider].map((model) => (
-                  <Card key={model.id} className="flex flex-col transition-shadow hover:shadow-md">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base truncate pr-2" title={model.displayName || model.id}>
-                          {model.displayName || model.id}
-                        </CardTitle>
-                        <Badge variant="outline" className="shrink-0">{model.object}</Badge>
+            <div key={provider} className="space-y-3">
+              {/* Provider header */}
+              <div className="flex items-center gap-3">
+                <h4 className="text-[13px] font-semibold tracking-wide uppercase text-muted-foreground">
+                  {provider}
+                </h4>
+                <div className="h-px flex-1 bg-white/[0.06]" />
+                <span className="text-[11px] text-muted-foreground/60 tabular-nums">
+                  {groupedModels[provider].length}
+                </span>
+              </div>
+
+              {/* Model cards */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {groupedModels[provider].map((model) => {
+                  const enabledCount = Object.values(model.capabilities).filter(Boolean).length;
+                  const totalCount = Object.values(model.capabilities).length;
+                  const hasLimits = Object.values(model.limits).some((v) => v != null);
+
+                  return (
+                    <div
+                      key={model.id}
+                      className="group flex flex-col rounded-xl border border-white/[0.06] bg-card p-4 transition-all hover:border-white/[0.12] hover:bg-white/[0.02]"
+                    >
+                      {/* Model header */}
+                      <div className="mb-3 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h5
+                            className="text-[13px] font-semibold leading-tight truncate"
+                            title={model.displayName || model.id}
+                          >
+                            {model.displayName || model.id}
+                          </h5>
+                          <span className="shrink-0 text-[10px] font-medium text-muted-foreground/60 rounded-md bg-white/[0.04] px-1.5 py-0.5">
+                            {enabledCount}/{totalCount}
+                          </span>
+                        </div>
+                        <p
+                          className="font-mono text-[11px] text-muted-foreground truncate"
+                          title={model.id}
+                        >
+                          {model.id}
+                        </p>
                       </div>
-                      <CardDescription className="text-xs font-mono text-muted-foreground truncate" title={model.id}>
-                        {model.id}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
-                      <div className="grid grid-cols-2 gap-2">
+
+                      {/* Capability pills */}
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {Object.entries(model.capabilities).map(([key, supported]) => {
                           const iconKey = key as keyof typeof CAPABILITY_ICONS;
                           const Icon = CAPABILITY_ICONS[iconKey];
@@ -123,63 +172,57 @@ export const CapabilitiesTab: React.FC = () => {
                           return (
                             <div
                               key={key}
-                              className={`flex items-center gap-2 rounded-md border p-2 ${
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
                                 supported
-                                  ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30'
-                                  : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15'
+                                  : 'bg-white/[0.02] text-muted-foreground/50 border border-white/[0.04]'
                               }`}
+                              title={label}
                             >
-                              <Icon
-                                className={`h-4 w-4 shrink-0 ${
-                                  supported ? 'text-green-600 dark:text-green-400' : 'text-gray-400'
-                                }`}
-                              />
-                              <span
-                                className={`text-[11px] font-medium truncate ${
-                                  supported
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : 'text-gray-500 dark:text-gray-400'
-                                }`}
-                                title={label}
-                              >
-                                {label}
-                              </span>
+                              <Icon className="h-3 w-3 shrink-0" />
+                              {label}
                             </div>
                           );
                         })}
                       </div>
-                      {Object.values(model.limits).some((v) => v != null) && (
-                        <div className="space-y-2 pt-2 border-t mt-auto">
-                          <p className="text-xs font-medium text-muted-foreground">Limits</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {model.limits.maxTokens != null && (
-                              <Badge variant="secondary" className="text-[10px] font-normal px-1.5">
-                                Context: {model.limits.maxTokens.toLocaleString()}
-                              </Badge>
-                            )}
-                            {model.limits.maxOutputTokens != null && (
-                              <Badge variant="secondary" className="text-[10px] font-normal px-1.5">
-                                Output: {model.limits.maxOutputTokens.toLocaleString()}
-                              </Badge>
-                            )}
-                            {model.limits.thinkingBudget != null && (
-                              <Badge variant="secondary" className="text-[10px] font-normal px-1.5 border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                                Think: {model.limits.thinkingBudget.toLocaleString()}
-                              </Badge>
-                            )}
-                          </div>
+
+                      {/* Limits section */}
+                      {hasLimits && (
+                        <div className="mt-auto flex flex-wrap gap-1.5 border-t border-white/[0.04] pt-3">
+                          {model.limits.maxTokens != null && (
+                            <span className="inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                              CTX {formatTokenCount(model.limits.maxTokens)}
+                            </span>
+                          )}
+                          {model.limits.maxOutputTokens != null && (
+                            <span className="inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                              OUT {formatTokenCount(model.limits.maxOutputTokens)}
+                            </span>
+                          )}
+                          {model.limits.thinkingBudget != null && (
+                            <span className="inline-flex items-center rounded-md bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 font-mono text-[10px] text-blue-300">
+                              THINK {formatTokenCount(model.limits.thinkingBudget)}
+                            </span>
+                          )}
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
+
           {models.length === 0 && (
-             <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
-               No models found. Check your provider configurations.
-             </div>
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/[0.1] py-16 text-center">
+              <Layers className="h-8 w-8 text-muted-foreground/30" />
+              <div className="space-y-1">
+                <p className="text-[13px] font-medium">No models found</p>
+                <p className="text-xs text-muted-foreground">
+                  Check your provider configurations
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}

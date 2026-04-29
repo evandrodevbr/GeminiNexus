@@ -184,7 +184,7 @@ export function ModelVisibilitySettings() {
               return (
                 <div
                   key={modelId}
-                  className="hover:bg-muted/50 flex items-center space-x-3 rounded p-2"
+                  className="flex items-center space-x-3 rounded-lg p-2 hover:bg-white/[0.03] transition-colors"
                 >
                   <Checkbox
                     id={`model-${modelId}`}
@@ -206,7 +206,7 @@ export function ModelVisibilitySettings() {
                       title={t('proxy.copy')}
                     >
                       {copiedModel === modelId ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-4 w-4 text-emerald-400" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}

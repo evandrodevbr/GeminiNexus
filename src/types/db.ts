@@ -87,50 +87,50 @@ export type TokenUsageRow = z.infer<typeof TokenUsageRowSchema>;
 
 export const HourlyUsageSchema = z.object({
   bucket: z.string(),
-  promptTokens: z.number(),
-  completionTokens: z.number(),
-  totalTokens: z.number(),
-  requests: z.number(),
+  promptTokens: z.number().nullable().transform((v) => v ?? 0),
+  completionTokens: z.number().nullable().transform((v) => v ?? 0),
+  totalTokens: z.number().nullable().transform((v) => v ?? 0),
+  requests: z.number().nullable().transform((v) => v ?? 0),
 });
 
 export type HourlyUsage = z.infer<typeof HourlyUsageSchema>;
 
 export const DailyUsageSchema = z.object({
   bucket: z.string(),
-  promptTokens: z.number(),
-  completionTokens: z.number(),
-  totalTokens: z.number(),
-  requests: z.number(),
+  promptTokens: z.number().nullable().transform((v) => v ?? 0),
+  completionTokens: z.number().nullable().transform((v) => v ?? 0),
+  totalTokens: z.number().nullable().transform((v) => v ?? 0),
+  requests: z.number().nullable().transform((v) => v ?? 0),
 });
 
 export type DailyUsage = z.infer<typeof DailyUsageSchema>;
 
 export const WeeklyUsageSchema = z.object({
   bucket: z.string(),
-  promptTokens: z.number(),
-  completionTokens: z.number(),
-  totalTokens: z.number(),
-  requests: z.number(),
+  promptTokens: z.number().nullable().transform((v) => v ?? 0),
+  completionTokens: z.number().nullable().transform((v) => v ?? 0),
+  totalTokens: z.number().nullable().transform((v) => v ?? 0),
+  requests: z.number().nullable().transform((v) => v ?? 0),
 });
 
 export type WeeklyUsage = z.infer<typeof WeeklyUsageSchema>;
 
 export const MonthlyUsageSchema = z.object({
   bucket: z.string(),
-  promptTokens: z.number(),
-  completionTokens: z.number(),
-  totalTokens: z.number(),
-  requests: z.number(),
+  promptTokens: z.number().nullable().transform((v) => v ?? 0),
+  completionTokens: z.number().nullable().transform((v) => v ?? 0),
+  totalTokens: z.number().nullable().transform((v) => v ?? 0),
+  requests: z.number().nullable().transform((v) => v ?? 0),
 });
 
 export type MonthlyUsage = z.infer<typeof MonthlyUsageSchema>;
 
 export const ModelUsageSchema = z.object({
   model: z.string(),
-  promptTokens: z.number(),
-  completionTokens: z.number(),
-  totalTokens: z.number(),
-  requests: z.number(),
+  promptTokens: z.number().nullable().transform((v) => v ?? 0),
+  completionTokens: z.number().nullable().transform((v) => v ?? 0),
+  totalTokens: z.number().nullable().transform((v) => v ?? 0),
+  requests: z.number().nullable().transform((v) => v ?? 0),
 });
 
 export type ModelUsage = z.infer<typeof ModelUsageSchema>;

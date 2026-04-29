@@ -35,9 +35,9 @@ function HomePageErrorBoundary({ error, reset }: { error: unknown; reset: () => 
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <div className="text-lg font-semibold">{t('error.generic')}</div>
-        <div className="text-muted-foreground mt-2 text-sm">{t('action.retry')}</div>
+      <div className="rounded-xl border border-dashed border-white/[0.1] p-8 text-center">
+        <div className="text-base font-semibold">{t('error.generic')}</div>
+        <div className="text-muted-foreground mt-2 text-[13px]">{t('action.retry')}</div>
         <Button className="mt-4" variant="outline" onClick={() => reset()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           {t('action.retry')}

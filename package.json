@@ -107,6 +107,7 @@
     "@nestjs/websockets": "^11.1.19",
     "@nivo/bar": "^0.99.0",
     "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
     "@nivo/pie": "^0.99.0",
     "@orpc/client": "^1.13.14",
     "@orpc/server": "^1.13.14",

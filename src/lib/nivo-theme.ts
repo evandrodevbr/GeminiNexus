@@ -1,16 +1,20 @@
 import type { PartialTheme } from '@nivo/theming';
 
+/**
+ * Nivo chart theme aligned with Gemini Nexus design system.
+ * Uses Inter font family and refined dark palette.
+ */
 export const nivoTheme: PartialTheme = {
   background: 'transparent',
   text: {
-    fontFamily: "Geist, 'Microsoft YaHei', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif",
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     fontSize: 11,
-    fill: '#b8b8b8',
+    fill: '#6b7280',
   },
   axis: {
     domain: {
       line: {
-        stroke: 'rgba(255,255,255,0.1)',
+        stroke: 'rgba(255,255,255,0.06)',
         strokeWidth: 1,
       },
     },
@@ -20,41 +24,41 @@ export const nivoTheme: PartialTheme = {
         strokeWidth: 0,
       },
       text: {
-        fontFamily: "Geist, 'Microsoft YaHei', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif",
-        fontSize: 11,
-        fill: '#b8b8b8',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 10,
+        fill: '#6b7280',
       },
     },
     legend: {
       text: {
-        fontFamily: "Geist, 'Microsoft YaHei', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif",
-        fontSize: 12,
-        fill: '#b8b8b8',
+        fontFamily: "Inter, sans-serif",
+        fontSize: 11,
+        fill: '#6b7280',
       },
     },
   },
   grid: {
     line: {
-      stroke: 'rgba(255,255,255,0.06)',
+      stroke: 'rgba(255,255,255,0.04)',
       strokeWidth: 1,
-      strokeDasharray: '4 4',
     },
   },
   legends: {
     text: {
-      fontFamily: "Geist, 'Microsoft YaHei', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif",
-      fontSize: 12,
-      fill: '#b8b8b8',
+      fontFamily: "Inter, sans-serif",
+      fontSize: 11,
+      fill: '#6b7280',
     },
   },
   tooltip: {
     container: {
-      background: '#2e2e2e',
-      color: '#fff',
-      fontFamily: "Geist, 'Microsoft YaHei', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif",
+      background: '#16161e',
+      color: '#e8eaed',
+      fontFamily: "Inter, sans-serif",
       fontSize: 12,
-      borderRadius: 6,
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      borderRadius: 8,
+      border: '1px solid rgba(255,255,255,0.06)',
+      boxShadow: '0 8px 24px -4px rgba(0, 0, 0, 0.3)',
       padding: '8px 12px',
     },
   },

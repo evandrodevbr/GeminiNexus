@@ -58,9 +58,9 @@ const MODEL_DISPLAY_REPLACEMENTS: Array<[string, string]> = [
 ];
 
 const QUOTA_TEXT_COLOR_CLASS_BY_STATUS: Record<QuotaStatus, string> = {
-  high: 'text-green-500',
-  medium: 'text-yellow-500',
-  low: 'text-red-500',
+  high: 'text-emerald-400',
+  medium: 'text-amber-400',
+  low: 'text-rose-400',
 };
 
 const QUOTA_BAR_COLOR_CLASS_BY_STATUS: Record<QuotaStatus, string> = {
@@ -240,12 +240,12 @@ export function CloudAccountCard({
           <span className="text-muted-foreground/70 text-[10px] font-bold tracking-wider uppercase">
             {title}
           </span>
-          <div className="bg-border/50 h-[1px] flex-1" />
+          <div className="h-[1px] flex-1 bg-white/[0.04]" />
         </div>
         {models.map(([modelName, info]) => (
           <div
             key={modelName}
-            className="group/item hover:bg-muted/60 hover:border-border/60 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-transparent px-2 py-1.5 text-sm transition-all"
+            className="group/item grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-transparent px-2 py-1.5 text-[13px] transition-all hover:bg-white/[0.03]"
           >
             <span
               className="text-muted-foreground group-hover/item:text-foreground min-w-0 truncate font-semibold"
@@ -291,7 +291,7 @@ export function CloudAccountCard({
   const providerGroupedQuotaSection =
     providerStats && providerStats.visibleModels > 0 ? (
       <>
-        <div className="bg-muted/40 flex items-center justify-between rounded-lg px-3 py-1.5 text-xs">
+        <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-1.5 text-xs">
           <span className="font-medium">{t('settings.providerGroupings.overall')}</span>
           <div className="flex items-center gap-2">
             <span
@@ -343,7 +343,7 @@ export function CloudAccountCard({
 
   return (
     <Card
-      className={`group bg-card hover:border-primary/40 flex h-full flex-col overflow-hidden border transition-all duration-200 hover:shadow-sm ${isSelected ? 'ring-primary border-primary/50 ring-2' : ''}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-card transition-all duration-200 hover:border-white/[0.12] ${isSelected ? 'ring-accent/30 border-accent/40 ring-2' : ''}`}
     >
       <CardHeader className="relative flex flex-row items-center gap-4 space-y-0 pb-2">
         {onToggleSelection && (
@@ -365,7 +365,7 @@ export function CloudAccountCard({
             className="bg-muted h-10 w-10 rounded-full border"
           />
         ) : (
-          <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full border">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted-foreground">
             {account.name?.[0]?.toUpperCase() || 'A'}
           </div>
         )}
@@ -493,7 +493,7 @@ export function CloudAccountCard({
               {account.provider.toUpperCase()}
             </Badge>
             {account.is_active && (
-              <Badge variant="default" className="bg-green-500 text-xs hover:bg-green-600">
+              <Badge variant="default" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-xs hover:bg-emerald-500/20">
                 {t('cloud.card.active')}
               </Badge>
             )}
@@ -514,7 +514,7 @@ export function CloudAccountCard({
           )}
 
           {account.is_active ? (
-            <Button variant="ghost" size="sm" disabled className="text-green-600 opacity-100">
+            <Button variant="ghost" size="sm" disabled className="text-emerald-400 opacity-100">
               <Power className="mr-1 h-3 w-3" />
               {t('cloud.card.active')}
             </Button>
@@ -551,7 +551,7 @@ export function CloudAccountCard({
         </div>
       </CardContent>
 
-      <CardFooter className="bg-muted/20 text-muted-foreground justify-center border-t p-2 px-4 text-xs">
+      <CardFooter className="justify-center border-t border-white/[0.04] p-2 px-4 text-xs text-muted-foreground">
         <span>
           {t('cloud.card.used')}{' '}
           {formatDistanceToNow(account.last_used * 1000, { addSuffix: true })}
@@ -613,7 +613,7 @@ export function CompactCloudAccountCard({
   );
 
   return (
-    <div className="group bg-card hover:border-primary/40 flex items-center gap-3 rounded-lg border px-3 py-2 transition-all duration-200">
+    <div className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-card px-3 py-2 transition-all duration-200 hover:border-white/[0.12]">
       {account.avatar_url ? (
         <img
           src={account.avatar_url}
@@ -621,14 +621,14 @@ export function CompactCloudAccountCard({
           className="bg-muted h-7 w-7 rounded-full border"
         />
       ) : (
-        <div className="bg-primary/10 text-primary flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-xs font-semibold text-muted-foreground">
           {account.name?.[0]?.toUpperCase() || 'A'}
         </div>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold">
+          <span className="truncate text-[13px] font-semibold">
             {account.name || t('cloud.card.unknown')}
           </span>
           <Badge
@@ -644,7 +644,7 @@ export function CompactCloudAccountCard({
           {account.is_active && (
             <Badge
               variant="default"
-              className="shrink-0 bg-green-500 text-[10px] hover:bg-green-600"
+              className="shrink-0 bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-[10px] hover:bg-emerald-500/20"
             >
               {t('cloud.card.active')}
             </Badge>
@@ -756,7 +756,7 @@ export function CompactCloudAccountCard({
             variant="ghost"
             size="sm"
             disabled
-            className="h-7 text-xs text-green-600 opacity-100"
+            className="h-7 text-xs text-emerald-400 opacity-100"
           >
             <Power className="mr-1 h-3 w-3" />
             {t('cloud.card.active')}

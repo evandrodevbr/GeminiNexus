@@ -294,10 +294,10 @@ print(response.choices[0].message.content)`;
   }
 
   return (
-    <div className="container mx-auto max-w-4xl space-y-5 p-6">
+    <div className="container mx-auto max-w-4xl space-y-5 overflow-auto p-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">{t('proxy.title')}</h2>
-        <p className="text-muted-foreground mt-1">{t('proxy.description')}</p>
+        <h2 className="text-lg font-semibold tracking-tight">{t('proxy.title')}</h2>
+        <p className="text-muted-foreground mt-1 text-[13px]">{t('proxy.description')}</p>
       </div>
 
       <Tabs defaultValue="status">
@@ -311,7 +311,7 @@ print(response.choices[0].message.content)`;
         {/* Status Tab */}
         <TabsContent value="status" className="space-y-5">
           {/* Service Control Card */}
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -320,15 +320,15 @@ print(response.choices[0].message.content)`;
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`h-3 w-3 rounded-full ${proxyConfig.enabled ? 'animate-pulse bg-green-500' : 'bg-gray-400'}`}
+                    className={`h-2.5 w-2.5 rounded-full ${proxyConfig.enabled ? 'animate-pulse bg-emerald-400' : 'bg-muted-foreground/30'}`}
                   ></div>
-                  <span className="text-sm font-medium">
+                  <span className="text-[13px] font-medium">
                     {proxyConfig.enabled ? t('proxy.service.running') : t('proxy.service.stopped')}
                   </span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5">
               {/* Start/Stop Button */}
               <div className="flex items-center gap-4">
                 <Button
@@ -387,7 +387,7 @@ print(response.choices[0].message.content)`;
                       value={proxyConfig.api_key || ''}
                       readOnly
                       type={showKey ? 'text' : 'password'}
-                      className="pr-10 font-mono text-sm"
+                      className="pr-10 font-mono text-[13px]"
                     />
                     <Button
                       variant="ghost"
@@ -454,10 +454,10 @@ print(response.choices[0].message.content)`;
               </div>
 
               {/* Auto Start Toggle */}
-              <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center justify-between rounded-xl border border-white/[0.06] p-4">
                 <div className="space-y-1">
                   <Label>{t('proxy.config.auto_start')}</Label>
-                  <p className="text-xs text-gray-500">{t('proxy.config.auto_start_desc')}</p>
+                  <p className="text-xs text-muted-foreground">{t('proxy.config.auto_start_desc')}</p>
                 </div>
                 <Switch
                   checked={proxyConfig.auto_start}
@@ -470,7 +470,7 @@ print(response.choices[0].message.content)`;
           </Card>
 
           {/* Account Quota Context */}
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <CardTitle>Account Pool</CardTitle>
               <CardDescription>Quota and routing context</CardDescription>
@@ -480,21 +480,21 @@ print(response.choices[0].message.content)`;
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">Primary Account</p>
-                      <p className="text-muted-foreground text-sm">{accounts[0].email}</p>
+                      <p className="text-[13px] font-medium">Primary Account</p>
+                      <p className="text-muted-foreground font-mono text-[13px]">{accounts[0].email}</p>
                     </div>
                     {accounts.length > 1 && (
                       <Badge variant="outline">Pool Mode: Active ({accounts.length} accounts)</Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="text-xs" asChild>
                     <Link to={'/accounts' as any}>Manage Accounts</Link>
                   </Button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 py-6 text-center">
-                  <p className="text-muted-foreground text-sm">No accounts configured</p>
-                  <Button size="sm" asChild>
+                  <p className="text-muted-foreground text-[13px]">No accounts configured</p>
+                  <Button size="sm" className="text-xs" asChild>
                     <Link to={'/accounts' as any}>Add Account</Link>
                   </Button>
                 </div>
@@ -505,16 +505,16 @@ print(response.choices[0].message.content)`;
           {proxyConfig.enabled ? (
             <>
               {/* Local Access Info Banner */}
-              <div className="flex flex-col gap-2 rounded-md border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+              <div className="flex flex-col gap-2 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 text-[13px] text-blue-200">
                   <div className="flex items-center gap-2">
                   <div className="font-semibold">{t('proxy.config.local_access')}</div>
-                  <code className="rounded bg-blue-100 px-1.5 py-0.5 font-mono select-all dark:bg-blue-900/50">
+                  <code className="rounded-md bg-blue-500/10 px-1.5 py-0.5 font-mono text-xs select-all">
                     http://{selectedIp || 'localhost'}:{proxyConfig.port}/v1
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                    className="h-7 w-7 text-blue-300 hover:bg-blue-500/10"
                     onClick={() =>
                       copyToClipboard(
                         `http://${selectedIp || 'localhost'}:${proxyConfig.port}/v1`,
@@ -539,7 +539,7 @@ print(response.choices[0].message.content)`;
                   )}
                 </div>
                 {!proxyConfig.api_key && (
-                  <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+                  <div className="flex items-center gap-2 text-xs font-medium text-amber-400">
                     {t('proxy.config.no_token_warning')}
                   </div>
                 )}
@@ -572,11 +572,11 @@ print(response.choices[0].message.content)`;
                     },
                   ];
                   return items.map((metric) => (
-                    <Card key={metric.label}>
+                    <Card key={metric.label} className="border border-white/[0.06] bg-card shadow-none">
                       <CardContent className="pt-6">
-                        <p className="text-muted-foreground text-xs">{metric.label}</p>
+                        <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">{metric.label}</p>
                         <div className="mt-1 flex items-center gap-2">
-                          <span className="text-2xl font-bold">
+                          <span className="font-mono text-xl font-semibold tabular-nums">
                             {metric.value}
                             {metric.suffix}
                           </span>
@@ -588,11 +588,11 @@ print(response.choices[0].message.content)`;
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center">
-              <ServerOff className="text-muted-foreground h-12 w-12" />
+            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-white/[0.1] p-12 text-center">
+              <ServerOff className="text-muted-foreground/50 h-10 w-10" />
               <div className="space-y-1">
-                <p className="text-lg font-medium">Proxy is not running</p>
-                <p className="text-muted-foreground text-sm">Start the proxy to enable local API access</p>
+                <p className="text-base font-semibold">Proxy is not running</p>
+                <p className="text-muted-foreground text-[13px]">Start the proxy to enable local API access</p>
               </div>
               <Button
                 onClick={async () => {
@@ -609,20 +609,20 @@ print(response.choices[0].message.content)`;
 
         {/* Routing Tab */}
         <TabsContent value="routing" className="space-y-5">
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <CardTitle>{t('proxy.mapping.title')}</CardTitle>
               <CardDescription>{t('proxy.mapping.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg border">
-                <div className="grid grid-cols-3 gap-4 border-b bg-muted/50 p-3 text-xs font-medium text-muted-foreground">
+              <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+                <div className="grid grid-cols-3 gap-4 border-b border-white/[0.06] bg-white/[0.02] p-3 text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
                   <div>Requested Model</div>
                   <div>Resolved Model</div>
                   <div>Provider</div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 items-center p-3">
-                  <div className="text-sm font-medium">Claude Sonnet 4.6 (Thinking)</div>
+                <div className="grid grid-cols-3 gap-4 items-center p-3 text-[13px]">
+                  <div className="font-medium">Claude Sonnet 4.6 (Thinking)</div>
                   <Select
                     value={resolveAnthropicMappingValue(
                       proxyConfig.anthropic_mapping,
@@ -649,8 +649,8 @@ print(response.choices[0].message.content)`;
                   </Select>
                   <Badge variant="secondary">Anthropic</Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-4 items-center border-t p-3">
-                  <div className="text-sm font-medium">Claude Opus 4.6 (Thinking)</div>
+                <div className="grid grid-cols-3 gap-4 items-center border-t border-white/[0.06] p-3 text-[13px]">
+                  <div className="font-medium">Claude Opus 4.6 (Thinking)</div>
                   <Select
                     value={resolveAnthropicMappingValue(
                       proxyConfig.anthropic_mapping,
@@ -696,7 +696,7 @@ print(response.choices[0].message.content)`;
           </Card>
 
           {/* Current Mappings */}
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <CardTitle>{t('proxy.routing.currentMappings')}</CardTitle>
               <CardDescription>{t('proxy.routing.modelMapping')}</CardDescription>
@@ -706,10 +706,10 @@ print(response.choices[0].message.content)`;
                 const mappingEntries = Object.entries(proxyConfig.anthropic_mapping || {});
                 const customEntries = Object.entries(proxyConfig.custom_mapping || {});
                 return mappingEntries.length === 0 && customEntries.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t('proxy.routing.noMapping')}</p>
+                  <p className="text-[13px] text-muted-foreground">{t('proxy.routing.noMapping')}</p>
                 ) : (
-                  <div className="rounded-lg border">
-                    <div className="grid grid-cols-3 gap-4 border-b bg-muted/50 p-3 text-xs font-medium text-muted-foreground">
+                  <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+                    <div className="grid grid-cols-3 gap-4 border-b border-white/[0.06] bg-white/[0.02] p-3 text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
                       <div>{t('proxy.mapping.maps_to')}</div>
                       <div>{t('settings.modelMapping.targetGemini')}</div>
                       <div>Provider</div>
@@ -717,7 +717,7 @@ print(response.choices[0].message.content)`;
                     {mappingEntries.map(([key, value]) => (
                       <div
                         key={key}
-                        className="grid grid-cols-3 gap-4 items-center border-b p-3 last:border-0"
+                        className="grid grid-cols-3 gap-4 items-center border-b border-white/[0.06] p-3 last:border-0"
                       >
                         <div className="font-mono text-xs">{key}</div>
                         <div className="font-mono text-xs">{value}</div>
@@ -727,7 +727,7 @@ print(response.choices[0].message.content)`;
                     {customEntries.map(([key, value]) => (
                       <div
                         key={key}
-                        className="grid grid-cols-3 gap-4 items-center border-b p-3 last:border-0"
+                        className="grid grid-cols-3 gap-4 items-center border-b border-white/[0.06] p-3 last:border-0"
                       >
                         <div className="font-mono text-xs">{key}</div>
                         <div className="font-mono text-xs">{value}</div>
@@ -741,21 +741,21 @@ print(response.choices[0].message.content)`;
           </Card>
 
           {/* Upstream Proxy Status */}
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <CardTitle>{t('proxy.routing.upstreamProxy')}</CardTitle>
               <CardDescription>{t('proxy.routing.upstreamProxy')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <span className="text-sm text-muted-foreground">{t('proxy.routing.status')}</span>
+              <div className="flex items-center justify-between rounded-xl border border-white/[0.06] p-3">
+                <span className="text-[13px] text-muted-foreground">{t('proxy.routing.status')}</span>
                 <Badge variant={proxyConfig.upstream_proxy?.enabled ? 'default' : 'secondary'}>
                   {proxyConfig.upstream_proxy?.enabled ? t('proxy.routing.enabled') : t('proxy.routing.disabled')}
                 </Badge>
               </div>
               {proxyConfig.upstream_proxy?.enabled && (
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <span className="text-sm text-muted-foreground">{t('proxy.routing.url')}</span>
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.06] p-3">
+                  <span className="text-[13px] text-muted-foreground">{t('proxy.routing.url')}</span>
                   <span className="font-mono text-xs">{proxyConfig.upstream_proxy?.url || '—'}</span>
                 </div>
               )}
@@ -765,7 +765,7 @@ print(response.choices[0].message.content)`;
 
         {/* API Docs Tab */}
         <TabsContent value="api-docs" className="space-y-5">
-          <Card>
+          <Card className="border border-white/[0.06] bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Code size={20} />
@@ -791,9 +791,9 @@ print(response.choices[0].message.content)`;
               </div>
 
               {/* Model Selector & Copy API ID */}
-              <div className="flex flex-col gap-4 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700">
+              <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <Label className="text-sm font-medium">
+                  <Label className="text-[13px] font-medium">
                     Model{' '}
                     <span className="text-muted-foreground ml-1 font-normal">
                       ({availableModelIds.length} available)
@@ -836,7 +836,7 @@ print(response.choices[0].message.content)`;
               {/* Collapsible Code Examples */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Code Examples</Label>
+                  <Label className="text-[13px] font-medium">Code Examples</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -851,9 +851,9 @@ print(response.choices[0].message.content)`;
                 </div>
 
                 {/* cURL */}
-                <div className="rounded-lg border">
+                <div className="overflow-hidden rounded-xl border border-white/[0.06]">
                   <div
-                    className="flex w-full cursor-pointer items-center justify-between p-3 text-sm font-medium hover:bg-muted/50"
+                    className="flex w-full cursor-pointer items-center justify-between p-3 text-[13px] font-medium hover:bg-white/[0.02] transition-colors"
                     onClick={() => setShowCurl(!showCurl)}
                   >
                     <span className="flex items-center gap-2">
@@ -876,16 +876,16 @@ print(response.choices[0].message.content)`;
                     </div>
                   </div>
                   {showCurl && (
-                    <pre className="overflow-x-auto border-t bg-gray-900 p-3 font-mono text-xs whitespace-pre-wrap text-gray-100">
+                    <pre className="overflow-x-auto border-t border-white/[0.06] bg-card p-3 font-mono text-xs whitespace-pre-wrap text-foreground/90">
                       {getCurlExample(activeModelTab)}
                     </pre>
                   )}
                 </div>
 
                 {/* Python */}
-                <div className="rounded-lg border">
+                <div className="overflow-hidden rounded-xl border border-white/[0.06]">
                   <div
-                    className="flex w-full cursor-pointer items-center justify-between p-3 text-sm font-medium hover:bg-muted/50"
+                    className="flex w-full cursor-pointer items-center justify-between p-3 text-[13px] font-medium hover:bg-white/[0.02] transition-colors"
                     onClick={() => setShowPython(!showPython)}
                   >
                     <span className="flex items-center gap-2">
@@ -908,7 +908,7 @@ print(response.choices[0].message.content)`;
                     </div>
                   </div>
                   {showPython && (
-                    <pre className="overflow-x-auto border-t bg-gray-900 p-3 font-mono text-xs whitespace-pre-wrap text-gray-100">
+                    <pre className="overflow-x-auto border-t border-white/[0.06] bg-card p-3 font-mono text-xs whitespace-pre-wrap text-foreground/90">
                       {getPythonExample(activeModelTab)}
                     </pre>
                   )}
