@@ -48,19 +48,12 @@ const installNoticeText: Record<
   },
 };
 
-export function resolveInstallNoticeLanguage({
-  configLanguage,
-  locale,
-}: {
-  configLanguage?: string | null;
-  locale?: string | null;
-}): InstallNoticeLanguage {
-  const rawLanguage = configLanguage || locale;
-  if (!rawLanguage) {
-    return 'en';
-  }
-
-  const normalized = rawLanguage.toLowerCase();
+/**
+ * Match a locale tag to a supported InstallNoticeLanguage.
+ * Returns the matched language or null if no match found.
+ */
+function matchLocaleTag(tag: string): InstallNoticeLanguage | null {
+  const normalized = tag.toLowerCase();
   if (normalized.startsWith('zh')) {
     return 'zh-CN';
   }
@@ -75,6 +68,51 @@ export function resolveInstallNoticeLanguage({
 
   if (normalized.startsWith('pt')) {
     return 'pt-BR';
+  }
+
+  if (normalized.startsWith('en')) {
+    return 'en';
+  }
+
+  return null;
+}
+
+/**
+ * Resolve the language to use for the install notice dialog.
+ *
+ * Priority: configLanguage > preferredLanguages > locale > 'en'
+ *
+ * `preferredLanguages` should come from `app.getPreferredSystemLanguages()`
+ * which returns the OS-level preferred language list and is more reliable
+ * than `app.getLocale()` which can return Chromium's internal locale.
+ */
+export function resolveInstallNoticeLanguage({
+  configLanguage,
+  preferredLanguages,
+  locale,
+}: {
+  configLanguage?: string | null;
+  preferredLanguages?: string[];
+  locale?: string | null;
+}): InstallNoticeLanguage {
+  // 1. Explicit user config takes highest priority
+  if (configLanguage) {
+    return matchLocaleTag(configLanguage) ?? 'en';
+  }
+
+  // 2. OS preferred languages (most reliable source)
+  if (preferredLanguages && preferredLanguages.length > 0) {
+    for (const lang of preferredLanguages) {
+      const matched = matchLocaleTag(lang);
+      if (matched) {
+        return matched;
+      }
+    }
+  }
+
+  // 3. Chromium locale (fallback)
+  if (locale) {
+    return matchLocaleTag(locale) ?? 'en';
   }
 
   return 'en';
@@ -100,6 +138,10 @@ function normalizeWindowsInstallDirName(appName: string) {
     .toLowerCase();
 }
 
+/**
+ * Return the primary expected install root (Squirrel per-user location).
+ * Used for the dialog detail text to tell the user where to find the app.
+ */
 export function getExpectedInstallRoot({
   platform,
   localAppData,
@@ -122,30 +164,85 @@ export function getExpectedInstallRoot({
   return pathApi.resolve(pathApi.join(localAppData, installDirName));
 }
 
+/**
+ * Return all valid install root directories for the app on Windows.
+ * Includes both Squirrel (%LOCALAPPDATA%) and WiX/MSI (Program Files) paths.
+ */
+export function getAllExpectedInstallRoots({
+  platform,
+  localAppData,
+  appName,
+  programFiles,
+  programFilesX86,
+}: {
+  platform: string;
+  localAppData?: string | null;
+  appName: string;
+  programFiles?: string | null;
+  programFilesX86?: string | null;
+}): string[] {
+  if (platform !== 'win32') {
+    return [];
+  }
+
+  const pathApi = getPathApi(platform);
+  const roots: string[] = [];
+
+  // Squirrel per-user install: %LOCALAPPDATA%\gemini_nexus
+  if (localAppData) {
+    const installDirName = normalizeWindowsInstallDirName(appName);
+    roots.push(pathApi.resolve(pathApi.join(localAppData, installDirName)));
+  }
+
+  // WiX/MSI system-wide install: C:\Program Files\Gemini Nexus
+  // and C:\Program Files (x86)\Gemini Nexus
+  const displayName = appName.trim();
+  if (programFiles) {
+    roots.push(pathApi.resolve(pathApi.join(programFiles, displayName)));
+  }
+
+  if (programFilesX86) {
+    roots.push(pathApi.resolve(pathApi.join(programFilesX86, displayName)));
+  }
+
+  return roots;
+}
+
 export function isRunningFromExpectedInstallDir({
   platform,
   isPackaged,
   localAppData,
   appName,
   execPath,
+  programFiles,
+  programFilesX86,
 }: {
   platform: string;
   isPackaged: boolean;
   localAppData?: string | null;
   appName: string;
   execPath: string;
+  programFiles?: string | null;
+  programFilesX86?: string | null;
 }) {
   if (platform !== 'win32' || !isPackaged) {
     return true;
   }
 
-  const expectedRoot = getExpectedInstallRoot({ platform, localAppData, appName });
-  if (!expectedRoot) {
+  const roots = getAllExpectedInstallRoots({
+    platform,
+    localAppData,
+    appName,
+    programFiles,
+    programFilesX86,
+  });
+
+  if (roots.length === 0) {
     return true;
   }
 
   const pathApi = getPathApi(platform);
-  const normalizedExecPath = pathApi.resolve(execPath);
+  const normalizedExecPath = pathApi.resolve(execPath).toLowerCase();
 
-  return normalizedExecPath.toLowerCase().startsWith(expectedRoot.toLowerCase() + pathApi.sep);
+  return roots.some((root) => normalizedExecPath.startsWith(root.toLowerCase() + pathApi.sep));
 }

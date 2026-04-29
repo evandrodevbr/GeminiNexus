@@ -116,6 +116,8 @@ function isRunningFromExpectedInstallDir() {
     localAppData: process.env.LOCALAPPDATA,
     appName: app.getName(),
     execPath: process.execPath,
+    programFiles: process.env.ProgramFiles,
+    programFilesX86: process.env['ProgramFiles(x86)'],
   });
 }
 
@@ -140,6 +142,7 @@ function showWindowsInstallNoticeIfNeeded() {
   hasShownInstallNotice = true;
   const language = resolveInstallNoticeLanguage({
     configLanguage: startupConfig?.language,
+    preferredLanguages: app.getPreferredSystemLanguages(),
     locale: app.getLocale(),
   });
   const text = getInstallNoticeText(language);
