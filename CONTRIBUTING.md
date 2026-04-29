@@ -1,44 +1,55 @@
 # Contributing to Gemini Nexus
 
-First off, thank you for considering contributing to Gemini Nexus! 🎉
+Thank you for considering contributing to Gemini Nexus! 🎉
 
-It's people like you that make Gemini Nexus such a great tool. We welcome contributions from everyone, whether it's a bug report, feature suggestion, documentation improvement, or code contribution.
+Whether it's a bug report, feature suggestion, documentation improvement, or code contribution — all help is welcome.
+
+---
 
 ## 📋 Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Pull Request Process](#pull-request-process)
-- [Style Guidelines](#style-guidelines)
-- [Reporting Bugs](#reporting-bugs)
-- [Suggesting Features](#suggesting-features)
+- [Code of Conduct](#-code-of-conduct)
+- [Getting Started](#-getting-started)
+- [Development Setup](#-development-setup)
+- [Making Changes](#-making-changes)
+- [Commit Guidelines](#-commit-guidelines)
+- [Pull Request Process](#-pull-request-process)
+- [Code Style](#-code-style)
+- [Reporting Issues](#-reporting-issues)
+
+---
 
 ## 📜 Code of Conduct
 
-This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+This project is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+---
 
 ## 🚀 Getting Started
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
+1. **Fork** the repository on GitHub
+2. **Clone** your fork locally:
+
    ```bash
-   git clone https://github.com/YOUR_USERNAME/GeminiNexusManager.git
-   cd Gemini NexusManager
+   git clone https://github.com/YOUR_USERNAME/GeminiNexus.git
+   cd GeminiNexus
    ```
+
 3. **Add the upstream remote**:
+
    ```bash
-   git remote add upstream https://github.com/Draculabo/AntigravityManager.git
+   git remote add upstream https://github.com/evandrodevbr/GeminiNexus.git
    ```
+
+---
 
 ## 💻 Development Setup
 
 ### Prerequisites
 
-- Node.js v18 or higher
-- npm (comes with Node.js)
-- Git
+- **Node.js** v20 or higher
+- **npm** (this project uses `package-lock.json`)
+- **Git**
 
 ### Installation
 
@@ -46,49 +57,73 @@ This project and everyone participating in it is governed by our [Code of Conduc
 # Install dependencies
 npm install
 
-# Start development server
+# Start the app in development mode
 npm start
 ```
 
 ### Available Scripts
 
-| Command                | Description                         |
-| ---------------------- | ----------------------------------- |
-| `npm start`            | Start the app in development mode   |
-| `npm run lint`         | Run ESLint to check for code issues |
-| `npm run format:write` | Format code with Prettier           |
-| `npm run test:unit`    | Run unit tests with Vitest          |
-| `npm run test:e2e`     | Run E2E tests with Playwright       |
-| `npm run test:all`     | Run all tests                       |
-| `npm run type-check`   | Run TypeScript type checking        |
-| `npm run make`         | Build production packages           |
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start the app in development mode (Electron + Vite HMR) |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Check formatting with Prettier |
+| `npm run format:write` | Auto-format code with Prettier |
+| `npm run type-check` | Run TypeScript type check |
+| `npm test` | Run unit tests with Vitest |
+| `npm run test:e2e` | Run E2E tests with Playwright |
+| `npm run test:all` | Run all tests (unit + E2E) |
+| `npm run make` | Build production installers |
+
+### Project Structure
+
+```plaintext
+src/
+├── components/        # React UI components (Radix-based primitives in ui/)
+├── hooks/             # Custom React hooks
+├── ipc/               # Electron IPC + database handlers
+├── layouts/           # Layout components (MainLayout + sidebar)
+├── localization/      # i18n translation resources
+├── routes/            # TanStack Router pages (index, usage, proxy, settings)
+├── server/            # NestJS backend (proxy gateway service)
+├── services/          # Service layer
+├── types/             # TypeScript type definitions + Zod schemas
+└── utils/             # Utility functions
+```
+
+---
 
 ## ✏️ Making Changes
 
-1. **Create a new branch** from `main`:
+1. **Create a branch** from `main`:
 
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b feat/your-feature-name
    # or
    git checkout -b fix/your-bug-fix
    ```
 
-2. **Make your changes** and commit them:
+2. **Make your changes**, then commit:
 
    ```bash
    git add .
    git commit -m "feat: add amazing new feature"
    ```
 
-3. **Keep your branch updated**:
+3. **Keep your branch up to date**:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
-### Commit Message Guidelines
+---
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/). Each commit message should be structured as follows:
+## 📝 Commit Guidelines
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/). Commits are analyzed by `semantic-release` to automatically determine version bumps and generate changelogs.
+
+### Format
 
 ```
 <type>(<scope>): <description>
@@ -98,88 +133,136 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Each com
 [optional footer(s)]
 ```
 
-**Types:**
+### Types
 
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation only changes
-- `style`: Changes that don't affect code meaning (formatting, etc.)
-- `refactor`: Code change that neither fixes a bug nor adds a feature
-- `perf`: Performance improvement
-- `test`: Adding or correcting tests
-- `chore`: Changes to build process or auxiliary tools
+| Type | Description | Release |
+|------|-------------|---------|
+| `feat` | A new feature | **minor** |
+| `fix` | A bug fix | **patch** |
+| `perf` | Performance improvement | **patch** |
+| `refactor` | Code change (no bug fix or feature) | **patch** |
+| `docs` | Documentation only | no release |
+| `style` | Formatting, whitespace | no release |
+| `test` | Adding or fixing tests | no release |
+| `chore` | Build process, tooling | no release |
+| `ci` | CI/CD changes | no release |
 
-**Examples:**
+### Breaking Changes
+
+Add `BREAKING CHANGE:` in the footer or `!` after the type to trigger a **major** release:
 
 ```
-feat(auth): add Google OAuth support
-fix(quota): resolve quota refresh timeout issue
-docs(readme): update installation instructions
+feat!: remove legacy plaintext storage
+
+BREAKING CHANGE: all accounts must re-authenticate after upgrade.
 ```
+
+### Examples
+
+```
+feat(proxy): add Anthropic /v1/messages endpoint
+fix(usage): handle SQL SUM(null) in empty date ranges
+docs(readme): add Chinese and Spanish translations
+ci: normalize Node.js to v20 across all workflows
+```
+
+---
 
 ## 🔄 Pull Request Process
 
-1. **Update documentation** if you're changing functionality
-2. **Add tests** for new features
-3. **Ensure all tests pass**: `npm run test:all`
-4. **Ensure code is formatted**: `npm run format:write`
-5. **Ensure no lint errors**: `npm run lint`
-6. **Push to your fork** and create a Pull Request
+### Before Opening a PR
+
+1. Run the quality checks:
+
+   ```bash
+   npm run lint
+   npm run format:write
+   npm run type-check
+   npm test
+   ```
+
+2. Update documentation if you changed functionality
+3. Add tests for new features
 
 ### PR Checklist
 
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
+- [ ] I have commented hard-to-understand areas
+- [ ] I have updated related documentation
 - [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or my feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] I have added tests that prove my fix or feature works
+- [ ] All existing tests pass locally
 
-## 🎨 Style Guidelines
+### Review Process
 
-### TypeScript/JavaScript
-
-- Use TypeScript for all new code
-- Follow the existing code style (enforced by ESLint and Prettier)
-- Use meaningful variable and function names
-- Add JSDoc comments for public APIs
-
-### React Components
-
-- Use functional components with hooks
-- Keep components small and focused
-- Use TypeScript interfaces for props
-- Follow the existing file structure
-
-### CSS/Styling
-
-- Use TailwindCSS utility classes
-- Follow the design system in `components.json`
-- Ensure responsive design
-
-## 🐛 Reporting Bugs
-
-Found a bug? Please [create an issue](https://github.com/Draculabo/AntigravityManager/issues/new?template=bug_report.md) with:
-
-- **Clear title** describing the issue
-- **Steps to reproduce** the behavior
-- **Expected behavior** vs actual behavior
-- **Screenshots** if applicable
-- **Environment details** (OS, app version)
-
-## 💡 Suggesting Features
-
-Have an idea? Please [create an issue](https://github.com/Draculabo/AntigravityManager/issues/new?template=feature_request.md) with:
-
-- **Clear description** of the feature
-- **Use case** - why is this feature needed?
-- **Possible implementation** ideas (optional)
-
-## 🙏 Thank You
-
-Your contributions help make Gemini Nexus better for everyone. Thank you for taking the time to contribute!
+- PRs require at least one maintainer approval
+- CI must pass (lint, type-check, unit tests)
+- Squash-merge is preferred for clean history
 
 ---
 
-If you have any questions, feel free to open an issue or reach out to the maintainers.
+## 🎨 Code Style
+
+### TypeScript
+
+- Use TypeScript for all new code — avoid `any`
+- Use Zod for runtime validation
+- Prefer `lodash-es` named imports over native utilities
+- Use `@/` alias for `src/` imports
+
+### React Components
+
+- Functional components with hooks only
+- Use Radix UI primitives for accessible components
+- TypeScript interfaces for props
+- Follow existing component structure (`components/ComponentName.tsx`)
+
+### Styling
+
+- Tailwind CSS v4 utility classes
+- Use `clsx` + `tailwind-merge` for conditional classes
+- Follow the Gemini Nexus design tokens (`rounded-xl`, `border-white/[0.06]`)
+
+### Import Order
+
+```typescript
+// 1. React and core libraries
+import React, { useEffect } from 'react';
+
+// 2. External dependencies (alphabetical)
+import { useTranslation } from 'react-i18next';
+
+// 3. Internal imports (using @ alias)
+import { Card } from '@/components/ui/card';
+```
+
+---
+
+## 🐛 Reporting Issues
+
+### Bug Reports
+
+[Create a bug report](https://github.com/evandrodevbr/GeminiNexus/issues/new?labels=bug&template=bug_report.md) with:
+
+- Clear title describing the issue
+- Steps to reproduce the behavior
+- Expected vs actual behavior
+- Screenshots if applicable
+- Environment details (OS, app version, Node.js version)
+
+### Feature Requests
+
+[Suggest a feature](https://github.com/evandrodevbr/GeminiNexus/issues/new?labels=enhancement&template=feature_request.md) with:
+
+- Clear description of the feature
+- Use case — why is this needed?
+- Possible implementation ideas (optional)
+
+---
+
+## 🙏 Thank You
+
+Your contributions make Gemini Nexus better for everyone. Thank you for your time!
+
+If you have questions, feel free to [open a discussion](https://github.com/evandrodevbr/GeminiNexus/discussions) or reach out to the maintainers.
