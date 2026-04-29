@@ -8,70 +8,97 @@ import { sanitizeObject } from '../../utils/sensitiveDataMasking';
 const LOG_RETENTION = '30d';
 const LOG_MAX_SIZE = '50m';
 
-const agentDir = getAgentDir();
+let _logger: winston.Logger | null = null;
 
-if (!fs.existsSync(agentDir)) {
-  try {
-    fs.mkdirSync(agentDir, { recursive: true });
-  } catch (e) {
-    console.error('Failed to create agent directory for API logs', e);
+/**
+ * Lazily initializes the API logger on first access.
+ * Avoids creating directories and file transports at module load time,
+ * preventing EACCES errors in CI/test environments.
+ */
+function getLogger(): winston.Logger {
+  if (_logger) {
+    return _logger;
   }
+
+  const agentDir = getAgentDir();
+
+  if (!fs.existsSync(agentDir)) {
+    try {
+      fs.mkdirSync(agentDir, { recursive: true });
+    } catch (e) {
+      console.error('Failed to create agent directory for API logs', e);
+    }
+  }
+
+  const fileFormat = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(({ timestamp, level, message, ...meta }) => {
+      const logEntry = {
+        timestamp,
+        level,
+        message,
+        ...meta,
+      };
+      return JSON.stringify(logEntry);
+    }),
+  );
+
+  const consoleFormat = winston.format.combine(
+    winston.format.colorize({ all: true }),
+    winston.format.printf(({ timestamp, level, message, ...meta }) => {
+      const logEntry = {
+        timestamp,
+        level,
+        message,
+        ...meta,
+      };
+      return JSON.stringify(logEntry);
+    }),
+  );
+
+  const rotateTransport = new DailyRotateFile({
+    filename: path.join(agentDir, 'api-%DATE%.log'),
+    datePattern: 'YYYY-MM-DD-HH',
+    maxSize: LOG_MAX_SIZE,
+    maxFiles: LOG_RETENTION,
+    zippedArchive: false,
+    auditFile: path.join(agentDir, '.api-log-audit.json'),
+    level: 'debug',
+    format: fileFormat,
+  });
+
+  rotateTransport.on('error', (error) => {
+    console.error('DailyRotateFile API transport error', error);
+  });
+
+  const consoleTransport = new winston.transports.Console({
+    level: 'debug',
+    format: consoleFormat,
+  });
+
+  consoleTransport.on('error', (error) => {
+    console.error('Console API transport error', error);
+  });
+
+  _logger = winston.createLogger({
+    level: 'debug',
+    transports: [consoleTransport, rotateTransport],
+    exitOnError: false,
+  });
+
+  return _logger;
 }
 
-const fileFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...meta,
-    };
-    return JSON.stringify(logEntry);
-  }),
-);
-
-const consoleFormat = winston.format.combine(
-  winston.format.colorize({ all: true }),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...meta,
-    };
-    return JSON.stringify(logEntry);
-  }),
-);
-
-const rotateTransport = new DailyRotateFile({
-  filename: path.join(agentDir, 'api-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD-HH',
-  maxSize: LOG_MAX_SIZE,
-  maxFiles: LOG_RETENTION,
-  zippedArchive: false,
-  auditFile: path.join(agentDir, '.api-log-audit.json'),
-  level: 'debug',
-  format: fileFormat,
-});
-
-rotateTransport.on('error', (error) => {
-  console.error('DailyRotateFile API transport error', error);
-});
-
-const consoleTransport = new winston.transports.Console({
-  level: 'debug',
-  format: consoleFormat,
-});
-
-consoleTransport.on('error', (error) => {
-  console.error('Console API transport error', error);
-});
-
-export const apiLogger = winston.createLogger({
-  level: 'debug',
-  transports: [consoleTransport, rotateTransport],
-  exitOnError: false,
+/** Lazily-initialized API logger instance. */
+export const apiLogger = new Proxy({} as winston.Logger, {
+  get(_target, prop: string) {
+    const logger = getLogger();
+    const value = logger[prop as keyof winston.Logger];
+    if (typeof value === 'function') {
+      return value.bind(logger);
+    }
+    return value;
+  },
 });
 
 /**
