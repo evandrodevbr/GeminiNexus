@@ -23,25 +23,48 @@
     <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="许可证" />
   </a>
   <img src="https://img.shields.io/badge/平台-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="平台" />
+  <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
 </p>
+
+> [!IMPORTANT]
+> **Windows 用户：** 如果在安装过程中看到 **“Windows 已保护你的电脑”** (SmartScreen) 警告，请点击 **“更多信息”** (More info)，然后点击 **“仍要运行”** (Run anyway)。这是未签名的新应用预期的安全提示，属于正常现象。
+
+---
+
+## 📖 目录
+
+- [✨ 为什么选择 Gemini Nexus？](#-为什么选择-gemini-nexus)
+- [🎯 功能特性](#-功能特性)
+- [📸 截图](#-截图)
+- [⚡ 安装与快速开始](#-安装与快速开始)
+- [🛠️ 技术栈](#️-技术栈)
+- [💻 开发](#-开发)
+- [❓ 常见问题](#-常见问题)
+- [🤝 参与贡献](#-参与贡献)
+- [📄 许可证](#-许可证)
 
 ---
 
 ## ✨ 为什么选择 Gemini Nexus？
 
-- 😫 单个账户配额很快用完，需要频繁手动切换
-- 🔄 管理多个 Google/Claude 账户非常繁琐
-- 📊 不知道已经消耗了多少 Token 或还剩多少配额
-- 🔌 需要一个可靠的本地 API 代理，支持 OpenAI/Anthropic 协议
+在使用 AI 驱动的 IDE 和编程工具时，你是否遇到过这些问题？
 
-**Gemini Nexus** 解决所有这些问题。它是一个专业的 Electron 桌面应用，作为你的开发工具和 Google Gemini / Claude AI 之间的智能网关：
+- 😫 **配额限制：** 单个账户配额很快用完，需要频繁手动切换。
+- 🔄 **账户管理：** 管理多个 Google/Claude 账户非常繁琐。
+- 📊 **盲目使用：** 不知道已经消耗了多少 Token 或还剩多少配额。
+- 🔌 **集成问题：** 需要一个可靠的本地 API 代理，并且必须原生支持 OpenAI/Anthropic 协议。
+- 🔍 **缺乏透明度：** 无法查看代理在后台实际发送或接收的数据。
 
-- ✅ **无限账户池** — 添加任意数量的 Google Gemini 和 Claude 账户
-- ✅ **智能自动切换** — 当配额不足或被限速时自动轮换到下一个可用账户
-- ✅ **实时使用分析** — SaaS 级仪表板，配备面积图、趋势指标和模型分布
-- ✅ **完整的代理可观测性** — 实时流量监控、请求重放和模型能力检查器
-- ✅ **兼容 OpenAI 和 Anthropic** — 即插即用的代理，支持 Cursor、Windsurf、OpenCode
-- ✅ **默认安全** — AES-256-GCM 加密，配合操作系统原生凭证管理
+**Gemini Nexus** 解决所有这些问题。它是一个专业的 Electron 桌面应用，作为你的开发工具和 Google Gemini / Claude AI 之间的智能网关。
+
+### 核心价值主张
+
+- ✅ **无限账户池** — 添加任意数量的 Google Gemini 和 Claude 账户。
+- ✅ **智能自动切换** — 当配额不足或被限速时自动轮换到下一个可用账户。
+- ✅ **实时使用分析** — SaaS 级仪表板，配备面积图、趋势指标和模型分布。
+- ✅ **完整的代理可观测性** — 实时流量监控、请求重放和模型能力检查器。
+- ✅ **兼容 OpenAI 和 Anthropic** — 即插即用的代理，支持 Cursor、Windsurf、OpenCode 以及任何兼容 OpenAI 的工具。
+- ✅ **默认安全** — AES-256-GCM 加密，配合操作系统原生凭证管理。
 
 ---
 
@@ -77,10 +100,10 @@
       <ul>
         <li>兼容 OpenAI <code>/v1/chat/completions</code></li>
         <li>兼容 Anthropic <code>/v1/messages</code></li>
-        <li>完整的 SSE 流式传输支持</li>
+        <li>完整的 SSE 流式传输支持（已在 Cursor, Windsurf, OpenCode 测试）</li>
         <li>模型映射（如 <code>claude-sonnet-4-6</code> → <code>gemini-3-flash</code>）</li>
         <li>可配置端口、超时时间和 API 密钥</li>
-        <li>模型可见性控制</li>
+        <li>模型可见性控制（隐藏/显示特定模型）</li>
       </ul>
     </td>
     <td width="50%">
@@ -97,17 +120,17 @@
     <td width="50%">
       <h3>🔍 代理可观测性（高级）</h3>
       <ul>
-        <li><strong>流量监控</strong> — 实时请求/响应日志</li>
+        <li><strong>流量监控</strong> — 实时请求/响应日志，含延迟和模型信息</li>
         <li><strong>请求重放</strong> — 重放任意请求进行调试</li>
-        <li><strong>模型能力</strong> — 检查视觉、思考、流式、JSON 模式</li>
-        <li><strong>开发者工具</strong> — cURL 和 Python 代码生成</li>
+        <li><strong>模型能力</strong> — 检查每个模型对视觉、思考、流式、JSON 模式的支持</li>
+        <li><strong>开发者工具</strong> — cURL 和 Python 代码生成，一键复制</li>
       </ul>
     </td>
     <td width="50%">
       <h3>🔐 安全与加密</h3>
       <ul>
         <li>所有敏感数据采用 AES-256-GCM 加密</li>
-        <li>集成操作系统原生凭证管理器</li>
+        <li>集成操作系统原生凭证管理器 (Keytar + SafeStorage)</li>
         <li>自动迁移旧版明文数据</li>
         <li>每个账户的 Token 和配额均加密存储</li>
       </ul>
@@ -119,6 +142,7 @@
       <ul>
         <li>深色 / 浅色 / 跟随系统主题</li>
         <li>多语言：English & Português (Brasil)</li>
+        <li>每个账户可独立覆盖代理 URL</li>
         <li>模型可见性开关</li>
         <li>日志目录访问</li>
       </ul>
@@ -128,8 +152,9 @@
       <ul>
         <li>原生 Electron 应用，系统托盘集成</li>
         <li>可折叠侧边栏，状态持久化</li>
-        <li>响应式布局</li>
+        <li>响应式布局适配所有视图</li>
         <li>状态栏实时显示代理和连接指标</li>
+        <li>错误边界处理以及友好的用户提示</li>
       </ul>
     </td>
   </tr>
@@ -163,31 +188,46 @@
 
 ---
 
-## ⚡ 快速开始
+## ⚡ 安装与快速开始
 
-### 前置要求
+### 📦 下载
 
-- **Node.js** v20 或更高版本
-- **npm**
+您可以从我们的 [Releases 页面](https://github.com/evandrodevbr/GeminiNexus/releases) 下载适用于 Windows、macOS 和 Linux 的最新预编译版本。
 
-### 从源码构建
+*(如果您使用的是 Windows 并在安装时遇到了 SmartScreen 提示，请参阅页面顶部的警告)。*
 
-```bash
-git clone https://github.com/evandrodevbr/GeminiNexus.git
-cd GeminiNexus
-npm install
-npm start
+### 🔌 配合 AI IDE 使用
 
-# 构建生产版本
-npm run make
-```
-
-### 配合 AI IDE 使用
+在代理运行并至少添加一个账户后，配置您首选的 IDE（Cursor、Windsurf、OpenCode 等）：
 
 ```plaintext
 API Base URL:  http://localhost:10100/v1
 API Key:       （从应用的 Proxy 页面复制）
-Model:         gemini-3-flash
+Model:         gemini-3-flash （或您选择的任何映射模型）
+```
+
+### 🛠️ 从源码构建
+
+#### 前置要求
+
+- **Node.js** v20 或更高版本
+- **npm** （本项目使用 `package-lock.json`）
+
+#### 步骤
+
+```bash
+# 克隆仓库
+git clone https://github.com/evandrodevbr/GeminiNexus.git
+cd GeminiNexus
+
+# 安装依赖
+npm install
+
+# 启动开发环境
+npm start
+
+# 构建生产版本（例如 Windows 安装程序）
+npm run make
 ```
 
 ---
@@ -207,26 +247,74 @@ Model:         gemini-3-flash
 
 ---
 
+## 💻 开发
+
+```bash
+# 启动开发环境 (Electron + Vite HMR)
+npm start
+
+# 运行代码规范检查
+npm run lint
+
+# 类型检查
+npm run type-check
+
+# 格式化代码
+npm run format:write
+
+# 运行测试
+npm test
+```
+
+---
+
 ## ❓ 常见问题
 
 <details>
-<summary><b>问：应用无法启动？</b></summary>
+<summary><b>问：安装时出现 Windows SmartScreen 警告（"Windows 已保护你的电脑"）？</b></summary>
 
-1. 确保依赖已安装：`npm install`
-2. Node.js 版本 >= 20
-3. 尝试删除 `node_modules` 并重新安装
-
+是的，对于未签名的新应用，这是一个常见的警告。请点击 **"更多信息"** (More info)，然后点击 **"仍要运行"** (Run anyway)。详情请参阅 README 顶部的提示。
 </details>
 
 <details>
-<summary><b>问：IDE 无法连接代理？</b></summary>
+<summary><b>问：从源码构建时应用无法启动？</b></summary>
 
-1. 确保代理正在运行（状态栏绿色指示器）
-2. 确认端口一致（默认 `10100`）
-3. 从 Proxy 页面复制 API 密钥
-4. 确保至少有一个账户处于活跃状态
-
+1. 确保所有依赖均已安装：`npm install`
+2. 检查 Node.js 版本是否 >= 20。
+3. 尝试删除 `node_modules` 并重新安装。
+4. 在 Windows 上，请确保已安装 WiX Toolset 以便执行 `npm run make` 命令。
 </details>
+
+<details>
+<summary><b>问：账户登录失败？</b></summary>
+
+1. 确保您的网络连接正常。
+2. 尝试清除应用数据并重新登录。
+3. 检查该账户是否已被 Google/Claude 限制。
+</details>
+
+<details>
+<summary><b>问：IDE 无法连接到代理？</b></summary>
+
+1. 确保代理正在运行（查看状态栏的绿色指示器）。
+2. 确认端口与您 IDE 中的配置一致（默认为 `10100`）。
+3. 直接从 Proxy 页面复制 API 密钥并粘贴到 IDE 设置中。
+4. 确保在 Accounts 页面中至少有一个活跃的账户。
+</details>
+
+<details>
+<summary><b>问：Token 计数显示为零？</b></summary>
+
+1. 这是早期版本中的一个已知漏洞 — 请更新至最新版本。
+2. 目前 Token 追踪功能已能正确处理流式元数据及预估计数。
+3. 使用数据会在 Usage Analytics 页面每 15 秒自动刷新。
+</details>
+
+---
+
+## 🤝 参与贡献
+
+欢迎贡献代码！详情请参阅 `CONTRIBUTING.md`。
 
 ---
 
@@ -242,6 +330,8 @@ Model:         gemini-3-flash
 > **仅供教育目的**
 >
 > 本项目仅供教育和研究目的使用。按"原样"提供，不提供任何担保。**严禁商业用途。**
+>
+> 使用本软件即表示您同意不会将其用于任何商业目的，并且您全权负责确保您的使用符合所有适用的法律和法规。作者和贡献者对因使用本软件而引起的任何滥用或损害不承担任何责任。
 
 ---
 

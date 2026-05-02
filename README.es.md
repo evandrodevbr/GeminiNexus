@@ -23,7 +23,25 @@
     <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="Licencia" />
   </a>
   <img src="https://img.shields.io/badge/plataforma-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="Plataforma" />
+  <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
 </p>
+
+> [!IMPORTANT]
+> **Usuarios de Windows:** Si ves una advertencia de SmartScreen **"Windows protegió su PC"** durante la instalación, haz clic en **"Más información"** y luego en **"Ejecutar de todas formas"**. Esta es una advertencia de seguridad esperada para aplicaciones nuevas no firmadas.
+
+---
+
+## 📖 Tabla de Contenidos
+
+- [✨ ¿Por qué Gemini Nexus?](#-por-qué-gemini-nexus)
+- [🎯 Características](#-características)
+- [📸 Capturas de Pantalla](#-capturas-de-pantalla)
+- [⚡ Instalación e Inicio Rápido](#-instalación-e-inicio-rápido)
+- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [💻 Desarrollo](#-desarrollo)
+- [❓ Preguntas Frecuentes](#-preguntas-frecuentes)
+- [🤝 Contribuir](#-contribuir)
+- [📄 Licencia](#-licencia)
 
 ---
 
@@ -31,19 +49,22 @@
 
 Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con estos problemas?
 
-- 😫 La cuota de una sola cuenta se agota rápido, requiriendo cambios manuales frecuentes
-- 🔄 Gestionar múltiples cuentas de Google/Claude es tedioso
-- 📊 No sabes cuántos tokens has consumido o cuánta cuota queda
-- 🔌 Necesitas un proxy local confiable que hable los protocolos OpenAI/Anthropic
+- 😫 **Límites de cuota:** La cuota de una sola cuenta se agota rápido, requiriendo cambios manuales frecuentes.
+- 🔄 **Gestión de cuentas:** Gestionar múltiples cuentas de Google/Claude es tedioso.
+- 📊 **Uso a ciegas:** No sabes cuántos tokens has consumido o cuánta cuota queda.
+- 🔌 **Problemas de integración:** Necesitas un proxy local confiable que hable los protocolos OpenAI/Anthropic de forma nativa.
+- 🔍 **Falta de transparencia:** No puedes ver qué se envía o recibe exactamente a través del proxy.
 
-**Gemini Nexus** resuelve todo esto. Es una aplicación de escritorio profesional en Electron que actúa como gateway inteligente entre tus herramientas de desarrollo y Google Gemini / Claude AI:
+**Gemini Nexus** resuelve todo esto. Es una aplicación de escritorio profesional en Electron que actúa como gateway inteligente entre tus herramientas de desarrollo y Google Gemini / Claude AI.
 
-- ✅ **Pool de Cuentas Ilimitado** — Agrega cualquier cantidad de cuentas Google Gemini y Claude
-- ✅ **Cambio Automático Inteligente** — Rota automáticamente a la siguiente cuenta disponible cuando la cuota es baja
-- ✅ **Analytics de Uso en Tiempo Real** — Dashboard nivel SaaS con gráficos de área, indicadores de tendencia y distribución por modelo
-- ✅ **Observabilidad Completa del Proxy** — Monitor de tráfico en vivo, replay de solicitudes e inspector de capacidades de modelos
-- ✅ **Compatible con OpenAI y Anthropic** — Proxy drop-in para Cursor, Windsurf, OpenCode y cualquier herramienta compatible
-- ✅ **Seguro por Defecto** — Cifrado AES-256-GCM con gestión nativa de credenciales del SO
+### Propuesta de Valor
+
+- ✅ **Pool de Cuentas Ilimitado** — Agrega cualquier cantidad de cuentas Google Gemini y Claude.
+- ✅ **Cambio Automático Inteligente** — Rota automáticamente a la siguiente cuenta disponible cuando la cuota es baja o hay rate limit.
+- ✅ **Analytics de Uso en Tiempo Real** — Dashboard nivel SaaS con gráficos de área, indicadores de tendencia y distribución por modelo.
+- ✅ **Observabilidad Completa del Proxy** — Monitor de tráfico en vivo, replay de solicitudes e inspector de capacidades de modelos.
+- ✅ **Compatible con OpenAI y Anthropic** — Proxy drop-in para Cursor, Windsurf, OpenCode y cualquier herramienta compatible con OpenAI.
+- ✅ **Seguro por Defecto** — Cifrado AES-256-GCM con gestión nativa de credenciales del sistema operativo.
 
 ---
 
@@ -79,7 +100,7 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
       <ul>
         <li>Endpoint compatible con OpenAI <code>/v1/chat/completions</code></li>
         <li>Endpoint compatible con Anthropic <code>/v1/messages</code></li>
-        <li>Soporte completo de streaming SSE</li>
+        <li>Soporte completo de streaming SSE (probado con Cursor, Windsurf, OpenCode)</li>
         <li>Mapeo de modelos (ej: <code>claude-sonnet-4-6</code> → <code>gemini-3-flash</code>)</li>
         <li>Puerto, timeout y API key configurables</li>
         <li>Control de visibilidad de modelos</li>
@@ -99,17 +120,17 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
     <td width="50%">
       <h3>🔍 Observabilidad del Proxy (Avanzado)</h3>
       <ul>
-        <li><strong>Monitor de Tráfico</strong> — Log en vivo de solicitudes/respuestas</li>
+        <li><strong>Monitor de Tráfico</strong> — Log en vivo de solicitudes/respuestas con latencia y modelo</li>
         <li><strong>Replay de Solicitudes</strong> — Reproduce cualquier solicitud para debugging</li>
-        <li><strong>Capacidades de Modelos</strong> — Inspecciona visión, thinking, streaming, modo JSON</li>
-        <li><strong>Herramientas para Devs</strong> — Generación de código cURL y Python</li>
+        <li><strong>Capacidades de Modelos</strong> — Inspecciona soporte de visión, thinking, streaming, modo JSON</li>
+        <li><strong>Herramientas para Devs</strong> — Generación de código cURL y Python, copia con un clic</li>
       </ul>
     </td>
     <td width="50%">
       <h3>🔐 Seguridad y Cifrado</h3>
       <ul>
         <li>Cifrado AES-256-GCM para todos los datos sensibles</li>
-        <li>Integración con gestor de credenciales nativo del SO</li>
+        <li>Integración con gestor de credenciales nativo del SO (Keytar + SafeStorage)</li>
         <li>Migración automática de datos legacy en texto plano</li>
         <li>Almacenamiento cifrado de tokens y cuotas por cuenta</li>
       </ul>
@@ -119,8 +140,9 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
     <td width="50%">
       <h3>⚙️ Configuración y Personalización</h3>
       <ul>
-        <li>Tema Oscuro / Claro / Sistema</li>
+        <li>Soporte de temas Oscuro / Claro / Sistema</li>
         <li>Multi-idioma: English & Português (Brasil)</li>
+        <li>Override de proxy URL por cuenta</li>
         <li>Toggles de visibilidad de modelos</li>
         <li>Acceso al directorio de logs</li>
       </ul>
@@ -130,8 +152,9 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
       <ul>
         <li>App nativa Electron con integración en bandeja del sistema</li>
         <li>Sidebar colapsable con estado persistente</li>
-        <li>Layouts responsivos</li>
-        <li>Barra de estado con indicadores en vivo</li>
+        <li>Layouts responsivos en todas las vistas</li>
+        <li>Barra de estado con indicadores en vivo de proxy y conexión</li>
+        <li>Error boundaries con fallbacks amigables al usuario</li>
       </ul>
     </td>
   </tr>
@@ -165,31 +188,46 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
 
 ---
 
-## ⚡ Inicio Rápido
+## ⚡ Instalación e Inicio Rápido
 
-### Requisitos Previos
+### 📦 Descarga
 
-- **Node.js** v20 o superior
-- **npm**
+Puedes descargar los binarios precompilados más recientes para Windows, macOS y Linux desde nuestra [página de Releases](https://github.com/evandrodevbr/GeminiNexus/releases).
 
-### Compilar desde el Código Fuente
+*(Consulta la advertencia en la parte superior de esta página si usas Windows y te encuentras con el aviso de SmartScreen).*
 
-```bash
-git clone https://github.com/evandrodevbr/GeminiNexus.git
-cd GeminiNexus
-npm install
-npm start
+### 🔌 Uso con IDEs de IA
 
-# Compilar para producción
-npm run make
-```
-
-### Uso con IDEs de IA
+Con la aplicación en ejecución y al menos una cuenta agregada, configura tu IDE preferido (Cursor, Windsurf, OpenCode, etc.):
 
 ```plaintext
 API Base URL:  http://localhost:10100/v1
 API Key:       (copiar de la página Proxy en la app)
-Model:         gemini-3-flash
+Model:         gemini-3-flash  (o cualquier modelo mapeado)
+```
+
+### 🛠️ Compilar desde el Código Fuente
+
+#### Requisitos Previos
+
+- **Node.js** v20 o superior
+- **npm** (este proyecto usa `package-lock.json`)
+
+#### Pasos
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/evandrodevbr/GeminiNexus.git
+cd GeminiNexus
+
+# Instalar dependencias
+npm install
+
+# Iniciar en modo desarrollo
+npm start
+
+# Compilar para producción (ej: instalador de Windows)
+npm run make
 ```
 
 ---
@@ -209,26 +247,66 @@ Model:         gemini-3-flash
 
 ---
 
+## 💻 Desarrollo
+
+```bash
+# Iniciar entorno de dev (Electron + Vite HMR)
+npm start
+
+# Ejecutar linting
+npm run lint
+
+# Verificación de tipos
+npm run type-check
+
+# Formatear código
+npm run format:write
+
+# Ejecutar pruebas
+npm test
+```
+
+---
+
 ## ❓ Preguntas Frecuentes
 
 <details>
-<summary><b>P: ¿La app no inicia?</b></summary>
+<summary><b>P: ¿Aviso de Windows SmartScreen ("Windows protegió su PC") durante la instalación?</b></summary>
 
-1. Asegúrate de que las dependencias están instaladas: `npm install`
-2. Node.js versión >= 20
-3. Intenta eliminar `node_modules` y reinstalar
-
+Sí, este es un aviso común para nuevas aplicaciones no firmadas. Haz clic en **"Más información"** y luego en **"Ejecutar de todas formas"**. Consulta la advertencia en la parte superior del README para más detalles.
 </details>
 
 <details>
-<summary><b>P: ¿El IDE no conecta al proxy?</b></summary>
+<summary><b>P: ¿La app no inicia al compilar desde el código fuente?</b></summary>
 
-1. Asegúrate de que el proxy está corriendo (indicador verde en la barra de estado)
-2. Confirma que el puerto coincide (por defecto `10100`)
-3. Copia la API key de la página Proxy
-4. Asegúrate de tener al menos una cuenta activa
-
+1. Asegúrate de que todas las dependencias están instaladas: `npm install`.
+2. Verifica que tu versión de Node.js sea >= 20.
+3. Intenta eliminar `node_modules` y reinstalar.
+4. En Windows, asegúrate de que el WiX Toolset esté disponible para el comando `npm run make`.
 </details>
+
+<details>
+<summary><b>P: ¿El inicio de sesión de la cuenta falló?</b></summary>
+
+1. Asegúrate de que tu conexión a la red funcione correctamente.
+2. Intenta borrar los datos de la app y volver a iniciar sesión.
+3. Comprueba si la cuenta está restringida por Google/Claude.
+</details>
+
+<details>
+<summary><b>P: ¿El IDE no se puede conectar al proxy?</b></summary>
+
+1. Asegúrate de que el proxy esté funcionando (indicador verde en la barra de estado).
+2. Confirma que el puerto coincide con tu configuración del IDE (por defecto `10100`).
+3. Copia la API key directamente desde la página Proxy y pégala en la configuración de tu IDE.
+4. Asegúrate de tener al menos una cuenta activa en la página Cuentas.
+</details>
+
+---
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Por favor lee `CONTRIBUTING.md` para más detalles.
 
 ---
 
@@ -244,6 +322,8 @@ Model:         gemini-3-flash
 > **Solo con Fines Educativos**
 >
 > Este proyecto está destinado exclusivamente a fines educativos y de investigación. Se proporciona "tal cual" sin ninguna garantía. **El uso comercial está estrictamente prohibido.**
+>
+> Al utilizar este software, aceptas que no lo usarás para ningún fin comercial y eres el único responsable de asegurar que tu uso cumpla con todas las leyes y regulaciones aplicables. Los autores y colaboradores no son responsables del mal uso o los daños derivados de la utilización de este software.
 
 ---
 

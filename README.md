@@ -26,19 +26,22 @@
   <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
 </p>
 
+> [!IMPORTANT]
+> **Windows Users:** If you see a **"Windows protected your PC"** (SmartScreen) warning during installation, click **"More info"** and then **"Run anyway"**. This is an expected security prompt for new, unsigned applications.
+
 ---
 
 ## 📖 Table of Contents
 
-- [Why Gemini Nexus?](#-why-gemini-nexus)
-- [Features](#-features)
-- [Screenshots](#-screenshots)
-- [Quick Start](#-quick-start)
-- [Tech Stack](#️-tech-stack)
-- [Development](#-development)
-- [FAQ](#-faq)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [✨ Why Gemini Nexus?](#-why-gemini-nexus)
+- [🎯 Features](#-features)
+- [📸 Screenshots](#-screenshots)
+- [⚡ Installation & Quick Start](#-installation--quick-start)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [💻 Development](#-development)
+- [❓ FAQ](#-faq)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
 ---
 
@@ -46,20 +49,22 @@
 
 When using AI-powered IDEs and coding tools, have you ever run into these problems?
 
-- 😫 Single account quota runs out quickly, requiring frequent manual switching
-- 🔄 Managing multiple Google/Claude accounts is cumbersome
-- 📊 Don't know how much quota or tokens you've consumed
-- 🔌 Need a reliable local API proxy that speaks OpenAI/Anthropic protocols
-- 🔍 Can't see what's actually being sent/received by the proxy
+- 😫 **Quota limits:** Single account quotas run out quickly, requiring frequent manual switching.
+- 🔄 **Account management:** Managing multiple Google/Claude accounts is cumbersome.
+- 📊 **Blind usage:** You don't know how much quota or how many tokens you've actually consumed.
+- 🔌 **Integration issues:** You need a reliable local API proxy that speaks OpenAI/Anthropic protocols natively.
+- 🔍 **Lack of transparency:** You can't see what's actually being sent or received by the proxy under the hood.
 
-**Gemini Nexus** solves all of these. It's a professional Electron desktop application that acts as an intelligent gateway between your development tools and Google Gemini / Claude AI:
+**Gemini Nexus** solves all of these issues. It's a professional Electron desktop application that acts as an intelligent gateway between your development tools and Google Gemini / Claude AI.
 
-- ✅ **Unlimited Account Pool** — Add any number of Google Gemini & Claude accounts
-- ✅ **Smart Auto-Switching** — Automatically rotates to the next available account when quota is low or rate-limited
-- ✅ **Real-time Usage Analytics** — SaaS-grade dashboard with area charts, trend indicators, and model distribution
-- ✅ **Full Proxy Observability** — Live traffic monitor, request replay, and model capabilities inspector
-- ✅ **OpenAI & Anthropic Compatible** — Drop-in replacement proxy for Cursor, Windsurf, OpenCode, and any OpenAI-compatible tool
-- ✅ **Secure by Default** — AES-256-GCM encryption with OS-native credential management
+### Key Value Proposition
+
+- ✅ **Unlimited Account Pool** — Add any number of Google Gemini & Claude accounts.
+- ✅ **Smart Auto-Switching** — Automatically rotates to the next available account when quota is low or rate-limited.
+- ✅ **Real-time Usage Analytics** — SaaS-grade dashboard with area charts, trend indicators, and model distribution.
+- ✅ **Full Proxy Observability** — Live traffic monitor, request replay, and model capabilities inspector.
+- ✅ **OpenAI & Anthropic Compatible** — Drop-in replacement proxy for Cursor, Windsurf, OpenCode, and any OpenAI-compatible tool.
+- ✅ **Secure by Default** — AES-256-GCM encryption with OS-native credential management.
 
 ---
 
@@ -161,37 +166,55 @@ When using AI-powered IDEs and coding tools, have you ever run into these proble
 
 
 <p align="center">
-  <img src="docs/assets/main.png" alt="Main" width="80%" />
+  <img src="docs/assets/main.png" alt="Main Dashboard" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/2usage.png" alt="Usage" width="80%" />
+  <img src="docs/assets/2usage.png" alt="Usage Analytics" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/3proxy.png" alt="Proxy" width="80%" />
+  <img src="docs/assets/3proxy.png" alt="Proxy Monitor" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/4routing.png" alt="Routing" width="80%" />
+  <img src="docs/assets/4routing.png" alt="Routing Config" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/5docs.png" alt="Docs" width="80%" />
+  <img src="docs/assets/5docs.png" alt="Documentation" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/6connections.png" alt="Connections" width="80%" />
+  <img src="docs/assets/6connections.png" alt="Active Connections" width="80%" />
 </p>
 <p align="center">
-  <img src="docs/assets/7config.png" alt="Config" width="80%" />
+  <img src="docs/assets/7config.png" alt="Settings Configuration" width="80%" />
 </p>
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Installation & Quick Start
 
-### Prerequisites
+### 📦 Download the App
+
+You can download the latest pre-compiled binaries for Windows, macOS, and Linux from our [Releases page](https://github.com/evandrodevbr/GeminiNexus/releases). 
+
+*(Refer to the warning at the top of this page if you are using Windows and encounter the SmartScreen prompt).*
+
+### 🔌 Using with AI IDEs
+
+Once the application is running and you have added at least one account, configure your preferred IDE (Cursor, Windsurf, OpenCode, etc.):
+
+```plaintext
+API Base URL:  http://localhost:10100/v1
+API Key:       (copy this from the Proxy page in the app)
+Model:         gemini-3-flash  (or any mapped model of your choice)
+```
+
+### 🛠️ Build from Source
+
+#### Prerequisites
 
 - **Node.js** v20 or higher
 - **npm** (this project uses `package-lock.json`)
 
-### Build from Source
+#### Steps
 
 ```bash
 # Clone the repository
@@ -201,22 +224,11 @@ cd GeminiNexus
 # Install dependencies
 npm install
 
-# Start development
+# Start the application in development mode
 npm start
 
-# Build for production (Windows installer)
+# Build for production (e.g., Windows installer)
 npm run make
-```
-
-### Using with AI IDEs
-
-Once the proxy is running, configure your IDE:
-
-```plaintext
-# In Cursor / Windsurf / OpenCode settings:
-API Base URL:  http://localhost:10100/v1
-API Key:       (copy from the Proxy page in the app)
-Model:         gemini-3-flash  (or any mapped model)
 ```
 
 ---
@@ -281,41 +293,43 @@ src/
 ## ❓ FAQ
 
 <details>
-<summary><b>Q: The app won't start?</b></summary>
+<summary><b>Q: "Windows protected your PC" (SmartScreen) warning during installation?</b></summary>
+
+Yes, this is a common warning for new unsigned applications. Click **"More info"** and then **"Run anyway"**. See the warning at the top of the README for more details.
+</details>
+
+<details>
+<summary><b>Q: The app won't start when building from source?</b></summary>
 
 1. Make sure all dependencies are installed: `npm install`
-2. Check if Node.js version is >= 20
-3. Try deleting `node_modules` and reinstalling
-4. On Windows, ensure the WiX Toolset is available for `npm run make`
-
+2. Check if your Node.js version is >= 20.
+3. Try deleting `node_modules` and reinstalling.
+4. On Windows, ensure the WiX Toolset is available for `npm run make`.
 </details>
 
 <details>
 <summary><b>Q: Account login failed?</b></summary>
 
-1. Ensure network connection is working
-2. Try clearing app data and logging in again
-3. Check if the account is restricted by Google/Claude
-
+1. Ensure your network connection is working.
+2. Try clearing the app data and logging in again.
+3. Check if the account is restricted by Google/Claude.
 </details>
 
 <details>
-<summary><b>Q: IDE can't connect to the proxy?</b></summary>
+<summary><b>Q: My IDE can't connect to the proxy?</b></summary>
 
-1. Make sure the proxy is running (green indicator in the status bar)
-2. Verify the port matches your IDE config (default: `10100`)
-3. Copy the API key from the Proxy page and paste it in your IDE settings
-4. Check that at least one account is active in the Accounts page
-
+1. Make sure the proxy is actually running (look for the green indicator in the status bar).
+2. Verify the port matches your IDE config (default is `10100`).
+3. Copy the API key directly from the Proxy page and paste it into your IDE settings.
+4. Check that at least one account is active in the Accounts page.
 </details>
 
 <details>
-<summary><b>Q: Token counts show zero?</b></summary>
+<summary><b>Q: Token counts are showing zero?</b></summary>
 
-1. This was a known bug in earlier versions — update to the latest version
-2. Token tracking now correctly handles streaming metadata and estimated counts
-3. Usage data refreshes every 15 seconds on the Usage Analytics page
-
+1. This was a known bug in earlier versions — please update to the latest release.
+2. Token tracking now correctly handles streaming metadata and estimated counts.
+3. Usage data refreshes every 15 seconds on the Usage Analytics page.
 </details>
 
 ---

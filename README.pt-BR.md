@@ -26,19 +26,22 @@
   <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
 </p>
 
+> [!IMPORTANT]
+> **Usuários do Windows:** Se você vir um aviso do SmartScreen **"O Windows protegeu o seu computador"** durante a instalação, clique em **"Mais informações"** e depois em **"Executar mesmo assim"**. Isso é um aviso de segurança esperado para aplicativos novos e não assinados.
+
 ---
 
 ## 📖 Sumário
 
-- [Por que o Gemini Nexus?](#-por-que-o-gemini-nexus)
-- [Funcionalidades](#-funcionalidades)
-- [Screenshots](#-screenshots)
-- [Início Rápido](#-início-rápido)
-- [Stack Tecnológica](#️-stack-tecnológica)
-- [Desenvolvimento](#-desenvolvimento)
-- [FAQ](#-faq)
-- [Contribuindo](#-contribuindo)
-- [Licença](#-licença)
+- [✨ Por que o Gemini Nexus?](#-por-que-o-gemini-nexus)
+- [🎯 Funcionalidades](#-funcionalidades)
+- [📸 Screenshots](#-screenshots)
+- [⚡ Instalação e Início Rápido](#-instalação-e-início-rápido)
+- [🛠️ Stack Tecnológica](#️-stack-tecnológica)
+- [💻 Desenvolvimento](#-desenvolvimento)
+- [❓ FAQ](#-faq)
+- [🤝 Contribuindo](#-contribuindo)
+- [📄 Licença](#-licença)
 
 ---
 
@@ -46,20 +49,22 @@
 
 Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes problemas?
 
-- 😫 A cota da conta única acaba rápido, exigindo trocas manuais frequentes
-- 🔄 Gerenciar múltiplas contas do Google/Claude é cansativo
-- 📊 Não sabe quantos tokens já consumiu ou quanta cota resta
-- 🔌 Precisa de um proxy local confiável que fale os protocolos OpenAI/Anthropic
-- 🔍 Não consegue ver o que está sendo enviado/recebido pelo proxy
+- 😫 **Limites de cota:** A cota da conta única acaba rápido, exigindo trocas manuais frequentes.
+- 🔄 **Gestão de contas:** Gerenciar múltiplas contas do Google/Claude é cansativo.
+- 📊 **Uso às cegas:** Você não sabe quantos tokens já consumiu ou quanta cota resta.
+- 🔌 **Problemas de integração:** Precisa de um proxy local confiável que fale os protocolos OpenAI/Anthropic nativamente.
+- 🔍 **Falta de transparência:** Não consegue ver o que está sendo enviado ou recebido pelo proxy nos bastidores.
 
-**Gemini Nexus** resolve tudo isso. É um aplicativo desktop profissional em Electron que funciona como um gateway inteligente entre suas ferramentas de desenvolvimento e o Google Gemini / Claude AI:
+O **Gemini Nexus** resolve tudo isso. É um aplicativo desktop profissional em Electron que funciona como um gateway inteligente entre suas ferramentas de desenvolvimento e o Google Gemini / Claude AI.
 
-- ✅ **Pool de Contas Ilimitado** — Adicione quantas contas Google Gemini & Claude quiser
-- ✅ **Troca Automática Inteligente** — Rotaciona automaticamente para a próxima conta disponível quando a cota está baixa ou com rate limit
-- ✅ **Analytics de Uso em Tempo Real** — Dashboard nível SaaS com gráficos de área, indicadores de tendência e distribuição por modelo
-- ✅ **Observabilidade Completa do Proxy** — Monitor de tráfego ao vivo, replay de requisições e inspetor de capacidades dos modelos
-- ✅ **Compatível com OpenAI & Anthropic** — Proxy drop-in para Cursor, Windsurf, OpenCode e qualquer ferramenta compatível com OpenAI
-- ✅ **Seguro por Padrão** — Criptografia AES-256-GCM com gerenciamento nativo de credenciais do SO
+### Principais Vantagens
+
+- ✅ **Pool de Contas Ilimitado** — Adicione quantas contas Google Gemini & Claude quiser.
+- ✅ **Troca Automática Inteligente** — Rotaciona automaticamente para a próxima conta disponível quando a cota está baixa ou com rate limit.
+- ✅ **Analytics de Uso em Tempo Real** — Dashboard nível SaaS com gráficos de área, indicadores de tendência e distribuição por modelo.
+- ✅ **Observabilidade Completa do Proxy** — Monitor de tráfego ao vivo, replay de requisições e inspetor de capacidades dos modelos.
+- ✅ **Compatível com OpenAI & Anthropic** — Proxy drop-in para Cursor, Windsurf, OpenCode e qualquer ferramenta compatível com OpenAI.
+- ✅ **Seguro por Padrão** — Criptografia AES-256-GCM com gerenciamento nativo de credenciais do sistema operacional.
 
 ---
 
@@ -98,7 +103,7 @@ Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes pr
         <li>Streaming SSE completo (testado com Cursor, Windsurf, OpenCode)</li>
         <li>Mapeamento de modelos (ex: <code>claude-sonnet-4-6</code> → <code>gemini-3-flash</code>)</li>
         <li>Porta, timeout e API key configuráveis</li>
-        <li>Controle de visibilidade de modelos (mostrar/ocultar modelos específicos)</li>
+        <li>Controle de visibilidade de modelos</li>
       </ul>
     </td>
     <td width="50%">
@@ -115,9 +120,9 @@ Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes pr
     <td width="50%">
       <h3>🔍 Observabilidade do Proxy (Avançado)</h3>
       <ul>
-        <li><strong>Monitor de Tráfego</strong> — Log ao vivo de requisições/respostas com latência, status e informações do modelo</li>
+        <li><strong>Monitor de Tráfego</strong> — Log ao vivo de requisições/respostas com latência e informações do modelo</li>
         <li><strong>Replay de Requisições</strong> — Reproduza qualquer requisição registrada para debugging</li>
-        <li><strong>Capacidades dos Modelos</strong> — Inspecione suporte a visão, thinking, streaming e modo JSON por modelo</li>
+        <li><strong>Capacidades dos Modelos</strong> — Inspecione suporte a visão, thinking, streaming e modo JSON</li>
         <li><strong>Ferramentas para Devs</strong> — Geração de código cURL & Python, cópia com um clique</li>
       </ul>
     </td>
@@ -125,7 +130,7 @@ Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes pr
       <h3>🔐 Segurança e Criptografia</h3>
       <ul>
         <li>Criptografia AES-256-GCM para todos os dados sensíveis</li>
-        <li>Integração com gerenciador de credenciais nativo do SO (Keytar + SafeStorage)</li>
+        <li>Integração com gerenciador de credenciais nativo (Keytar + SafeStorage)</li>
         <li>Migração automática de dados legados em texto plano</li>
         <li>Armazenamento criptografado de tokens & cotas por conta</li>
       </ul>
@@ -183,14 +188,32 @@ Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes pr
 
 ---
 
-## ⚡ Início Rápido
+## ⚡ Instalação e Início Rápido
 
-### Pré-requisitos
+### 📦 Download
+
+Você pode baixar os binários pré-compilados mais recentes para Windows, macOS e Linux na nossa [página de Releases](https://github.com/evandrodevbr/GeminiNexus/releases).
+
+*(Consulte o aviso no topo desta página se você estiver usando o Windows e encontrar o prompt do SmartScreen).*
+
+### 🔌 Usando com IDEs de IA
+
+Com o aplicativo rodando e pelo menos uma conta adicionada, configure sua IDE preferida (Cursor, Windsurf, OpenCode, etc.):
+
+```plaintext
+API Base URL:  http://localhost:10100/v1
+API Key:       (copie da página Proxy no app)
+Model:         gemini-3-flash  (ou qualquer modelo mapeado)
+```
+
+### 🛠️ Compilando pelo Código Fonte
+
+#### Pré-requisitos
 
 - **Node.js** v20 ou superior
 - **npm** (este projeto usa `package-lock.json`)
 
-### Compilando pelo Código Fonte
+#### Passos
 
 ```bash
 # Clone o repositório
@@ -203,19 +226,8 @@ npm install
 # Inicie o modo de desenvolvimento
 npm start
 
-# Compile para produção (instalador Windows)
+# Compile para produção (ex: instalador Windows)
 npm run make
-```
-
-### Usando com IDEs de IA
-
-Com o proxy em execução, configure sua IDE:
-
-```plaintext
-# Nas configurações do Cursor / Windsurf / OpenCode:
-API Base URL:  http://localhost:10100/v1
-API Key:       (copie da página Proxy no app)
-Model:         gemini-3-flash  (ou qualquer modelo mapeado)
 ```
 
 ---
@@ -280,41 +292,43 @@ src/
 ## ❓ FAQ
 
 <details>
-<summary><b>P: O app não inicia?</b></summary>
+<summary><b>P: Aviso do Windows SmartScreen ("O Windows protegeu o seu computador") durante a instalação?</b></summary>
 
-1. Certifique-se de que todas as dependências estão instaladas: `npm install`
-2. Verifique se a versão do Node.js é >= 20
-3. Tente deletar `node_modules` e reinstalar
-4. No Windows, certifique-se de que o WiX Toolset está disponível para `npm run make`
+Sim, este é um aviso comum para novos aplicativos não assinados. Clique em **"Mais informações"** e depois em **"Executar mesmo assim"**. Veja o aviso no topo do README para mais detalhes.
+</details>
 
+<details>
+<summary><b>P: O app não inicia ao compilar pelo código fonte?</b></summary>
+
+1. Certifique-se de que todas as dependências estão instaladas: `npm install`.
+2. Verifique se a versão do Node.js é >= 20.
+3. Tente deletar `node_modules` e reinstalar.
+4. No Windows, certifique-se de que o WiX Toolset está disponível para o comando `npm run make`.
 </details>
 
 <details>
 <summary><b>P: O login da conta falhou?</b></summary>
 
-1. Verifique se a conexão com a internet está funcionando
-2. Tente limpar os dados do app e fazer login novamente
-3. Verifique se a conta está restrita pelo Google/Claude
-
+1. Verifique se a conexão com a internet está funcionando.
+2. Tente limpar os dados do app e fazer login novamente.
+3. Verifique se a conta está restrita pelo Google/Claude.
 </details>
 
 <details>
-<summary><b>P: A IDE não conecta no proxy?</b></summary>
+<summary><b>P: A IDE não consegue conectar ao proxy?</b></summary>
 
-1. Certifique-se de que o proxy está rodando (indicador verde na barra de status)
-2. Verifique se a porta corresponde à configuração da sua IDE (padrão: `10100`)
-3. Copie a API key da página Proxy e cole nas configurações da sua IDE
-4. Verifique se pelo menos uma conta está ativa na página de Contas
-
+1. Certifique-se de que o proxy está rodando (indicador verde na barra de status).
+2. Verifique se a porta corresponde à configuração da sua IDE (padrão: `10100`).
+3. Copie a API key da página Proxy e cole nas configurações da sua IDE.
+4. Verifique se pelo menos uma conta está ativa na página de Contas.
 </details>
 
 <details>
 <summary><b>P: A contagem de tokens mostra zero?</b></summary>
 
-1. Este era um bug conhecido em versões anteriores — atualize para a versão mais recente
-2. O rastreamento de tokens agora lida corretamente com metadados de streaming e contagens estimadas
-3. Os dados de uso são atualizados a cada 15 segundos na página de Analytics de Uso
-
+1. Este era um bug conhecido em versões anteriores — por favor, atualize para a versão mais recente.
+2. O rastreamento de tokens agora lida corretamente com metadados de streaming e contagens estimadas.
+3. Os dados de uso são atualizados a cada 15 segundos na página de Analytics de Uso.
 </details>
 
 ---
