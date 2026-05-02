@@ -1,19 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { StatusBar } from '@/components/StatusBar';
-import {
-  LayoutDashboard,
-  Settings,
-  Network,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  BarChart3,
-} from 'lucide-react';
+import { LayoutDashboard, Settings, Network, RefreshCw, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useToast } from '@/components/ui/use-toast';
 import { getLocalizedErrorMessage } from '@/utils/errorMessages';
@@ -24,17 +15,6 @@ export const MainLayout: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const hasShownRouteErrorToastRef = useRef(false);
-
-  // Initialize state from localStorage if available, default to false (expanded)
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebar-collapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
-
-  // Persist state changes
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
 
   const navItems = [
     {
@@ -61,146 +41,77 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside
-          className={cn(
-            'relative flex flex-col border-r border-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-            isCollapsed ? 'w-[60px]' : 'w-56',
-          )}
-        >
-          {/* Collapse toggle */}
-          <button
-            className={cn(
-              'absolute -right-3 top-7 z-10 flex h-6 w-6 items-center justify-center rounded-full',
-              'bg-muted border border-white/[0.1] text-muted-foreground',
-              'opacity-0 transition-all duration-200 hover:bg-white/[0.1] hover:text-foreground',
-              'group-hover:opacity-100',
-            )}
-            style={{ opacity: 0 }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-3 w-3" />
-            ) : (
-              <ChevronLeft className="h-3 w-3" />
-            )}
-          </button>
+      <header className="flex h-12 items-center border-b border-white/[0.06] px-4">
+        <div className="flex shrink-0 items-center gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
+            <img src={iconPng} alt="Gemini Nexus Logo" className="h-full w-full object-contain" />
+          </div>
+          <h1 className="text-[15px] font-semibold tracking-tight whitespace-nowrap">
+            Gemini Nexus
+          </h1>
+        </div>
 
-          {/* Brand */}
-          <div className={cn('flex flex-col', isCollapsed ? 'items-center p-3' : 'px-4 py-5')}>
-            <div className="flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
-                <img
-                  src={iconPng}
-                  alt="Gemini Nexus Logo"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div
+        <nav className="mx-6 flex flex-1 items-center justify-center gap-1 overflow-x-auto">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.to;
+
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
                 className={cn(
-                  'overflow-hidden transition-all duration-300',
-                  isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium whitespace-nowrap transition-colors',
+                  isActive
+                    ? 'text-foreground bg-white/[0.08]'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]',
                 )}
               >
-                <h1 className="text-[15px] font-semibold tracking-tight">Gemini Nexus</h1>
+                <item.icon className="h-[16px] w-[16px]" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="shrink-0">
+          <StatusBar />
+        </div>
+      </header>
+
+      <main className="flex-1 overflow-auto">
+        <ErrorBoundary
+          resetKeys={[location.pathname]}
+          onReset={() => {
+            hasShownRouteErrorToastRef.current = false;
+          }}
+          onError={(error) => {
+            if (hasShownRouteErrorToastRef.current) {
+              return;
+            }
+
+            toast({
+              title: t('error.generic'),
+              description: getLocalizedErrorMessage(error, t),
+              variant: 'destructive',
+            });
+            hasShownRouteErrorToastRef.current = true;
+          }}
+          fallbackRender={({ resetErrorBoundary }) => (
+            <div className="mx-auto max-w-3xl p-6">
+              <div className="rounded-xl border border-dashed border-white/[0.06] p-8 text-center">
+                <div className="text-sm font-semibold">{t('error.generic')}</div>
+                <div className="text-muted-foreground mt-2 text-xs">{t('action.retry')}</div>
+                <Button className="mt-4" variant="outline" onClick={resetErrorBoundary}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  {t('action.retry')}
+                </Button>
               </div>
             </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-2 pt-2">
-            <TooltipProvider>
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.to;
-
-                if (isCollapsed) {
-                  return (
-                    <Tooltip key={item.to} delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <Link
-                          to={item.to}
-                          className={cn(
-                            'mx-auto flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200',
-                            isActive
-                              ? 'bg-white/[0.08] text-foreground'
-                              : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
-                          )}
-                        >
-                          <item.icon className="h-[18px] w-[18px]" />
-                          <span className="sr-only">{item.label}</span>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="text-xs">
-                        {item.label}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200',
-                      isActive
-                        ? 'bg-white/[0.08] text-foreground'
-                        : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
-                    )}
-                  >
-                    <item.icon className="h-[18px] w-[18px]" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </TooltipProvider>
-          </nav>
-
-          {/* Status bar */}
-          <div className="border-t border-white/[0.06] p-2">
-            <StatusBar isCollapsed={isCollapsed} />
-          </div>
-        </aside>
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto transition-all duration-300">
-          <ErrorBoundary
-            resetKeys={[location.pathname]}
-            onReset={() => {
-              hasShownRouteErrorToastRef.current = false;
-            }}
-            onError={(error) => {
-              if (hasShownRouteErrorToastRef.current) {
-                return;
-              }
-
-              toast({
-                title: t('error.generic'),
-                description: getLocalizedErrorMessage(error, t),
-                variant: 'destructive',
-              });
-              hasShownRouteErrorToastRef.current = true;
-            }}
-            fallbackRender={({ resetErrorBoundary }) => (
-              <div className="mx-auto max-w-3xl p-6">
-                <div className="rounded-xl border border-white/[0.06] border-dashed p-8 text-center">
-                  <div className="text-sm font-semibold">{t('error.generic')}</div>
-                  <div className="text-muted-foreground mt-2 text-xs">{t('action.retry')}</div>
-                  <Button className="mt-4" variant="outline" onClick={resetErrorBoundary}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    {t('action.retry')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          >
-            <Outlet />
-          </ErrorBoundary>
-        </main>
-      </div>
+          )}
+        >
+          <Outlet />
+        </ErrorBoundary>
+      </main>
     </div>
   );
 };
