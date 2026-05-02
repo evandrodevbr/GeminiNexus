@@ -176,7 +176,9 @@
     "keytar",
     "electron",
     "electron-winstaller",
-    "esbuild"
+    "esbuild",
+    "fs-xattr",
+    "appdmg"
   ],
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -190,7 +192,9 @@
       "keytar",
       "electron",
       "electron-winstaller",
-      "esbuild"
+      "esbuild",
+      "fs-xattr",
+      "appdmg"
     ],
     "overrides": {
       "node-abi": "^4.28.0",

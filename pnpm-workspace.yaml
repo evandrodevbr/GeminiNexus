@@ -11,3 +11,5 @@ allowBuilds:
   macos-alias: true
   protobufjs: true
   sharp: true
+  fs-xattr: true
+  appdmg: true
