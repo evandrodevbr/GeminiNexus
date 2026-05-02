@@ -59,3 +59,81 @@ class MockIntersectionObserver {
   disconnect() {}
 }
 (globalThis as any).IntersectionObserver = MockIntersectionObserver;
+
+// Universal Electron mock for testing environments
+vi.mock('electron', () => {
+  return {
+    app: {
+      getPath: vi.fn((name) => `/mock/path/${name}`),
+      getName: vi.fn(() => 'Gemini Nexus Test'),
+      getVersion: vi.fn(() => '1.0.0'),
+      isPackaged: false,
+      getLocale: vi.fn(() => 'en-US'),
+      getPreferredSystemLanguages: vi.fn(() => ['en-US']),
+      requestSingleInstanceLock: vi.fn(() => true),
+      quit: vi.fn(),
+      disableHardwareAcceleration: vi.fn(),
+      setName: vi.fn(),
+      commandLine: {
+        appendSwitch: vi.fn(),
+      },
+    },
+    ipcMain: {
+      on: vi.fn(),
+      handle: vi.fn(),
+      removeHandler: vi.fn(),
+      removeAllListeners: vi.fn(),
+    },
+    ipcRenderer: {
+      on: vi.fn(),
+      off: vi.fn(),
+      once: vi.fn(),
+      invoke: vi.fn(),
+      send: vi.fn(),
+      postMessage: vi.fn(),
+    },
+    BrowserWindow: vi.fn().mockImplementation(() => ({
+      loadURL: vi.fn(),
+      loadFile: vi.fn(),
+      show: vi.fn(),
+      close: vi.fn(),
+      destroy: vi.fn(),
+      webContents: {
+        send: vi.fn(),
+        on: vi.fn(),
+        session: {
+          webRequest: {
+            onBeforeSendHeaders: vi.fn(),
+          }
+        }
+      },
+      on: vi.fn(),
+    })),
+    dialog: {
+      showMessageBox: vi.fn().mockResolvedValue({ response: 0 }),
+      showOpenDialog: vi.fn().mockResolvedValue({ canceled: true, filePaths: [] }),
+      showSaveDialog: vi.fn().mockResolvedValue({ canceled: true, filePath: '' }),
+    },
+    shell: {
+      openPath: vi.fn(),
+      openExternal: vi.fn(),
+    },
+    contextBridge: {
+      exposeInMainWorld: vi.fn(),
+    },
+    Tray: vi.fn().mockImplementation(() => ({
+      setToolTip: vi.fn(),
+      setContextMenu: vi.fn(),
+      on: vi.fn(),
+      destroy: vi.fn(),
+    })),
+    Menu: {
+      buildFromTemplate: vi.fn(),
+    },
+    nativeTheme: {
+      themeSource: 'system',
+      shouldUseDarkColors: true,
+      on: vi.fn(),
+    },
+  };
+});
