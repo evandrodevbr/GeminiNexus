@@ -167,6 +167,7 @@ class TrafficLogger {
     body: unknown,
     durationMs: number,
     headers?: Record<string, unknown>,
+    metadata?: Record<string, unknown>,
   ): void {
     this.log({
       timestamp: new Date().toISOString(),
@@ -177,6 +178,7 @@ class TrafficLogger {
       headers: this.sanitizeHeaders(headers),
       body: this.truncateBody(body),
       durationMs,
+      metadata,
     });
   }
 

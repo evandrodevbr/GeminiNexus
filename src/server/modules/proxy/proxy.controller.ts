@@ -882,6 +882,7 @@ export class ProxyController {
     const startTime = Date.now();
     trafficLogger.logInbound(requestId, '/v1/chat/completions', body, undefined, {
       stream: body.stream,
+      model: body.model,
     });
 
     // Extract x-session-affinity header so OpenCode session stickiness works even when
@@ -908,12 +909,21 @@ export class ProxyController {
         return;
       } else {
         const duration = Date.now() - startTime;
+        const response = result as OpenAIChatResponse;
+        const usage = response.usage;
         trafficLogger.logOutbound(
           requestId,
           '/v1/chat/completions',
           HttpStatus.OK,
           result,
           duration,
+          undefined,
+          {
+            model: response.model || body.model,
+            tokensPrompt: usage?.prompt_tokens ?? 0,
+            tokensCompletion: usage?.completion_tokens ?? 0,
+            tokensTotal: usage?.total_tokens ?? 0,
+          },
         );
         this.proxyMetrics?.recordRequest({
           timestamp: startTime,
@@ -921,9 +931,8 @@ export class ProxyController {
           status: HttpStatus.OK,
           endpoint: '/v1/chat/completions',
         });
-        const response = result as OpenAIChatResponse;
-        if (response.usage?.total_tokens) {
-          this.proxyMetrics?.recordTokens(response.usage.total_tokens);
+        if (usage?.total_tokens) {
+          this.proxyMetrics?.recordTokens(usage.total_tokens);
         }
         this.setProxyHeaders(res, proxyContext);
         res.status(HttpStatus.OK).send(result);
@@ -1498,7 +1507,7 @@ export class ProxyController {
     return isObjectLike(value) && isFunction((value as { subscribe?: unknown }).subscribe);
   }
 
-  private extractAndRecordTokens(payload: string): void {
+  private extractAndRecordTokens(payload: string, requestId?: string, endpoint?: string): void {
     try {
       const lines = payload.split('\n');
       for (const line of lines) {
@@ -1514,11 +1523,28 @@ export class ProxyController {
         const usageMetadata = parsed?.usageMetadata;
         if (usageMetadata && typeof usageMetadata.totalTokenCount === 'number') {
           this.proxyMetrics?.recordTokens(usageMetadata.totalTokenCount);
+          // Log final token counts for this stream
+          if (requestId && endpoint) {
+            trafficLogger.logSseChunk(requestId, endpoint, undefined, {
+              model: parsed?.model,
+              tokensPrompt: usageMetadata.promptTokenCount ?? 0,
+              tokensCompletion: usageMetadata.candidatesTokenCount ?? 0,
+              tokensTotal: usageMetadata.totalTokenCount,
+            });
+          }
           return;
         }
         const usage = parsed?.usage;
         if (usage && typeof usage.total_tokens === 'number') {
           this.proxyMetrics?.recordTokens(usage.total_tokens);
+          if (requestId && endpoint) {
+            trafficLogger.logSseChunk(requestId, endpoint, undefined, {
+              model: parsed?.model,
+              tokensPrompt: usage.prompt_tokens ?? 0,
+              tokensCompletion: usage.completion_tokens ?? 0,
+              tokensTotal: usage.total_tokens,
+            });
+          }
           return;
         }
       }
@@ -1606,7 +1632,7 @@ export class ProxyController {
         if (requestId && endpoint) {
           trafficLogger.logSseChunk(requestId, endpoint, chunk);
         }
-        this.extractAndRecordTokens(payload);
+        this.extractAndRecordTokens(payload, requestId, endpoint);
         if (isFunction((res.raw as any).flush)) {
           (res.raw as any).flush();
         }
