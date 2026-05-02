@@ -11,7 +11,7 @@ interface TrendInfo {
 }
 
 interface StatCardProps {
-  label: string;
+  label: React.ReactNode;
   value: number | string;
   icon: LucideIcon;
   isLoading?: boolean;
@@ -82,10 +82,7 @@ function Sparkline({ data, accent }: { data: number[]; accent: string }) {
         </linearGradient>
       </defs>
       {/* Area fill */}
-      <polygon
-        points={`0,${h} ${points.join(' ')} ${w},${h}`}
-        fill={`url(#sparkGrad-${accent})`}
-      />
+      <polygon points={`0,${h} ${points.join(' ')} ${w},${h}`} fill={`url(#sparkGrad-${accent})`} />
       {/* Line */}
       <polyline
         points={points.join(' ')}
@@ -103,11 +100,7 @@ function TrendBadge({ trend }: { trend: TrendInfo }) {
   const isUp = trend.direction === 'up';
   const isNeutral = trend.direction === 'neutral' || trend.value === 0;
   const Icon = isNeutral ? Minus : isUp ? ArrowUpRight : ArrowDownRight;
-  const color = isNeutral
-    ? 'text-muted-foreground'
-    : isUp
-      ? 'text-emerald-400'
-      : 'text-rose-400';
+  const color = isNeutral ? 'text-muted-foreground' : isUp ? 'text-emerald-400' : 'text-rose-400';
 
   return (
     <div className={cn('flex items-center gap-0.5 text-[10px] font-medium', color)}>
@@ -130,7 +123,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       className={cn(
-        'group relative rounded-xl border border-white/[0.06] bg-card p-4 transition-all duration-200',
+        'group bg-card relative rounded-xl border border-white/[0.06] p-4 transition-all duration-200',
         'hover:border-white/[0.1] hover:bg-white/[0.02]',
         className,
       )}

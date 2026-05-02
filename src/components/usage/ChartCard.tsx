@@ -29,10 +29,10 @@ export const ChartCard: React.FC<ChartStatesProps> = ({
   children,
 }) => {
   return (
-    <div className="flex flex-col rounded-xl border border-white/[0.06] bg-card">
+    <div className="bg-card flex flex-col rounded-xl border border-white/[0.06]">
       <div className="flex flex-col p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-[13px] font-semibold tracking-tight text-foreground">{title}</h3>
+          <h3 className="text-foreground text-[13px] font-semibold tracking-tight">{title}</h3>
         </div>
         <div className="flex-1">
           {isLoading ? (
@@ -41,8 +41,8 @@ export const ChartCard: React.FC<ChartStatesProps> = ({
             </div>
           ) : error ? (
             <div className="flex h-[280px] flex-col items-center justify-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div className="bg-destructive/10 flex h-10 w-10 items-center justify-center rounded-lg">
+                <AlertTriangle className="text-destructive h-5 w-5" />
               </div>
               <p className="text-muted-foreground text-[13px]">{errorMessage}</p>
               <Button variant="outline" size="sm" onClick={onRetry}>
@@ -53,9 +53,9 @@ export const ChartCard: React.FC<ChartStatesProps> = ({
           ) : isEmpty ? (
             <div className="flex h-[280px] flex-col items-center justify-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04]">
-                <BarChart3 className="h-5 w-5 text-muted-foreground/60" />
+                <BarChart3 className="text-muted-foreground/60 h-5 w-5" />
               </div>
-              <p className="text-[13px] font-medium text-foreground">{emptyTitle}</p>
+              <p className="text-foreground text-[13px] font-medium">{emptyTitle}</p>
               <p className="text-muted-foreground max-w-[240px] text-center text-xs">
                 {emptyDescription}
               </p>

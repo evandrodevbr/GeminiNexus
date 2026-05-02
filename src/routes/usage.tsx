@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveLine } from '@nivo/line';
-import { ResponsiveBar } from '@nivo/bar';
 import {
   Select,
   SelectContent,
@@ -10,18 +9,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { ipc } from '@/ipc/manager';
 import { useCloudAccounts } from '@/hooks/useCloudAccounts';
+import { useAppConfig } from '@/hooks/useAppConfig';
 import { StatCard } from '@/components/usage/StatCard';
 import { ChartCard } from '@/components/usage/ChartCard';
-import {
-  COLOR_PROMPT,
-  COLOR_COMPLETION,
-  PIE_COLORS,
-  LineTooltip,
-} from '@/components/usage/NivoTooltip';
+import { ForecastCard } from '@/components/usage/ForecastCard';
+import { ModelQuotaBar } from '@/components/usage/ModelQuotaBar';
+import { CostReportCard, ModelCostEntry } from '@/components/usage/CostReportCard';
+import { ModelPricingDialog } from '@/components/usage/ModelPricingDialog';
+import { calculateCost } from '@/constants/pricing';
+import { COLOR_PROMPT, COLOR_COMPLETION, LineTooltip } from '@/components/usage/NivoTooltip';
 import { nivoTheme } from '@/lib/nivo-theme';
+import { MonitorTab } from '@/components/usage/MonitorTab';
 import {
   Activity,
   Layers,
@@ -29,6 +33,10 @@ import {
   MessageSquare,
   Radio,
   Zap,
+  DollarSign,
+  Info,
+  AlertTriangle,
+  Settings,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -129,10 +137,11 @@ function UsagePage() {
   const [range, setRange] = useState<TimeRange>('7d');
   const ALL_ACCOUNTS = '__all__';
   const [selectedAccountId, setSelectedAccountId] = useState<string>(ALL_ACCOUNTS);
+  const [isPricingDialogOpen, setIsPricingDialogOpen] = useState(false);
   const { data: accounts, isLoading: accountsLoading } = useCloudAccounts();
+  const { config, saveConfig } = useAppConfig();
 
-  const accountFilter =
-    selectedAccountId === ALL_ACCOUNTS ? undefined : selectedAccountId;
+  const accountFilter = selectedAccountId === ALL_ACCOUNTS ? undefined : selectedAccountId;
 
   /* ───── Current period data ───── */
   const {
@@ -203,7 +212,6 @@ function UsagePage() {
         end,
       });
     },
-    enabled: range === '24h',
     refetchInterval: 15_000,
     refetchIntervalInBackground: false,
     staleTime: 30_000,
@@ -211,10 +219,7 @@ function UsagePage() {
 
   /* ───── Derived data ───── */
   const totals = useMemo(() => sumBuckets(dailyData || []), [dailyData]);
-  const prevTotals = useMemo(
-    () => sumBuckets(prevDailyData || []),
-    [prevDailyData],
-  );
+  const prevTotals = useMemo(() => sumBuckets(prevDailyData || []), [prevDailyData]);
 
   const promptRatio = totals.totalTokens
     ? Math.round((totals.promptTokens / totals.totalTokens) * 100)
@@ -222,33 +227,22 @@ function UsagePage() {
   const completionRatio = totals.totalTokens
     ? Math.round((totals.completionTokens / totals.totalTokens) * 100)
     : 0;
-  const avgReqSize = totals.requests
-    ? Math.round(totals.totalTokens / totals.requests)
-    : 0;
+  const avgReqSize = totals.requests ? Math.round(totals.totalTokens / totals.requests) : 0;
 
-  const sparklineTotal = useMemo(
-    () => (dailyData || []).map((d) => d.totalTokens),
-    [dailyData],
-  );
-  const sparklinePrompt = useMemo(
-    () => (dailyData || []).map((d) => d.promptTokens),
-    [dailyData],
-  );
+  const sparklineTotal = useMemo(() => (dailyData || []).map((d) => d.totalTokens), [dailyData]);
+  const sparklinePrompt = useMemo(() => (dailyData || []).map((d) => d.promptTokens), [dailyData]);
   const sparklineCompletion = useMemo(
     () => (dailyData || []).map((d) => d.completionTokens),
     [dailyData],
   );
-  const sparklineRequests = useMemo(
-    () => (dailyData || []).map((d) => d.requests),
-    [dailyData],
-  );
+  const sparklineRequests = useMemo(() => (dailyData || []).map((d) => d.requests), [dailyData]);
 
   // Area chart — Nivo line format
   const areaChartData = useMemo(() => {
     const source = range === '24h' ? hourlyData || [] : dailyData || [];
     return [
       {
-        id: 'Prompt',
+        id: 'Input Tokens',
         color: COLOR_PROMPT,
         data: source.map((d) => ({
           x: formatBucketLabel(d.bucket, range),
@@ -256,7 +250,7 @@ function UsagePage() {
         })),
       },
       {
-        id: 'Completion',
+        id: 'Output Tokens',
         color: COLOR_COMPLETION,
         data: source.map((d) => ({
           x: formatBucketLabel(d.bucket, range),
@@ -266,30 +260,73 @@ function UsagePage() {
     ];
   }, [dailyData, hourlyData, range]);
 
-  // Model ranking bar data
-  const modelBarData = useMemo(() => {
-    if (!modelData?.length) {
-      return [];
-    }
-    return [...modelData]
-      .sort((a, b) => b.totalTokens - a.totalTokens)
-      .slice(0, 8)
-      .map((m) => ({
-        model:
-          m.model.length > 22 ? m.model.slice(0, 22) + '…' : m.model,
-        tokens: m.totalTokens,
-      }));
-  }, [modelData]);
+  // Model quota bar data and cost estimation
+  const { topModelsData, costReport, totalCost, hasQuotaWarning } = useMemo(() => {
+    let cost = 0;
+    let warning = false;
+    const report: ModelCostEntry[] = [];
 
-  // Top models mini-list
-  const topModels = useMemo(() => {
     if (!modelData?.length) {
-      return [];
+      return { topModelsData: [], costReport: [], totalCost: 0, hasQuotaWarning: false };
     }
-    return [...modelData]
+
+    const accountQuotas =
+      selectedAccountId !== ALL_ACCOUNTS
+        ? accounts?.find((a) => a.id === selectedAccountId)?.quota?.models
+        : null;
+
+    const processed = [...modelData]
       .sort((a, b) => b.totalTokens - a.totalTokens)
-      .slice(0, 5);
-  }, [modelData]);
+      .map((m) => {
+        const inputCost = calculateCost(m.model, m.promptTokens, 0, config?.custom_model_pricing);
+        const outputCost = calculateCost(
+          m.model,
+          0,
+          m.completionTokens,
+          config?.custom_model_pricing,
+        );
+        const mTotalCost = calculateCost(
+          m.model,
+          m.promptTokens,
+          m.completionTokens,
+          config?.custom_model_pricing,
+        );
+
+        cost += mTotalCost;
+
+        report.push({
+          model: m.model,
+          inputTokens: m.promptTokens,
+          outputTokens: m.completionTokens,
+          inputCost,
+          outputCost,
+          totalCost: mTotalCost,
+        });
+
+        // Use percentage if available directly from the API response
+        const percentage = accountQuotas?.[m.model]?.percentage;
+        if (percentage && percentage >= 80) {
+          warning = true;
+        }
+
+        // Since limit tokens isn't stored in quotas exactly, we just use undefined
+        // to not display limit stats in the bar but just usage
+        const limitTokens = undefined;
+
+        return {
+          model: m.model,
+          tokens: m.totalTokens,
+          limit: limitTokens,
+        };
+      });
+
+    return {
+      topModelsData: processed.slice(0, 8),
+      costReport: report.sort((a, b) => b.totalCost - a.totalCost),
+      totalCost: cost,
+      hasQuotaWarning: warning,
+    };
+  }, [modelData, accounts, selectedAccountId]);
 
   const isAreaEmpty =
     range === '24h'
@@ -298,6 +335,14 @@ function UsagePage() {
   const areaLoading = range === '24h' ? hourlyLoading : dailyLoading;
   const areaError = range === '24h' ? hourlyError : dailyError;
   const isModelEmpty = !modelLoading && !modelError && !modelData?.length;
+
+  const handleSavePricing = async (
+    pricing: Record<string, { input: number; output: number; source: string }>,
+  ) => {
+    if (config) {
+      await saveConfig({ ...config, custom_model_pricing: pricing });
+    }
+  };
 
   /* ───── Render ───── */
   return (
@@ -311,9 +356,7 @@ function UsagePage() {
             </h1>
             <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5">
               <Radio className="h-2.5 w-2.5 animate-pulse text-emerald-400" />
-              <span className="text-[10px] font-medium text-emerald-400">
-                Live
-              </span>
+              <span className="text-[10px] font-medium text-emerald-400">Live</span>
             </div>
           </div>
           <p className="text-muted-foreground mt-0.5 text-[13px]">
@@ -347,10 +390,7 @@ function UsagePage() {
             </SelectContent>
           </Select>
 
-          <Tabs
-            value={range}
-            onValueChange={(v) => setRange(v as TimeRange)}
-          >
+          <Tabs value={range} onValueChange={(v) => setRange(v as TimeRange)}>
             <TabsList className="h-8">
               <TabsTrigger value="24h" className="px-3 text-xs">
                 24h
@@ -366,75 +406,147 @@ function UsagePage() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-4 px-6 py-5">
-        {/* ─── Stat cards ─── */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Total Tokens"
-            value={formatNumber(totals.totalTokens)}
-            icon={Zap}
-            isLoading={dailyLoading}
-            accent="amber"
-            trend={
-              prevDailyData
-                ? calcTrend(totals.totalTokens, prevTotals.totalTokens)
-                : undefined
-            }
-            sparkline={sparklineTotal}
-          />
-          <StatCard
-            label="Prompt Tokens"
-            value={formatNumber(totals.promptTokens)}
-            icon={MessageSquare}
-            isLoading={dailyLoading}
-            accent="blue"
-            trend={
-              prevDailyData
-                ? calcTrend(totals.promptTokens, prevTotals.promptTokens)
-                : undefined
-            }
-            sparkline={sparklinePrompt}
-          />
-          <StatCard
-            label="Completion Tokens"
-            value={formatNumber(totals.completionTokens)}
-            icon={Activity}
-            isLoading={dailyLoading}
-            accent="green"
-            trend={
-              prevDailyData
-                ? calcTrend(
-                    totals.completionTokens,
-                    prevTotals.completionTokens,
-                  )
-                : undefined
-            }
-            sparkline={sparklineCompletion}
-          />
-          <StatCard
-            label="Total Requests"
-            value={totals.requests.toLocaleString()}
-            icon={Layers}
-            isLoading={dailyLoading}
-            accent="slate"
-            trend={
-              prevDailyData
-                ? calcTrend(totals.requests, prevTotals.requests)
-                : undefined
-            }
-            sparkline={sparklineRequests}
-          />
+      <Tabs defaultValue="analytics" className="flex-1 flex flex-col">
+        <div className="px-6 pt-5">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="monitor">Monitor</TabsTrigger>
+          </TabsList>
         </div>
+        <TabsContent value="analytics" className="flex-1 space-y-4 px-6 py-5">
+          {hasQuotaWarning && (
+          <Alert
+            variant="destructive"
+            className="border-amber-500/50 bg-amber-500/10 text-amber-500"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Quota Warning</AlertTitle>
+            <AlertDescription>
+              One or more models have exceeded 80% of their allocated usage limit.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* ─── Stat cards ─── */}
+        <TooltipProvider delayDuration={300}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <StatCard
+              label="Total Tokens"
+              value={formatNumber(totals.totalTokens)}
+              icon={Zap}
+              isLoading={dailyLoading}
+              accent="amber"
+              trend={
+                prevDailyData ? calcTrend(totals.totalTokens, prevTotals.totalTokens) : undefined
+              }
+              sparkline={sparklineTotal}
+            />
+            <div className="group relative">
+              <StatCard
+                label={
+                  <div className="flex cursor-help items-center gap-1.5">
+                    Input Tokens
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground/70 h-3.5 w-3.5" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Tokens sent to the model (prompt, context, files).</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                }
+                value={formatNumber(totals.promptTokens)}
+                icon={MessageSquare}
+                isLoading={dailyLoading}
+                accent="blue"
+                trend={
+                  prevDailyData
+                    ? calcTrend(totals.promptTokens, prevTotals.promptTokens)
+                    : undefined
+                }
+                sparkline={sparklinePrompt}
+              />
+            </div>
+            <div className="group relative">
+              <StatCard
+                label={
+                  <div className="flex cursor-help items-center gap-1.5">
+                    Output Tokens
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground/70 h-3.5 w-3.5" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Tokens generated by the model in response.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                }
+                value={formatNumber(totals.completionTokens)}
+                icon={Activity}
+                isLoading={dailyLoading}
+                accent="green"
+                trend={
+                  prevDailyData
+                    ? calcTrend(totals.completionTokens, prevTotals.completionTokens)
+                    : undefined
+                }
+                sparkline={sparklineCompletion}
+              />
+            </div>
+            <StatCard
+              label="Total Requests"
+              value={totals.requests.toLocaleString()}
+              icon={Layers}
+              isLoading={dailyLoading}
+              accent="slate"
+              trend={prevDailyData ? calcTrend(totals.requests, prevTotals.requests) : undefined}
+              sparkline={sparklineRequests}
+            />
+            <div className="group relative">
+              <StatCard
+                label={
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex cursor-help items-center gap-1.5">
+                      Estimated Cost
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground/70 h-3.5 w-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Approximate cost based on configured pricing.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-2 h-5 w-5 hover:bg-white/10"
+                      onClick={() => setIsPricingDialogOpen(true)}
+                    >
+                      <Settings className="text-muted-foreground h-3 w-3" />
+                    </Button>
+                  </div>
+                }
+                value={`$${totalCost.toFixed(2)}`}
+                icon={DollarSign}
+                isLoading={modelLoading}
+                accent="purple"
+              />
+            </div>
+          </div>
+        </TooltipProvider>
 
         {/* ─── Prompt/Completion ratio bar + top models ─── */}
         {!dailyLoading && totals.totalTokens > 0 && (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <div className="col-span-1 flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-card p-4 lg:col-span-2">
+            <div className="bg-card col-span-1 flex flex-col gap-3 rounded-xl border border-white/[0.06] p-4 lg:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">
-                  Prompt / Completion
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+                  Input / Output
                 </span>
-                <span className="font-mono text-xs text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-xs">
                   {formatNumber(totals.totalTokens)} total
                 </span>
               </div>
@@ -461,76 +573,30 @@ function UsagePage() {
                       className="h-2 w-2 rounded-full"
                       style={{ backgroundColor: COLOR_PROMPT }}
                     />
-                    <span className="text-muted-foreground">Prompt</span>
-                    <span className="font-mono font-semibold text-foreground">
-                      {promptRatio}%
-                    </span>
+                    <span className="text-muted-foreground">Input</span>
+                    <span className="text-foreground font-mono font-semibold">{promptRatio}%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span
                       className="h-2 w-2 rounded-full"
                       style={{ backgroundColor: COLOR_COMPLETION }}
                     />
-                    <span className="text-muted-foreground">Completion</span>
-                    <span className="font-mono font-semibold text-foreground">
+                    <span className="text-muted-foreground">Output</span>
+                    <span className="text-foreground font-mono font-semibold">
                       {completionRatio}%
                     </span>
                   </div>
                 </div>
                 <span className="text-muted-foreground">
                   Avg/req:{' '}
-                  <span className="font-mono font-medium text-foreground">
+                  <span className="text-foreground font-mono font-medium">
                     {formatNumber(avgReqSize)}
                   </span>
                 </span>
               </div>
             </div>
 
-            {/* Top models */}
-            <div className="rounded-xl border border-white/[0.06] bg-card p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">
-                  Top Models
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  tokens
-                </span>
-              </div>
-              <div className="space-y-2">
-                {topModels.map((m, i) => {
-                  const max = topModels[0]?.totalTokens || 1;
-                  const pct = Math.max(8, (m.totalTokens / max) * 100);
-                  return (
-                    <div key={m.model} className="group">
-                      <div className="mb-0.5 flex items-center justify-between">
-                        <span className="max-w-[140px] truncate text-xs text-muted-foreground transition-colors group-hover:text-foreground">
-                          {m.model}
-                        </span>
-                        <span className="font-mono text-[11px] font-medium text-foreground tabular-nums">
-                          {formatNumber(m.totalTokens)}
-                        </span>
-                      </div>
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.04]">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor:
-                              PIE_COLORS[i % PIE_COLORS.length],
-                            opacity: 0.7,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {topModels.length === 0 && (
-                  <p className="py-4 text-center text-xs text-muted-foreground">
-                    No data
-                  </p>
-                )}
-              </div>
-            </div>
+            <ForecastCard hourlyData={hourlyData} dailyData={dailyData} range={range} />
           </div>
         )}
 
@@ -542,9 +608,7 @@ function UsagePage() {
               isLoading={areaLoading}
               error={areaError}
               isEmpty={isAreaEmpty}
-              onRetry={() =>
-                range === '24h' ? refetchHourly() : refetchDaily()
-              }
+              onRetry={() => (range === '24h' ? refetchHourly() : refetchDaily())}
               emptyTitle="No usage data"
               emptyDescription="Data will appear here once proxy requests are recorded."
               errorMessage="Failed to load usage data"
@@ -579,8 +643,7 @@ function UsagePage() {
                     tickSize: 0,
                     tickPadding: 8,
                     tickRotation: 0,
-                    format: (v: number) =>
-                      v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`,
+                    format: (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${v}`),
                   }}
                   tooltip={LineTooltip}
                   legends={[
@@ -617,47 +680,46 @@ function UsagePage() {
               errorMessage="Failed to load model data"
               retryLabel="Retry"
             >
-              <div className="h-[320px]">
-                <ResponsiveBar
-                  data={modelBarData}
-                  keys={['tokens']}
-                  indexBy="model"
-                  layout="horizontal"
-                  theme={nivoTheme}
-                  colors={PIE_COLORS}
-                  colorBy="indexValue"
-                  margin={{ top: 0, right: 10, bottom: 10, left: 120 }}
-                  padding={0.3}
-                  borderRadius={4}
-                  enableGridX={true}
-                  enableGridY={false}
-                  gridXValues={4}
-                  axisBottom={null}
-                  axisLeft={{ tickSize: 0, tickPadding: 8 }}
-                  axisTop={null}
-                  axisRight={null}
-                  enableLabel={true}
-                  label={(d) => formatNumber(d.value as number)}
-                  labelSkipWidth={40}
-                  labelTextColor="#e8eaed"
-                  tooltip={({ indexValue, value }) => (
-                    <div className="bg-popover rounded-lg border border-white/[0.06] px-3 py-2 shadow-md">
-                      <p className="text-foreground mb-1 text-xs font-medium">
-                        {indexValue}
-                      </p>
-                      <span className="text-foreground font-mono text-xs font-medium">
-                        {(value as number).toLocaleString()} tokens
-                      </span>
-                    </div>
-                  )}
-                  animate={true}
-                  motionConfig="gentle"
-                />
+              <div className="custom-scrollbar h-[320px] overflow-y-auto pr-2">
+                {topModelsData.map((m) => (
+                  <ModelQuotaBar
+                    key={m.model}
+                    modelName={m.model}
+                    usedTokens={m.tokens}
+                    limitTokens={m.limit}
+                  />
+                ))}
               </div>
             </ChartCard>
           </div>
         </div>
-      </div>
+
+        {/* ─── Cost Report ─── */}
+        {!dailyLoading && modelData && modelData.length > 0 && (
+          <div className="mt-6">
+            <CostReportCard
+              models={costReport}
+              totalInputCost={costReport.reduce((acc, r) => acc + r.inputCost, 0)}
+              totalOutputCost={costReport.reduce((acc, r) => acc + r.outputCost, 0)}
+              totalCost={totalCost}
+              isLoading={modelLoading}
+            />
+          </div>
+        )}
+
+        {/* ─── Modals ─── */}
+          <ModelPricingDialog
+            open={isPricingDialogOpen}
+            onOpenChange={setIsPricingDialogOpen}
+            customPricing={config?.custom_model_pricing || {}}
+            onSavePricing={handleSavePricing}
+            availableModels={modelData?.map((m) => m.model) || []}
+          />
+        </TabsContent>
+        <TabsContent value="monitor" className="flex-1 px-6 py-5">
+          <MonitorTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

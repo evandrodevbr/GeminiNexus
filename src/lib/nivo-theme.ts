@@ -31,7 +31,7 @@ export const nivoTheme: PartialTheme = {
     },
     legend: {
       text: {
-        fontFamily: "Inter, sans-serif",
+        fontFamily: 'Inter, sans-serif',
         fontSize: 11,
         fill: '#6b7280',
       },
@@ -45,7 +45,7 @@ export const nivoTheme: PartialTheme = {
   },
   legends: {
     text: {
-      fontFamily: "Inter, sans-serif",
+      fontFamily: 'Inter, sans-serif',
       fontSize: 11,
       fill: '#6b7280',
     },
@@ -54,7 +54,7 @@ export const nivoTheme: PartialTheme = {
     container: {
       background: '#16161e',
       color: '#e8eaed',
-      fontFamily: "Inter, sans-serif",
+      fontFamily: 'Inter, sans-serif',
       fontSize: 12,
       borderRadius: 8,
       border: '1px solid rgba(255,255,255,0.06)',
