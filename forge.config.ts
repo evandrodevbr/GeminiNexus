@@ -10,7 +10,6 @@ import type {
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerRpm } from '@electron-forge/maker-rpm';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerWix } from '@electron-forge/maker-wix';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
@@ -441,10 +440,6 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({
-      setupIcon: 'images/icon.ico',
-      iconUrl: 'https://raw.githubusercontent.com/evandrodevbr/GeminiNexus/main/images/icon.ico',
-    }),
     ...(process.platform === 'win32' && process.arch === 'x64' && isWixAvailable()
       ? [
           new MakerWix({
@@ -463,7 +458,7 @@ const config: ForgeConfig = {
       },
       ['darwin'],
     ),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ['darwin', 'win32']),
     appImageMaker,
     new MakerRpm({}),
     new MakerDeb({}),
