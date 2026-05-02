@@ -2,6 +2,12 @@
 
 # Changelog
 
+## [0.15.2](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.1...v0.15.2) (2026-05-02)
+
+### 👷 Build System
+
+* allow macos-alias and other native modules to build in pnpm v10 ([2e3a65b](https://github.com/evandrodevbr/GeminiNexus/commit/2e3a65b76b91012638c422f6223b79399775c635))
+
 ## [0.15.1](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.0...v0.15.1) (2026-05-02)
 
 ### ✅ Tests
