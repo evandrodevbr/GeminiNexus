@@ -1,3 +1,31 @@
+<a name="readme-top"></a>
+
+# Changelog
+
+## [0.15.0](https://github.com/evandrodevbr/GeminiNexus/compare/v0.14.0...v0.15.0) (2026-05-02)
+
+### ✨ Features
+
+* bump version to 0.14.0 ([a905877](https://github.com/evandrodevbr/GeminiNexus/commit/a905877c76869a9b31b5b079d7afd86e4c905b59))
+* **core:** isolate dev and production environments ([5c44a62](https://github.com/evandrodevbr/GeminiNexus/commit/5c44a622a8b4fa81246d4ca77073be50b4ddc1c9))
+* **proxy:** add OpenCode IDE config and fix service availability ([713c449](https://github.com/evandrodevbr/GeminiNexus/commit/713c4497c623b0519847ed2afcc7da04997dae55))
+* **proxy:** enrich traffic logs with model and token metadata ([641c739](https://github.com/evandrodevbr/GeminiNexus/commit/641c739b64150d1df77fd1a81a028b8cb4a4884d))
+* **ui:** replace sidebar with compact top header navigation ([7d2977b](https://github.com/evandrodevbr/GeminiNexus/commit/7d2977b665a1a2fb0d5d8844a8e519471cdef8d8))
+* **usage:** add cost reporting with custom model pricing and OpenRouter ([bc69a2e](https://github.com/evandrodevbr/GeminiNexus/commit/bc69a2e8b52e5019c45faae12771af7e40d3f26b))
+* **usage:** move Monitor to Usage tab with per-request token tracking ([99e458f](https://github.com/evandrodevbr/GeminiNexus/commit/99e458f69bd5564d27f94c72c719ba49efd72abe))
+* **usage:** redesign Usage Analytics with accurate token averages ([20785a8](https://github.com/evandrodevbr/GeminiNexus/commit/20785a8414bb0e364085a4a64f6a958c178d1df8))
+
+### 🐛 Bug Fixes
+
+* **ci:** remove explicit pnpm version from workflows ([080bf30](https://github.com/evandrodevbr/GeminiNexus/commit/080bf30e38379db5cb3c8d124f76a39aef897ccc))
+* **ci:** resolve release pipeline conflicts and clean repo structure ([71bf812](https://github.com/evandrodevbr/GeminiNexus/commit/71bf8122d1a3d5bd74e3450f61d24747b50ed9d7))
+* **ci:** use Node 22 for semantic-release (requires ^22.14.0) ([268428a](https://github.com/evandrodevbr/GeminiNexus/commit/268428a1193fd0bfd0559472fd50b3293d9c8ccb))
+* install notice showing in Chinese and not recognizing MSI install path ([0753bbd](https://github.com/evandrodevbr/GeminiNexus/commit/0753bbdce63cffcd40fa13643e1082a67335c9c4))
+
+### ♻️ Code Refactoring
+
+* **accounts:** decompose CloudAccountList into focused components ([bf5a42c](https://github.com/evandrodevbr/GeminiNexus/commit/bf5a42c03e706d19033ceff332ee3609afded7ed))
+
 ## [0.14.0](https://github.com/evandrodevbr/GeminiNexus/compare/v0.13.1...v0.14.0) (2026-04-29)
 
 ### 🚀 Features
