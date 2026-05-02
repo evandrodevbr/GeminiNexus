@@ -89,12 +89,8 @@ export function ensureProxyMetricsTable(rawDb: Database.Database): void {
         metadata_json TEXT
       );
     `);
-    rawDb.exec(
-      `CREATE INDEX IF NOT EXISTS idx_traffic_logs_timestamp ON traffic_logs(timestamp);`,
-    );
-    rawDb.exec(
-      `CREATE INDEX IF NOT EXISTS idx_traffic_logs_direction ON traffic_logs(direction);`,
-    );
+    rawDb.exec(`CREATE INDEX IF NOT EXISTS idx_traffic_logs_timestamp ON traffic_logs(timestamp);`);
+    rawDb.exec(`CREATE INDEX IF NOT EXISTS idx_traffic_logs_direction ON traffic_logs(direction);`);
   } catch (error) {
     logger.error('Failed to ensure proxy_request_metrics table', error);
     throw error;
@@ -201,17 +197,30 @@ export class ProxyMetricsRepo {
       const reqRow = raw
         .prepare(
           `SELECT COUNT(*) as total, AVG(duration_ms) as avgLatency,
+           MIN(timestamp) as minTimestamp, MAX(timestamp) as maxTimestamp,
            CASE WHEN COUNT(*) = 0 THEN 0
            ELSE (COUNT(CASE WHEN status_code >= 400 THEN 1 END) * 100.0 / COUNT(*))
            END as errorRate
            FROM proxy_request_metrics WHERE timestamp >= ?`,
         )
         .get(cutoff) as
-        | { total: number; avgLatency: number | null; errorRate: number }
+        | {
+            total: number;
+            avgLatency: number | null;
+            errorRate: number;
+            minTimestamp: number | null;
+            maxTimestamp: number | null;
+          }
         | undefined;
 
       const totalRequests = reqRow?.total ?? 0;
-      const minutes = Math.max(windowMs / 60_000, 1);
+      let minutes = Math.max(windowMs / 60_000, 1);
+
+      if (reqRow?.minTimestamp && reqRow?.maxTimestamp && totalRequests > 0) {
+        const spanMs = reqRow.maxTimestamp - reqRow.minTimestamp;
+        minutes = Math.max(spanMs / 60_000, 1);
+      }
+
       const requestsPerMinute = Math.round((totalRequests / minutes) * 100) / 100;
       const avgLatencyMs = reqRow?.avgLatency ? Math.round(reqRow.avgLatency) : 0;
       const errorRatePercent = reqRow?.errorRate ?? 0;
@@ -244,7 +253,9 @@ export class ProxyMetricsRepo {
     const { raw } = getProxyMetricsDb();
     try {
       raw.prepare(`DELETE FROM proxy_request_metrics WHERE timestamp < ?`).run(cutoffTimestamp);
-      raw.prepare(`DELETE FROM proxy_connection_snapshots WHERE timestamp < ?`).run(cutoffTimestamp);
+      raw
+        .prepare(`DELETE FROM proxy_connection_snapshots WHERE timestamp < ?`)
+        .run(cutoffTimestamp);
       return true;
     } catch (error) {
       logger.error('Failed to delete old proxy metrics records', error);
@@ -298,7 +309,10 @@ export class TrafficLogsRepo {
     }
   }
 
-  static getRecent(limit: number = 50, direction?: string): Array<{
+  static getRecent(
+    limit: number = 50,
+    direction?: string,
+  ): Array<{
     timestamp: number;
     direction: string;
     requestId: string;
@@ -349,10 +363,13 @@ export class TrafficLogsRepo {
         body: r.body_json ? JSON.parse(r.body_json) : undefined,
         chunk: r.chunk_json ? JSON.parse(r.chunk_json) : undefined,
         durationMs: r.duration_ms ?? undefined,
-        error:
-          r.error_message
-            ? { message: r.error_message, stack: r.error_stack ?? undefined, status: r.error_status ?? undefined }
-            : undefined,
+        error: r.error_message
+          ? {
+              message: r.error_message,
+              stack: r.error_stack ?? undefined,
+              status: r.error_status ?? undefined,
+            }
+          : undefined,
         metadata: r.metadata_json ? JSON.parse(r.metadata_json) : undefined,
       }));
     } catch (error) {
@@ -361,10 +378,18 @@ export class TrafficLogsRepo {
     }
   }
 
-  static getStats(): { byDirection: Record<string, number>; byEndpoint: Record<string, number>; total: number } {
+  static getStats(): {
+    byDirection: Record<string, number>;
+    byEndpoint: Record<string, number>;
+    total: number;
+  } {
     const { raw } = getProxyMetricsDb();
     try {
-      const rows = raw.prepare(`SELECT direction, endpoint, COUNT(*) as cnt FROM traffic_logs GROUP BY direction, endpoint`).all() as Array<{
+      const rows = raw
+        .prepare(
+          `SELECT direction, endpoint, COUNT(*) as cnt FROM traffic_logs GROUP BY direction, endpoint`,
+        )
+        .all() as Array<{
         direction: string;
         endpoint: string;
         cnt: number;
@@ -400,7 +425,9 @@ export class TrafficLogsRepo {
   }> {
     const { raw } = getProxyMetricsDb();
     try {
-      const rows = raw.prepare(`SELECT * FROM traffic_logs ORDER BY timestamp DESC`).all() as Array<{
+      const rows = raw
+        .prepare(`SELECT * FROM traffic_logs ORDER BY timestamp DESC`)
+        .all() as Array<{
         timestamp: number;
         direction: string;
         request_id: string;
@@ -427,10 +454,13 @@ export class TrafficLogsRepo {
         body: r.body_json ? JSON.parse(r.body_json) : undefined,
         chunk: r.chunk_json ? JSON.parse(r.chunk_json) : undefined,
         durationMs: r.duration_ms ?? undefined,
-        error:
-          r.error_message
-            ? { message: r.error_message, stack: r.error_stack ?? undefined, status: r.error_status ?? undefined }
-            : undefined,
+        error: r.error_message
+          ? {
+              message: r.error_message,
+              stack: r.error_stack ?? undefined,
+              status: r.error_status ?? undefined,
+            }
+          : undefined,
         metadata: r.metadata_json ? JSON.parse(r.metadata_json) : undefined,
       }));
     } catch (error) {
