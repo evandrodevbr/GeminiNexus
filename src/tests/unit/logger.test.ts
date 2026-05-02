@@ -5,6 +5,7 @@ import path from 'path';
 vi.mock('../../utils/paths', async () => {
   const path = await import('path');
   return {
+      IS_DEV_ENVIRONMENT: false,
     getAgentDir: vi.fn(() => path.join(process.cwd(), 'temp_test_logs')),
   };
 });

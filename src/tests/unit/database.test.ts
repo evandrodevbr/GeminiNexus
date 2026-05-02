@@ -48,6 +48,7 @@ vi.mock('../../utils/logger', () => ({
 }));
 
 vi.mock('../../utils/paths', () => ({
+  IS_DEV_ENVIRONMENT: false,
   getGeminiNexusDbPaths: vi.fn().mockReturnValue(['/tmp/test.vscdb']),
 }));
 

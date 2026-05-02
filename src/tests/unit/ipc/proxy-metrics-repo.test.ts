@@ -25,6 +25,7 @@ vi.mock('../../../ipc/database/cloudHandler', () => ({
 }));
 
 vi.mock('../../../utils/paths', () => ({
+  IS_DEV_ENVIRONMENT: false,
   getCloudAccountsDbPath: vi.fn(() => '/mock/db/path.sqlite'),
 }));
 

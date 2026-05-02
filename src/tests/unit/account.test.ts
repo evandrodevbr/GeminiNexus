@@ -17,6 +17,7 @@ vi.mock('../../utils/paths', async () => {
   const path = await import('path');
   const agentDir = path.join(process.cwd(), 'temp_test_agent');
   return {
+      IS_DEV_ENVIRONMENT: false,
     getAgentDir: vi.fn(() => agentDir),
     getAccountsFilePath: vi.fn(() => path.join(agentDir, 'accounts.json')),
     getBackupsDir: vi.fn(() => path.join(agentDir, 'backups')),

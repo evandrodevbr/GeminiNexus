@@ -22,6 +22,7 @@ vi.mock('../../ipc/database/dbConnection', () => ({
 }));
 
 vi.mock('../../utils/paths', () => ({
+  IS_DEV_ENVIRONMENT: false,
   getGeminiNexusDbPaths: () => ['mock-db'],
 }));
 

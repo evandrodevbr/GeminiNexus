@@ -53,6 +53,7 @@ vi.mock('../../../utils/logger', () => ({
 }));
 
 vi.mock('../../../utils/paths', () => ({
+  IS_DEV_ENVIRONMENT: false,
   getGeminiNexusStoragePaths: vi.fn().mockReturnValue(['/tmp/storage.json']),
   getGeminiNexusDbPaths: vi.fn().mockReturnValue(['/tmp/state.vscdb']),
   getAgentDir: vi.fn().mockReturnValue('/tmp/agent'),
