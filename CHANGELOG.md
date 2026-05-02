@@ -2,6 +2,18 @@
 
 # Changelog
 
+## [0.15.1](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.0...v0.15.1) (2026-05-02)
+
+### ✅ Tests
+
+* add universal electron mock to fix headless CI test runs ([1d35801](https://github.com/evandrodevbr/GeminiNexus/commit/1d35801980e3e54cec1d3e52ed75850eb7eec350))
+* fix test environments failing due to missing IS_DEV_ENVIRONMENT mock export ([269ad18](https://github.com/evandrodevbr/GeminiNexus/commit/269ad18ed6c09585e881d0d916558b1bcc7ad940))
+* update proxy-advanced-handler tests to reflect optional service registration ([f4daaa8](https://github.com/evandrodevbr/GeminiNexus/commit/f4daaa8ca13bc75c7e5090905176c06b61ecfedc))
+
+### 👷 Build System
+
+* replace MakerSquirrel with MakerZIP for Windows ([27223f5](https://github.com/evandrodevbr/GeminiNexus/commit/27223f587d7facf25beef77aa6984cd248f2703d))
+
 ## [0.15.0](https://github.com/evandrodevbr/GeminiNexus/compare/v0.14.0...v0.15.0) (2026-05-02)
 
 ### ✨ Features
