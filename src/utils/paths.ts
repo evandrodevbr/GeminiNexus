@@ -4,6 +4,16 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 
 /**
+ * Detects whether the app is running in development mode.
+ * Uses NODE_ENV as the single source of truth. This is evaluated once
+ * at module load time so every consumer gets a consistent answer.
+ */
+export const IS_DEV_ENVIRONMENT = process.env.NODE_ENV === 'development';
+
+/** Directory name suffix applied in development to isolate from production data. */
+const DEV_SUFFIX = ' Dev';
+
+/**
  * Checks if the current platform is WSL.
  * @returns {boolean} True if the current platform is WSL, false otherwise.
  */
@@ -75,29 +85,29 @@ function getWindowsUser(): string {
 
 export function getAppDataDir(): string {
   const home = os.homedir();
+  const appName = IS_DEV_ENVIRONMENT ? `Gemini Nexus${DEV_SUFFIX}` : 'Gemini Nexus';
 
   if (isWsl()) {
     const winUser = getWindowsUser();
-    return `/mnt/c/Users/${winUser}/AppData/Roaming/GeminiNexus`;
+    const wslName = IS_DEV_ENVIRONMENT ? 'GeminiNexusDev' : 'GeminiNexus';
+    return `/mnt/c/Users/${winUser}/AppData/Roaming/${wslName}`;
   }
 
   switch (process.platform) {
     case 'darwin':
-      return path.join(home, 'Library', 'Application Support', 'Gemini Nexus');
+      return path.join(home, 'Library', 'Application Support', appName);
     case 'win32':
-      return path.join(
-        process.env.APPDATA || path.join(home, 'AppData', 'Roaming'),
-        'Gemini Nexus',
-      );
+      return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), appName);
     case 'linux':
-      return path.join(home, '.config', 'Gemini Nexus');
+      return path.join(home, '.config', appName);
     default:
-      return path.join(home, '.geminiNexus');
+      return path.join(home, IS_DEV_ENVIRONMENT ? '.geminiNexusDev' : '.geminiNexus');
   }
 }
 
 export function getAgentDir(): string {
-  return path.join(os.homedir(), '.geminiNexus-agent');
+  const dirName = IS_DEV_ENVIRONMENT ? '.geminiNexus-agent-dev' : '.geminiNexus-agent';
+  return path.join(os.homedir(), dirName);
 }
 
 export function getAccountsFilePath(): string {

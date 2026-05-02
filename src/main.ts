@@ -30,6 +30,12 @@ import { ConfigManager } from './ipc/config/manager';
 import { AppConfig } from './types/config';
 import { isAutoStartLaunch, syncAutoStart } from './utils/autoStart';
 import { safeStringifyPacket } from './utils/sensitiveDataMasking';
+import { IS_DEV_ENVIRONMENT } from './utils/paths';
+
+// Set app name early so Electron's userData path reflects the environment
+if (IS_DEV_ENVIRONMENT) {
+  app.setName('Gemini Nexus Dev');
+}
 
 const packetLogPath = path.join(app.getPath('userData'), 'orpc_packets.log');
 
@@ -63,7 +69,7 @@ if (squirrelStartup) {
   process.exit(0);
 }
 
-const inDevelopment = process.env.NODE_ENV === 'development';
+const inDevelopment = IS_DEV_ENVIRONMENT;
 const debugHttpProxy = process.env.http_proxy?.trim() || process.env.HTTP_PROXY?.trim();
 const debugHttpsProxy = process.env.https_proxy?.trim() || process.env.HTTPS_PROXY?.trim();
 const debugNoProxy = process.env.no_proxy?.trim() || process.env.NO_PROXY?.trim();
@@ -167,11 +173,7 @@ function showWindowsInstallNoticeIfNeeded() {
   });
 }
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-
-if (isDev) {
-  app.setName('Gemini Nexus Dev');
-}
+const isDev = IS_DEV_ENVIRONMENT;
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 

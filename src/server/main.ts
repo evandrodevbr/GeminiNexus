@@ -9,11 +9,16 @@ import { ProxyConfig } from '../types/config';
 import { setServerConfig } from './server-config';
 import { registerApiLogging } from './logging/api-logging.plugin';
 
+import { IS_DEV_ENVIRONMENT } from '../utils/paths';
+
 let app: NestFastifyApplication | null = null;
 let currentPort: number = 0;
 
+/** Default port: 8046 in development, 8045 in production */
+const DEFAULT_PORT = IS_DEV_ENVIRONMENT ? 8046 : 8045;
+
 export async function bootstrapNestServer(config: ProxyConfig): Promise<boolean> {
-  const port = config.port || 8045;
+  const port = config.port || DEFAULT_PORT;
   if (app) {
     logger.info('NestJS server already running.');
     return true;

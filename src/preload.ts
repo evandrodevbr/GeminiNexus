@@ -10,16 +10,15 @@ import os from 'os';
 let sentryEnabled = false;
 try {
   const home = os.homedir();
+  const isDev = process.env.NODE_ENV === 'development';
+  const appName = isDev ? 'Gemini Nexus Dev' : 'Gemini Nexus';
   let appDataPath = '';
   if (process.platform === 'win32') {
-    appDataPath = path.join(
-      process.env.APPDATA || path.join(home, 'AppData', 'Roaming'),
-      'Gemini Nexus',
-    );
+    appDataPath = path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), appName);
   } else if (process.platform === 'darwin') {
-    appDataPath = path.join(home, 'Library', 'Application Support', 'Gemini Nexus');
+    appDataPath = path.join(home, 'Library', 'Application Support', appName);
   } else {
-    appDataPath = path.join(home, '.config', 'Gemini Nexus');
+    appDataPath = path.join(home, '.config', appName);
   }
 
   const configPath = path.join(appDataPath, 'gui_config.json');
