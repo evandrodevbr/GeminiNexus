@@ -37,3 +37,9 @@ export function getServiceOrThrow<K extends keyof ProxyAdvancedRegistry>(
   if (!svc) throw new Error(`ProxyAdvanced service '${key}' is not registered`);
   return svc;
 }
+
+export function getServiceOptional<K extends keyof ProxyAdvancedRegistry>(
+  key: K,
+): ProxyAdvancedRegistry[K] {
+  return proxyAdvancedRegistry[key];
+}

@@ -3,12 +3,18 @@ import { networkInterfaces } from 'os';
 import { getServerConfig } from '../../server-config';
 import { registerProxyAdvancedService } from '../../../ipc/proxy-advanced/service-registry';
 
-export type SupportedIde = 'cursor' | 'vscode' | 'claude-code' | 'jetbrains' | 'opencide';
+export type SupportedIde =
+  | 'cursor'
+  | 'vscode'
+  | 'claude-code'
+  | 'jetbrains'
+  | 'opencide'
+  | 'opencode';
 
 export interface IdeConfigResult {
   ide: SupportedIde;
   format: 'json' | 'shell' | 'env' | 'instructions';
-  content: Record<string, string> | string;
+  content: Record<string, any> | string;
 }
 
 @Injectable()
@@ -46,6 +52,7 @@ export class ProxyIdeConfigService {
     port: number,
     apiKey: string,
     localIp: string,
+    defaultModel: string = 'gemini-3.1-pro-high',
   ): IdeConfigResult {
     const baseUrl = `http://${localIp}:${port}/v1`;
 
@@ -99,6 +106,20 @@ export class ProxyIdeConfigService {
           content: `OPENAI_API_KEY=${apiKey}\nOPENAI_BASE_URL=${baseUrl}`,
         };
       }
+      case 'opencode': {
+        return {
+          ide,
+          format: 'json',
+          content: {
+            apiType: 'openai',
+            apiKey: apiKey,
+            baseURL: baseUrl,
+            models: {
+              chat: [defaultModel],
+            },
+          },
+        };
+      }
       default: {
         // Exhaustive fallback to satisfy TypeScript
         const exhaustiveCheck: never = ide;
@@ -112,7 +133,7 @@ export class ProxyIdeConfigService {
    * Convenience helper that reads the current server config and local IP,
    * then delegates to generateIdeConfig.
    */
-  generateConfigForCurrentServer(ide: SupportedIde): IdeConfigResult | null {
+  generateConfigForCurrentServer(ide: SupportedIde, defaultModel?: string): IdeConfigResult | null {
     const config = getServerConfig();
     if (!config) {
       this.logger.warn('Server config not available; cannot generate IDE config');
@@ -121,6 +142,6 @@ export class ProxyIdeConfigService {
     const port = config.port;
     const apiKey = config.api_key;
     const localIp = this.getLocalIp();
-    return this.generateIdeConfig(ide, port, apiKey, localIp);
+    return this.generateIdeConfig(ide, port, apiKey, localIp, defaultModel);
   }
 }

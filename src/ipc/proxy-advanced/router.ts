@@ -155,9 +155,11 @@ const IdeConfigResponseSchema = z.object({
     .object({
       name: z.string(),
       settingsPath: z.string(),
-      proxySetting: z.string(),
-      apiKeySetting: z.string(),
-      instructions: z.string(),
+      proxySetting: z.string().optional(),
+      apiKeySetting: z.string().optional(),
+      instructions: z.string().optional(),
+      format: z.enum(['json', 'shell', 'env', 'instructions']).optional(),
+      content: z.union([z.record(z.string(), z.unknown()), z.string()]).optional(),
     })
     .optional(),
   error: z.string().optional(),
@@ -204,10 +206,10 @@ export const proxyAdvancedRouter = os.router({
   }),
 
   generateIdeConfig: os
-    .input(z.object({ ide: z.string() }))
+    .input(z.object({ ide: z.string(), defaultModel: z.string().optional() }))
     .output(IdeConfigResponseSchema)
     .handler(async ({ input }) => {
-      return generateIdeConfig(input.ide);
+      return generateIdeConfig(input.ide, input.defaultModel);
     }),
 
   replayRequest: os

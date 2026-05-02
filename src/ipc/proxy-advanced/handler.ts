@@ -1,8 +1,13 @@
 import { logger } from '../../utils/logger';
-import { getServiceOrThrow } from './service-registry';
-import type { IdeConfigResult } from '../../server/modules/proxy/proxy-ide-config.service';
+import { getServiceOrThrow, getServiceOptional } from './service-registry';
+import type {
+  IdeConfigResult,
+  SupportedIde,
+} from '../../server/modules/proxy/proxy-ide-config.service';
 import { TrafficLogsRepo } from '../database/proxyMetricsHandler';
 import { CloudAccountRepo } from '../database/cloudHandler';
+import { ConfigManager } from '../config/manager';
+import { networkInterfaces } from 'os';
 
 export interface TrafficLogEntryParsed {
   timestamp: string;
@@ -84,7 +89,15 @@ export async function exportTrafficLogs(
     }
 
     // CSV format
-    const headers = ['timestamp', 'direction', 'requestId', 'endpoint', 'method', 'status', 'durationMs'];
+    const headers = [
+      'timestamp',
+      'direction',
+      'requestId',
+      'endpoint',
+      'method',
+      'status',
+      'durationMs',
+    ];
     const rowsCsv = rows.map((e) =>
       [
         new Date(e.timestamp).toISOString(),
@@ -108,11 +121,27 @@ export async function exportTrafficLogs(
 
 export async function getParityCounters(): Promise<{
   success: boolean;
-  data?: { totalRequests: number; matchedRequests: number; parityViolations: number; lastUpdated: string };
+  data?: {
+    totalRequests: number;
+    matchedRequests: number;
+    parityViolations: number;
+    lastUpdated: string;
+  };
   error?: string;
 }> {
   try {
-    const tokenManager = getServiceOrThrow('tokenManager');
+    const tokenManager = getServiceOptional('tokenManager');
+    if (!tokenManager) {
+      return {
+        success: true,
+        data: {
+          totalRequests: 0,
+          matchedRequests: 0,
+          parityViolations: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
     return {
       success: true,
       data: tokenManager.getParityCounters(),
@@ -124,14 +153,24 @@ export async function getParityCounters(): Promise<{
 
 export async function getCircuitBreakerStatus(): Promise<{
   success: boolean;
-  data?: { states: Record<string, { state: string; failures: number; lastFailure: string | null }>; globalEnabled: boolean };
+  data?: {
+    states: Record<string, { state: string; failures: number; lastFailure: string | null }>;
+    globalEnabled: boolean;
+  };
   error?: string;
 }> {
   try {
-    const tokenManager = getServiceOrThrow('tokenManager');
+    const tokenManager = getServiceOptional('tokenManager');
+    if (!tokenManager) {
+      return {
+        success: true,
+        data: { states: {}, globalEnabled: true },
+      };
+    }
 
     const rawStatus = tokenManager.getCircuitBreakerStatus();
-    const states: Record<string, { state: string; failures: number; lastFailure: string | null }> = {};
+    const states: Record<string, { state: string; failures: number; lastFailure: string | null }> =
+      {};
     for (const [accountId, entry] of Object.entries(rawStatus)) {
       states[accountId] = {
         state: entry.state,
@@ -154,7 +193,7 @@ export async function getCircuitBreakerStatus(): Promise<{
 
 export async function getProxyMetrics(): Promise<{
   success: boolean;
-    data?: {
+  data?: {
     uptimeSeconds: number;
     totalRequests: number;
     activeConnections: number;
@@ -166,7 +205,21 @@ export async function getProxyMetrics(): Promise<{
   error?: string;
 }> {
   try {
-    const proxyMetrics = getServiceOrThrow('proxyMetrics');
+    const proxyMetrics = getServiceOptional('proxyMetrics');
+    if (!proxyMetrics) {
+      return {
+        success: true,
+        data: {
+          uptimeSeconds: 0,
+          totalRequests: 0,
+          activeConnections: 0,
+          avgLatency: 0,
+          errorRate: 0,
+          requestsPerMinute: 0,
+          cacheHitRate: 0,
+        },
+      };
+    }
 
     const metrics = proxyMetrics.getMetrics();
     return {
@@ -187,9 +240,14 @@ export async function getProxyMetrics(): Promise<{
   }
 }
 
-export async function getRecentRequests(): Promise<{ success: boolean; data?: unknown[]; error?: string }> {
+export async function getRecentRequests(): Promise<{
+  success: boolean;
+  data?: unknown[];
+  error?: string;
+}> {
   try {
-    const proxyReplay = getServiceOrThrow('proxyReplay');
+    const proxyReplay = getServiceOptional('proxyReplay');
+    if (!proxyReplay) return { success: true, data: [] };
     return {
       success: true,
       data: proxyReplay.getRecentRequests(20),
@@ -201,7 +259,11 @@ export async function getRecentRequests(): Promise<{ success: boolean; data?: un
 
 export async function replayRequest(
   requestId: string,
-): Promise<{ success: boolean; data?: { original: unknown; newResponse: unknown }; error?: string }> {
+): Promise<{
+  success: boolean;
+  data?: { original: unknown; newResponse: unknown };
+  error?: string;
+}> {
   try {
     const proxyReplay = getServiceOrThrow('proxyReplay');
     const result = await proxyReplay.replayRequest(requestId);
@@ -278,14 +340,14 @@ export async function getModelCapabilities(): Promise<{
   }
 }
 
-function mapIdeConfigResult(
-  result: IdeConfigResult,
-): {
+function mapIdeConfigResult(result: IdeConfigResult): {
   name: string;
   settingsPath: string;
-  proxySetting: string;
-  apiKeySetting: string;
-  instructions: string;
+  proxySetting?: string;
+  apiKeySetting?: string;
+  instructions?: string;
+  format: 'json' | 'shell' | 'env' | 'instructions';
+  content: Record<string, unknown> | string;
 } {
   switch (result.ide) {
     case 'vscode':
@@ -295,6 +357,8 @@ function mapIdeConfigResult(
         proxySetting: 'openai.url',
         apiKeySetting: 'openai.apiKey',
         instructions: 'Add these settings to your VS Code settings.json',
+        format: result.format,
+        content: result.content as Record<string, unknown>,
       };
     case 'cursor':
       return {
@@ -303,6 +367,8 @@ function mapIdeConfigResult(
         proxySetting: 'OPENAI_BASE_URL',
         apiKeySetting: 'OPENAI_API_KEY',
         instructions: 'Set these environment variables for Cursor',
+        format: result.format,
+        content: result.content as Record<string, unknown>,
       };
     case 'claude-code':
       return {
@@ -311,6 +377,8 @@ function mapIdeConfigResult(
         proxySetting: 'ANTHROPIC_BASE_URL',
         apiKeySetting: 'ANTHROPIC_API_KEY',
         instructions: 'Run these export commands before starting Claude Code',
+        format: result.format,
+        content: result.content as string,
       };
     case 'jetbrains':
       return {
@@ -319,6 +387,8 @@ function mapIdeConfigResult(
         proxySetting: 'Base URL',
         apiKeySetting: 'API Key',
         instructions: String(result.content),
+        format: result.format,
+        content: result.content as string,
       };
     case 'opencide':
       return {
@@ -327,9 +397,19 @@ function mapIdeConfigResult(
         proxySetting: 'OPENAI_BASE_URL',
         apiKeySetting: 'OPENAI_API_KEY',
         instructions: 'Add these lines to your .env file',
+        format: result.format,
+        content: result.content as string,
+      };
+    case 'opencode':
+      return {
+        name: 'OpenCode',
+        settingsPath: '.config/opencode/providers.json',
+        instructions: 'Add this snippet to your providers.json',
+        format: result.format,
+        content: result.content as Record<string, unknown>,
       };
     default: {
-      const exhaustiveCheck: never = result.ide;
+      const exhaustiveCheck: never = result.ide as never;
       throw new Error(`Unsupported IDE: ${String(exhaustiveCheck)}`);
     }
   }
@@ -337,29 +417,121 @@ function mapIdeConfigResult(
 
 export async function generateIdeConfig(
   ide: string,
+  defaultModel?: string,
 ): Promise<{
   success: boolean;
   data?: {
     name: string;
     settingsPath: string;
-    proxySetting: string;
-    apiKeySetting: string;
-    instructions: string;
+    proxySetting?: string;
+    apiKeySetting?: string;
+    instructions?: string;
+    format: 'json' | 'shell' | 'env' | 'instructions';
+    content: Record<string, unknown> | string;
   };
   error?: string;
 }> {
   try {
-    const proxyIdeConfig = getServiceOrThrow('proxyIdeConfig');
-
-    const supportedIdes = ['cursor', 'vscode', 'claude-code', 'jetbrains', 'opencide'] as const;
-    const normalizedIde = ide.toLowerCase() as typeof supportedIdes[number];
+    const supportedIdes = [
+      'cursor',
+      'vscode',
+      'claude-code',
+      'jetbrains',
+      'opencide',
+      'opencode',
+    ] as const;
+    const normalizedIde = ide.toLowerCase() as (typeof supportedIdes)[number];
     if (!supportedIdes.includes(normalizedIde)) {
       return { success: false, error: `Unsupported IDE: ${ide}` };
     }
 
-    const result = proxyIdeConfig.generateConfigForCurrentServer(normalizedIde);
-    if (!result) {
-      return { success: false, error: 'Failed to generate IDE config: server not configured' };
+    // Attempt to use NestJS service if running, fallback to manual generation
+    const proxyIdeConfig = getServiceOptional('proxyIdeConfig');
+    if (proxyIdeConfig) {
+      const result = proxyIdeConfig.generateConfigForCurrentServer(normalizedIde, defaultModel);
+      if (result) return { success: true, data: mapIdeConfigResult(result) };
+    }
+
+    // Fallback logic when proxy is stopped
+    const config = ConfigManager.getCachedConfig()?.proxy;
+    const port = config?.port || 8045;
+    const apiKey = config?.api_key || 'YOUR_API_KEY';
+
+    let localIp = '127.0.0.1';
+    const interfaces = networkInterfaces();
+    for (const iface of Object.values(interfaces)) {
+      if (iface) {
+        for (const entry of iface) {
+          if (entry.family === 'IPv4' && !entry.internal) {
+            localIp = entry.address;
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback generator mimicking the proxyIdeConfig.service
+    const baseUrl = `http://${localIp}:${port}/v1`;
+    let result: IdeConfigResult;
+
+    switch (normalizedIde) {
+      case 'cursor':
+        result = {
+          ide: normalizedIde,
+          format: 'json',
+          content: { OPENAI_API_KEY: apiKey, OPENAI_BASE_URL: baseUrl },
+        };
+        break;
+      case 'vscode':
+        result = {
+          ide: normalizedIde,
+          format: 'json',
+          content: { 'openai.url': baseUrl, 'openai.apiKey': apiKey },
+        };
+        break;
+      case 'claude-code':
+        result = {
+          ide: normalizedIde,
+          format: 'shell',
+          content: `export OPENAI_API_KEY=${apiKey} && export OPENAI_BASE_URL=${baseUrl}`,
+        };
+        break;
+      case 'jetbrains':
+        result = {
+          ide: normalizedIde,
+          format: 'instructions',
+          content: [
+            'JetBrains AI Assistant Setup:',
+            '1. Open Settings (File > Settings or Ctrl+Alt+S).',
+            '2. Navigate to Languages & Frameworks > AI Assistant.',
+            '3. Under "Custom OpenAI Endpoint", set:',
+            `   - Base URL: ${baseUrl}`,
+            `   - API Key: ${apiKey}`,
+            '4. Click "Apply" and restart the IDE if prompted.',
+          ].join('\n'),
+        };
+        break;
+      case 'opencide':
+        result = {
+          ide: normalizedIde,
+          format: 'env',
+          content: `OPENAI_API_KEY=${apiKey}\nOPENAI_BASE_URL=${baseUrl}`,
+        };
+        break;
+      case 'opencode':
+        result = {
+          ide: normalizedIde,
+          format: 'json',
+          content: {
+            apiType: 'openai',
+            apiKey: apiKey,
+            baseURL: baseUrl,
+            models: { chat: [defaultModel || 'gemini-3.1-pro-high'] },
+          },
+        };
+        break;
+      default:
+        throw new Error('Unsupported');
     }
 
     return {
