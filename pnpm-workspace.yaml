@@ -8,5 +8,6 @@ allowBuilds:
   electron-winstaller: true
   esbuild: true
   keytar: true
+  macos-alias: true
   protobufjs: true
   sharp: true

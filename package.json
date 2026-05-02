@@ -170,9 +170,28 @@
     "@nestjs/core",
     "@sentry/cli",
     "@swc/core",
-    "protobufjs"
+    "protobufjs",
+    "macos-alias",
+    "better-sqlite3",
+    "keytar",
+    "electron",
+    "electron-winstaller",
+    "esbuild"
   ],
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@bitdisaster/exe-icon-extractor",
+      "@nestjs/core",
+      "@sentry/cli",
+      "@swc/core",
+      "protobufjs",
+      "macos-alias",
+      "better-sqlite3",
+      "keytar",
+      "electron",
+      "electron-winstaller",
+      "esbuild"
+    ],
     "overrides": {
       "node-abi": "^4.28.0",
       "fastify": "^5.8.5",
