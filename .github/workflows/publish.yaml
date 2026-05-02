@@ -118,6 +118,8 @@ jobs:
             Write-Host "Incompatible WiX Toolset detected: $installed"
             choco upgrade wixtoolset --version=3.14.0 --allow-downgrade -y
           }
+          # Ensure 7zip is available for Squirrel.Windows zip operations
+          choco install 7zip -y
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -223,4 +225,16 @@ jobs:
           fi
 
           printf 'Uploading %s assets to %s\n' "${#files[@]}" "$RELEASE_TAG"
-          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
+          
+          # Upload files sequentially with retries to prevent GitHub API rate limits and 404/502 errors
+          for file in "${files[@]}"; do
+            echo "Uploading $file..."
+            if ! gh release upload "$RELEASE_TAG" "$file" --clobber; then
+              echo "::warning::Failed to upload $file. Retrying in 5 seconds..."
+              sleep 5
+              if ! gh release upload "$RELEASE_TAG" "$file" --clobber; then
+                echo "::error::Failed to upload $file after retry."
+                exit 1
+              fi
+            fi
+          done
