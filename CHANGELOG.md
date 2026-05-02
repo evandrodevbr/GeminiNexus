@@ -2,6 +2,12 @@
 
 # Changelog
 
+## [0.15.3](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.2...v0.15.3) (2026-05-02)
+
+### 👷 Build System
+
+* allow fs-xattr and appdmg to build in pnpm v10 ([1c26a9e](https://github.com/evandrodevbr/GeminiNexus/commit/1c26a9e542f3fa5a05b370b8a332ffe5a727ea92))
+
 ## [0.15.2](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.1...v0.15.2) (2026-05-02)
 
 ### 👷 Build System

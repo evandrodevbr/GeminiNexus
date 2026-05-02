@@ -1,7 +1,7 @@
 {
   "name": "gemini-nexus",
   "productName": "Gemini Nexus",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "description": "Gemini Nexus - Electron App",
   "main": ".vite/build/main.js",
   "private": true,
