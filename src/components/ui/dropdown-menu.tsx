@@ -20,7 +20,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      'flex cursor-default items-center rounded-md px-2 py-1.5 text-[13px] outline-none select-none transition-colors focus:bg-white/[0.06] data-[state=open]:bg-white/[0.06]',
+      'flex cursor-default items-center rounded-md px-2 py-1.5 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] data-[state=open]:bg-white/[0.06]',
       inset && 'pl-8',
       className,
     )}
@@ -92,7 +92,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex cursor-default items-center rounded-md px-2 py-1.5 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'focus:text-foreground relative flex cursor-default items-center rounded-md px-2 py-1.5 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       inset && 'pl-8',
       className,
     )}
@@ -108,7 +108,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      'relative flex cursor-default items-center rounded-md py-1.5 pr-2 pl-8 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'focus:text-foreground relative flex cursor-default items-center rounded-md py-1.5 pr-2 pl-8 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     checked={checked}
@@ -131,7 +131,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      'relative flex cursor-default items-center rounded-md py-1.5 pr-2 pl-8 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'focus:text-foreground relative flex cursor-default items-center rounded-md py-1.5 pr-2 pl-8 text-[13px] transition-colors outline-none select-none focus:bg-white/[0.06] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
@@ -154,7 +154,11 @@ const DropdownMenuLabel = React.forwardRef<
 >(({ className, inset, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn('px-2 py-1.5 text-xs font-medium text-muted-foreground', inset && 'pl-8', className)}
+    className={cn(
+      'text-muted-foreground px-2 py-1.5 text-xs font-medium',
+      inset && 'pl-8',
+      className,
+    )}
     {...props}
   />
 ));

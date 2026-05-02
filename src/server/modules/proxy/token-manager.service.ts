@@ -349,14 +349,23 @@ export class TokenManagerService implements OnModuleInit {
       if (requestedAccountId && !excludedAccountIds.has(requestedAccountId)) {
         const requestedToken = this.tokens.get(requestedAccountId);
         if (requestedToken) {
-          const isHealthy = this.isAccountHealthy(requestedAccountId, requestedToken, nowSeconds, model);
+          const isHealthy = this.isAccountHealthy(
+            requestedAccountId,
+            requestedToken,
+            nowSeconds,
+            model,
+          );
           if (isHealthy) {
             this.logger.log(`Using requested account: ${requestedAccountId}`);
             return this.buildCloudAccount(requestedAccountId, requestedToken);
           }
-          this.logger.warn(`Requested account ${requestedAccountId} is not healthy, falling back to selection`);
+          this.logger.warn(
+            `Requested account ${requestedAccountId} is not healthy, falling back to selection`,
+          );
         } else {
-          this.logger.warn(`Requested account ${requestedAccountId} not found, falling back to selection`);
+          this.logger.warn(
+            `Requested account ${requestedAccountId} not found, falling back to selection`,
+          );
         }
       }
 
@@ -962,7 +971,12 @@ export class TokenManagerService implements OnModuleInit {
     }
   }
 
-  private isAccountHealthy(accountId: string, tokenData: TokenData, nowSeconds: number, model?: string): boolean {
+  private isAccountHealthy(
+    accountId: string,
+    tokenData: TokenData,
+    nowSeconds: number,
+    model?: string,
+  ): boolean {
     const entry = this.getOrCreateCircuitBreakerEntry(accountId);
     if (entry.state === 'unhealthy') {
       return false;
@@ -1089,8 +1103,24 @@ export class TokenManagerService implements OnModuleInit {
     }
   }
 
-  getCircuitBreakerStatus(): Record<string, { state: 'healthy' | 'degraded' | 'unhealthy'; failureCount: number; lastFailureTime: number | null; failureRate: number }> {
-    const result: Record<string, { state: 'healthy' | 'degraded' | 'unhealthy'; failureCount: number; lastFailureTime: number | null; failureRate: number }> = {};
+  getCircuitBreakerStatus(): Record<
+    string,
+    {
+      state: 'healthy' | 'degraded' | 'unhealthy';
+      failureCount: number;
+      lastFailureTime: number | null;
+      failureRate: number;
+    }
+  > {
+    const result: Record<
+      string,
+      {
+        state: 'healthy' | 'degraded' | 'unhealthy';
+        failureCount: number;
+        lastFailureTime: number | null;
+        failureRate: number;
+      }
+    > = {};
     for (const accountId of this.tokens.keys()) {
       const entry = this.getOrCreateCircuitBreakerEntry(accountId);
       this.computeCircuitBreakerState(entry);
@@ -1104,7 +1134,12 @@ export class TokenManagerService implements OnModuleInit {
     return result;
   }
 
-  getParityCounters(): { totalRequests: number; matchedRequests: number; parityViolations: number; lastUpdated: string } {
+  getParityCounters(): {
+    totalRequests: number;
+    matchedRequests: number;
+    parityViolations: number;
+    lastUpdated: string;
+  } {
     return {
       totalRequests: this.parityRequestCount,
       matchedRequests: this.shadowComparisonCount,

@@ -10,7 +10,9 @@ vi.mock('@/ipc/proxy-advanced/service-registry', () => ({
 const mockProxyService = {
   handleChatCompletions: vi.fn().mockResolvedValue({ choices: [{ message: { content: 'test' } }] }),
   handleAnthropicMessages: vi.fn().mockResolvedValue({ content: [{ text: 'test' }] }),
-  handleGeminiGenerateContent: vi.fn().mockResolvedValue({ candidates: [{ content: { parts: [{ text: 'test' }] } }] }),
+  handleGeminiGenerateContent: vi
+    .fn()
+    .mockResolvedValue({ candidates: [{ content: { parts: [{ text: 'test' }] } }] }),
 } as unknown as ProxyService;
 
 describe('ProxyReplayService', () => {

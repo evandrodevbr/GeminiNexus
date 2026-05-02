@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProxyIdeConfigService, SupportedIde } from '@/server/modules/proxy/proxy-ide-config.service';
+import {
+  ProxyIdeConfigService,
+  SupportedIde,
+} from '@/server/modules/proxy/proxy-ide-config.service';
 
 vi.mock('@/ipc/proxy-advanced/service-registry', () => ({
   registerProxyAdvancedService: vi.fn(),
@@ -50,12 +53,8 @@ describe('ProxyIdeConfigService', () => {
 
     it('should skip internal interfaces', () => {
       vi.mocked(networkInterfaces).mockReturnValue({
-        lo: [
-          { family: 'IPv4', internal: true, address: '127.0.0.1' } as any,
-        ],
-        eth0: [
-          { family: 'IPv4', internal: false, address: '10.0.0.5' } as any,
-        ],
+        lo: [{ family: 'IPv4', internal: true, address: '127.0.0.1' } as any],
+        eth0: [{ family: 'IPv4', internal: false, address: '10.0.0.5' } as any],
       });
 
       expect(service.getLocalIp()).toBe('10.0.0.5');
@@ -63,9 +62,7 @@ describe('ProxyIdeConfigService', () => {
 
     it('should fallback to 127.0.0.1 when no external interface exists', () => {
       vi.mocked(networkInterfaces).mockReturnValue({
-        lo: [
-          { family: 'IPv4', internal: true, address: '127.0.0.1' } as any,
-        ],
+        lo: [{ family: 'IPv4', internal: true, address: '127.0.0.1' } as any],
       });
 
       expect(service.getLocalIp()).toBe('127.0.0.1');

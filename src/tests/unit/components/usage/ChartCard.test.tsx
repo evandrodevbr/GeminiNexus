@@ -18,9 +18,7 @@ describe('ChartCard', () => {
   };
 
   it('renders loading state with skeleton', () => {
-    renderWithProviders(
-      <ChartCard {...defaultProps} isLoading={true} />,
-    );
+    renderWithProviders(<ChartCard {...defaultProps} isLoading={true} />);
 
     expect(screen.getByText('Test Chart')).toBeInTheDocument();
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
@@ -30,11 +28,7 @@ describe('ChartCard', () => {
   it('renders error state with retry button and calls onRetry when clicked', () => {
     const onRetry = vi.fn();
     renderWithProviders(
-      <ChartCard
-        {...defaultProps}
-        error={new Error('Network error')}
-        onRetry={onRetry}
-      />,
+      <ChartCard {...defaultProps} error={new Error('Network error')} onRetry={onRetry} />,
     );
 
     expect(screen.getByText('Failed to load chart.')).toBeInTheDocument();
@@ -46,14 +40,10 @@ describe('ChartCard', () => {
   });
 
   it('renders empty state with title and description', () => {
-    renderWithProviders(
-      <ChartCard {...defaultProps} isEmpty={true} />,
-    );
+    renderWithProviders(<ChartCard {...defaultProps} isEmpty={true} />);
 
     expect(screen.getByText('No Data')).toBeInTheDocument();
-    expect(
-      screen.getByText('There is no data to display.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('There is no data to display.')).toBeInTheDocument();
     expect(screen.queryByTestId('chart-content')).not.toBeInTheDocument();
   });
 
@@ -67,11 +57,7 @@ describe('ChartCard', () => {
 
   it('prioritizes loading over error state', () => {
     renderWithProviders(
-      <ChartCard
-        {...defaultProps}
-        isLoading={true}
-        error={new Error('Some error')}
-      />,
+      <ChartCard {...defaultProps} isLoading={true} error={new Error('Some error')} />,
     );
 
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
@@ -80,11 +66,7 @@ describe('ChartCard', () => {
 
   it('prioritizes error over empty state', () => {
     renderWithProviders(
-      <ChartCard
-        {...defaultProps}
-        error={new Error('Some error')}
-        isEmpty={true}
-      />,
+      <ChartCard {...defaultProps} error={new Error('Some error')} isEmpty={true} />,
     );
 
     expect(screen.getByText('Failed to load chart.')).toBeInTheDocument();

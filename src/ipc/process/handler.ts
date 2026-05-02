@@ -1,9 +1,5 @@
 import { logger } from '../../utils/logger';
-import {
-  bootstrapNestServer,
-  isNestServerRunning,
-  stopNestServer,
-} from '../../server/main';
+import { bootstrapNestServer, isNestServerRunning, stopNestServer } from '../../server/main';
 import { ConfigManager } from '../config/manager';
 
 /**
@@ -24,8 +20,6 @@ export async function closeGeminiNexus(): Promise<void> {
   logger.info('Stopping Gemini Nexus proxy server...');
   await stopNestServer();
 }
-
-
 
 /**
  * Waits for the Gemini Nexus process to exit.

@@ -48,8 +48,12 @@ export function ModelVisibilitySettings() {
 
   // Initialize model visibility and provider groupings from config
   useEffect(() => {
-    if (config?.model_visibility) { setTimeout(() => setModelVisibilityMap(config.model_visibility), 0); }
-    if (config?.provider_groupings_enabled !== undefined) { setTimeout(() => setProviderGroupingEnabled(config.provider_groupings_enabled), 0); }
+    if (config?.model_visibility) {
+      setTimeout(() => setModelVisibilityMap(config.model_visibility), 0);
+    }
+    if (config?.provider_groupings_enabled !== undefined) {
+      setTimeout(() => setProviderGroupingEnabled(config.provider_groupings_enabled), 0);
+    }
   }, [config?.model_visibility, config?.provider_groupings_enabled]);
 
   // Get all unique models from all accounts
@@ -184,7 +188,7 @@ export function ModelVisibilitySettings() {
               return (
                 <div
                   key={modelId}
-                  className="flex items-center space-x-3 rounded-lg p-2 hover:bg-white/[0.03] transition-colors"
+                  className="flex items-center space-x-3 rounded-lg p-2 transition-colors hover:bg-white/[0.03]"
                 >
                   <Checkbox
                     id={`model-${modelId}`}

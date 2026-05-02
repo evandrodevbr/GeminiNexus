@@ -54,7 +54,8 @@ export const ReplayTab: React.FC = () => {
     onError: (error) => {
       toast({
         title: t('proxy.advanced.replay.error'),
-        description: error instanceof Error ? error.message : t('proxy.advanced.replay.unknownError'),
+        description:
+          error instanceof Error ? error.message : t('proxy.advanced.replay.unknownError'),
         variant: 'destructive',
       });
       setSelectedRequestId(null);
@@ -76,7 +77,10 @@ export const ReplayTab: React.FC = () => {
     if (!status) return <Badge variant="outline">{t('proxy.advanced.replay.pending')}</Badge>;
     if (status >= 200 && status < 300) {
       return (
-        <Badge variant="default" className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20">
+        <Badge
+          variant="default"
+          className="border-emerald-500/20 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20"
+        >
           <CheckCircle className="mr-1 h-3 w-3" />
           {status}
         </Badge>
@@ -99,7 +103,9 @@ export const ReplayTab: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold">{t('proxy.advanced.replay.title')}</h3>
-          <p className="text-[13px] text-muted-foreground">{t('proxy.advanced.replay.description')}</p>
+          <p className="text-muted-foreground text-[13px]">
+            {t('proxy.advanced.replay.description')}
+          </p>
         </div>
         <Button
           variant="outline"
@@ -113,10 +119,12 @@ export const ReplayTab: React.FC = () => {
       </div>
 
       {/* Requests List */}
-      <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card">
-        <div className="border-b border-white/[0.06] px-5 py-4 space-y-1">
+      <div className="bg-card overflow-hidden rounded-xl border border-white/[0.06]">
+        <div className="space-y-1 border-b border-white/[0.06] px-5 py-4">
           <h4 className="text-[13px] font-semibold">{t('proxy.advanced.replay.recentRequests')}</h4>
-          <p className="text-xs text-muted-foreground">{t('proxy.advanced.replay.clickToReplay')}</p>
+          <p className="text-muted-foreground text-xs">
+            {t('proxy.advanced.replay.clickToReplay')}
+          </p>
         </div>
         <div className="p-5">
           {requestsLoading ? (
@@ -125,8 +133,8 @@ export const ReplayTab: React.FC = () => {
             </div>
           ) : requests.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.1]">
-              <Clock className="h-6 w-6 text-muted-foreground/30" />
-              <p className="text-[13px] text-muted-foreground">
+              <Clock className="text-muted-foreground/30 h-6 w-6" />
+              <p className="text-muted-foreground text-[13px]">
                 {t('proxy.advanced.replay.noRequests')}
               </p>
             </div>
@@ -143,7 +151,7 @@ export const ReplayTab: React.FC = () => {
                       <span className="text-[13px] font-medium">
                         {request.method} {request.endpoint}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {formatTimestamp(request.timestamp)}
                         {request.duration && ` · ${request.duration}ms`}
                       </span>

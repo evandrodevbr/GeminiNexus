@@ -193,7 +193,11 @@ export const cloudRouter = os.router({
       try {
         await CloudAccountRepo.setAccountProxy(input.accountId, input.proxyUrl);
       } catch (error: unknown) {
-        logger.error('[ORPC] setAccountProxy error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
+        logger.error(
+          '[ORPC] setAccountProxy error:',
+          extractErrorMessage(error),
+          error instanceof Error ? error.stack : undefined,
+        );
         throw error;
       }
     }),
@@ -204,7 +208,11 @@ export const cloudRouter = os.router({
 
       return result;
     } catch (error: unknown) {
-      logger.error('[ORPC] syncLocalAccount error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
+      logger.error(
+        '[ORPC] syncLocalAccount error:',
+        extractErrorMessage(error),
+        error instanceof Error ? error.stack : undefined,
+      );
       throw toSyncLocalAccountORPCError(error);
     }
   }),
@@ -274,7 +282,11 @@ export const cloudRouter = os.router({
       try {
         return await exportCloudAccounts(input.stripTokens);
       } catch (error: unknown) {
-        logger.error('[ORPC] exportCloudAccounts error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
+        logger.error(
+          '[ORPC] exportCloudAccounts error:',
+          extractErrorMessage(error),
+          error instanceof Error ? error.stack : undefined,
+        );
         throw error;
       }
     }),
@@ -298,7 +310,11 @@ export const cloudRouter = os.router({
       try {
         return await importCloudAccounts(input.jsonContent, input.strategy);
       } catch (error: unknown) {
-        logger.error('[ORPC] importCloudAccounts error:', extractErrorMessage(error), error instanceof Error ? error.stack : undefined);
+        logger.error(
+          '[ORPC] importCloudAccounts error:',
+          extractErrorMessage(error),
+          error instanceof Error ? error.stack : undefined,
+        );
         throw error;
       }
     }),

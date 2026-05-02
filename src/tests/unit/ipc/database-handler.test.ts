@@ -53,10 +53,13 @@ vi.mock('../../../utils/paths', () => ({
 }));
 
 vi.mock('../../../ipc/database/dbConnection', () => ({
-  openDrizzleConnection: vi.fn().mockImplementation(() => ({
-    raw: { close: mockClose },
-    orm: createMockOrm(),
-  }) as any),
+  openDrizzleConnection: vi.fn().mockImplementation(
+    () =>
+      ({
+        raw: { close: mockClose },
+        orm: createMockOrm(),
+      }) as any,
+  ),
 }));
 
 vi.mock('fs', () => ({
@@ -84,10 +87,13 @@ describe('Database Handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getGeminiNexusDbPaths).mockReturnValue(['/tmp/test.vscdb']);
-    vi.mocked(openDrizzleConnection).mockImplementation(() => ({
-      raw: { close: mockClose },
-      orm: createMockOrm(),
-    }) as any);
+    vi.mocked(openDrizzleConnection).mockImplementation(
+      () =>
+        ({
+          raw: { close: mockClose },
+          orm: createMockOrm(),
+        }) as any,
+    );
     vi.mocked(fs.existsSync).mockReturnValue(true);
   });
 
@@ -127,7 +133,9 @@ describe('Database Handler', () => {
         err.code = 'SQLITE_BUSY';
         throw err;
       });
-      expect(() => getDatabaseConnection()).toThrow('Database is locked. Please close Gemini Nexus before proceeding.');
+      expect(() => getDatabaseConnection()).toThrow(
+        'Database is locked. Please close Gemini Nexus before proceeding.',
+      );
     });
 
     it('should throw SQLITE_LOCKED error as user-friendly message', () => {
@@ -136,7 +144,9 @@ describe('Database Handler', () => {
         err.code = 'SQLITE_LOCKED';
         throw err;
       });
-      expect(() => getDatabaseConnection()).toThrow('Database is locked. Please close Gemini Nexus before proceeding.');
+      expect(() => getDatabaseConnection()).toThrow(
+        'Database is locked. Please close Gemini Nexus before proceeding.',
+      );
     });
   });
 

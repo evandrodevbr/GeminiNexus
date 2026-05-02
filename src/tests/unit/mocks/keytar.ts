@@ -14,6 +14,8 @@ export function findPassword(service: string): Promise<string | null> {
   return Promise.resolve('mock-found-password');
 }
 
-export function findCredentials(service: string): Promise<Array<{ account: string; password: string }>> {
+export function findCredentials(
+  service: string,
+): Promise<Array<{ account: string; password: string }>> {
   return Promise.resolve([]);
 }

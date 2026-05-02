@@ -13,9 +13,7 @@ describe('Button', () => {
   it('renders all variant styles', () => {
     const variants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'] as const;
     variants.forEach((variant) => {
-      const { container } = renderWithProviders(
-        <Button variant={variant}>{variant}</Button>,
-      );
+      const { container } = renderWithProviders(<Button variant={variant}>{variant}</Button>);
       expect(container.querySelector('button')).toBeInTheDocument();
     });
   });
@@ -23,9 +21,7 @@ describe('Button', () => {
   it('renders all size styles', () => {
     const sizes = ['default', 'sm', 'lg', 'icon'] as const;
     sizes.forEach((size) => {
-      const { container } = renderWithProviders(
-        <Button size={size}>{size}</Button>,
-      );
+      const { container } = renderWithProviders(<Button size={size}>{size}</Button>);
       expect(container.querySelector('button')).toBeInTheDocument();
     });
   });

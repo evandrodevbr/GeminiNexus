@@ -4,17 +4,20 @@
 > Date: 2026-04-22
 
 ## Current State
+
 The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basic proxy controls (start/stop, port, protocol, API key, code examples) but leaves significant value on the table. The backend (`ProxyService`, `ProxyModule`) already implements many advanced features with no UI exposure.
 
 ## Proposed New Features
 
 ### 1. Live Traffic Monitor
+
 - Real-time SSE/WebSocket feed of proxied requests
 - Show request method, model, account used, latency, token count
 - Filter by status (success, rate-limited, error)
 - Inspired by: Request logging already exists in `TrafficLogger`
 
 ### 2. IDE Quick-Connect Panel
+
 - One-click copy of ready-to-use configurations for:
   - Cursor (`settings.json` snippet)
   - OpenCode (`.env` snippet)
@@ -24,6 +27,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - QR code for mobile/quick access
 
 ### 3. API Playground
+
 - Built-in Swagger/OpenAPI UI or custom test panel
 - Pre-loaded with all supported endpoints:
   - `/v1/chat/completions` (OpenAI-compatible)
@@ -33,6 +37,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Show exact curl equivalent for every request
 
 ### 4. Health Dashboard
+
 - Real-time metrics cards:
   - Requests/minute
   - Average latency (p50, p95, p99)
@@ -43,6 +48,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Color-coded status indicators
 
 ### 5. Model Availability Status
+
 - Live grid showing which models are currently available
 - Per-model indicators:
   - Green: available
@@ -52,6 +58,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Collapse/expand by provider (Gemini, Anthropic)
 
 ### 6. Error Feed
+
 - Scrollable log of recent errors
 - Columns: timestamp, endpoint, model, account, error code, message
 - Click to expand full request/response
@@ -59,6 +66,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Export to JSON/CSV
 
 ### 7. Connection Visualizer
+
 - Diagram showing: IDE → Proxy → Account Pool → Upstream API
 - Animated flow dots representing live requests
 - Highlight currently active account
@@ -66,6 +74,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Simple but effective for understanding routing
 
 ### 8. One-Click Diagnostics
+
 - "Run Diagnostics" button that performs:
   - Check if proxy port is accessible
   - Test each configured account
@@ -75,6 +84,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 - Output: green checkmarks or detailed error report with fix suggestions
 
 ### 9. Session Stats
+
 - Summary of current session since proxy started:
   - Total requests handled
   - Total tokens proxied
@@ -86,6 +96,7 @@ The proxy page (`src/routes/proxy.tsx`) is a 724-line monolith that exposes basi
 ---
 
 ## Implementation Notes
+
 - Many of these features require new IPC endpoints in `src/ipc/proxy/router.ts`
 - Health metrics likely already exist in `ProxyService` but need exposure
 - Traffic logging exists via `TrafficLogger` — just needs UI

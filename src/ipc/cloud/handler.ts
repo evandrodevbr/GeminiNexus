@@ -685,7 +685,7 @@ export async function setAutoSwitchEnabled(enabled: boolean): Promise<void> {
   // Trigger an immediate check if enabled
   if (enabled) {
     const { CloudMonitorService } = await import('../../services/CloudMonitorService');
-      CloudMonitorService.poll().catch((err: unknown) =>
+    CloudMonitorService.poll().catch((err: unknown) =>
       logger.error('Failed to poll after enabling auto-switch', err),
     );
   }

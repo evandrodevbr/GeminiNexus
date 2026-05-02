@@ -58,9 +58,7 @@ describe('ProviderGroup', () => {
 
   it('displays model count', () => {
     renderWithProviders(<ProviderGroup {...defaultProps} />);
-    expect(
-      screen.getByText(/settings\.providerGroupings\.models/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/settings\.providerGroupings\.models/)).toBeInTheDocument();
   });
 
   it('shows quota bars and average percentage', () => {
@@ -88,9 +86,7 @@ describe('ProviderGroup', () => {
 
   it('calls onToggleCollapse when header button is clicked', () => {
     const onToggleCollapse = vi.fn();
-    renderWithProviders(
-      <ProviderGroup {...defaultProps} onToggleCollapse={onToggleCollapse} />,
-    );
+    renderWithProviders(<ProviderGroup {...defaultProps} onToggleCollapse={onToggleCollapse} />);
 
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -98,9 +94,7 @@ describe('ProviderGroup', () => {
   });
 
   it('renders color dot with provider color', () => {
-    const { container } = renderWithProviders(
-      <ProviderGroup {...defaultProps} />,
-    );
+    const { container } = renderWithProviders(<ProviderGroup {...defaultProps} />);
     const dot = container.querySelector('span[style*="background-color"]');
     expect(dot).toHaveAttribute('style', expect.stringContaining('#4285F4'));
   });
@@ -117,10 +111,7 @@ describe('ProviderGroup', () => {
 
   it('renders nothing when visibleModels is empty', () => {
     const { container } = renderWithProviders(
-      <ProviderGroup
-        {...defaultProps}
-        stats={createMockStats({ visibleModels: [] })}
-      />,
+      <ProviderGroup {...defaultProps} stats={createMockStats({ visibleModels: [] })} />,
     );
     expect(container.firstChild).toBeNull();
   });

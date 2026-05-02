@@ -196,16 +196,16 @@ Model:         gemini-3-flash
 
 ## 🛠️ Stack Tecnológico
 
-| Categoría | Tecnologías |
-|-----------|------------|
-| **Core** | Electron, React 19, TypeScript |
-| **Build** | Vite, Electron Forge |
-| **Estilos** | Tailwind CSS v4, Radix UI, Lucide Icons |
-| **Estado** | TanStack Query, TanStack Router |
-| **Backend** | NestJS (gateway interno), ORPC (RPC type-safe) |
-| **Base de Datos** | Better-SQLite3, Drizzle ORM |
-| **Gráficos** | Nivo (Line, Bar, Pie) |
-| **Testing** | Vitest, Playwright |
+| Categoría         | Tecnologías                                    |
+| ----------------- | ---------------------------------------------- |
+| **Core**          | Electron, React 19, TypeScript                 |
+| **Build**         | Vite, Electron Forge                           |
+| **Estilos**       | Tailwind CSS v4, Radix UI, Lucide Icons        |
+| **Estado**        | TanStack Query, TanStack Router                |
+| **Backend**       | NestJS (gateway interno), ORPC (RPC type-safe) |
+| **Base de Datos** | Better-SQLite3, Drizzle ORM                    |
+| **Gráficos**      | Nivo (Line, Bar, Pie)                          |
+| **Testing**       | Vitest, Playwright                             |
 
 ---
 

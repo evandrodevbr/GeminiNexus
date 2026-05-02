@@ -25,9 +25,7 @@ export class ProxyReplayService {
   private readonly buffer: ReplayEntry[] = [];
   private readonly maxSize = 20;
 
-  constructor(
-    @Inject(ProxyService) private readonly proxyService: ProxyService,
-  ) {
+  constructor(@Inject(ProxyService) private readonly proxyService: ProxyService) {
     registerProxyAdvancedService('proxyReplay', this);
   }
 

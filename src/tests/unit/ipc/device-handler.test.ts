@@ -99,9 +99,15 @@ describe('Device Handler', () => {
       expect(profile).toHaveProperty('devDeviceId');
       expect(profile).toHaveProperty('sqmId');
       expect(profile.machineId).toMatch(/^auth0\|user_[0-9a-f]{32}$/);
-      expect(profile.macMachineId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-      expect(profile.devDeviceId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-      expect(profile.sqmId).toMatch(/^\{[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\}$/);
+      expect(profile.macMachineId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(profile.devDeviceId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(profile.sqmId).toMatch(
+        /^\{[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\}$/,
+      );
       expect(profile.macMachineId).not.toBe(profile.devDeviceId);
     });
   });

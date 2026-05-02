@@ -146,12 +146,22 @@ describe('Proxy Advanced Handler', () => {
 
     it('should export as CSV', async () => {
       vi.mocked(TrafficLogsRepo.getAllForExport).mockReturnValueOnce([
-        { timestamp: 1000, direction: 'outbound', requestId: 'r1', endpoint: '/chat', method: 'POST', status: 200, durationMs: 50 },
+        {
+          timestamp: 1000,
+          direction: 'outbound',
+          requestId: 'r1',
+          endpoint: '/chat',
+          method: 'POST',
+          status: 200,
+          durationMs: 50,
+        },
       ]);
 
       const result = await exportTrafficLogs('csv');
       expect(result.success).toBe(true);
-      expect(result.data).toContain('timestamp,direction,requestId,endpoint,method,status,durationMs');
+      expect(result.data).toContain(
+        'timestamp,direction,requestId,endpoint,method,status,durationMs',
+      );
       expect(result.data).toContain('outbound');
     });
 

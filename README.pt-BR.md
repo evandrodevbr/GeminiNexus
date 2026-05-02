@@ -159,7 +159,6 @@ Ao usar IDEs e ferramentas de programação com IA, você já enfrentou estes pr
 
 ## 📸 Screenshots
 
-
 <p align="center">
   <img src="docs/assets/main.png" alt="Main" width="80%" />
 </p>
@@ -223,17 +222,17 @@ Model:         gemini-3-flash  (ou qualquer modelo mapeado)
 
 ## 🛠️ Stack Tecnológica
 
-| Categoria | Tecnologias |
-|-----------|------------|
-| **Core** | [Electron](https://www.electronjs.org/), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/) |
-| **Build** | [Vite](https://vitejs.dev/), [Electron Forge](https://www.electronforge.io/) |
-| **Estilização** | [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev/) |
-| **Estado** | [TanStack Query](https://tanstack.com/query/latest), [TanStack Router](https://tanstack.com/router/latest) |
-| **Backend** | [NestJS](https://nestjs.com/) (gateway interno), [ORPC](https://orpc.unnoq.com/) (RPC type-safe) |
-| **Banco de Dados** | [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3), [Drizzle ORM](https://orm.drizzle.team/) |
-| **Gráficos** | [Nivo](https://nivo.rocks/) (Line, Bar, Pie) |
-| **i18n** | [react-i18next](https://react.i18next.com/) |
-| **Testes** | [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/) |
+| Categoria          | Tecnologias                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| **Core**           | [Electron](https://www.electronjs.org/), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)  |
+| **Build**          | [Vite](https://vitejs.dev/), [Electron Forge](https://www.electronforge.io/)                                            |
+| **Estilização**    | [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev/) |
+| **Estado**         | [TanStack Query](https://tanstack.com/query/latest), [TanStack Router](https://tanstack.com/router/latest)              |
+| **Backend**        | [NestJS](https://nestjs.com/) (gateway interno), [ORPC](https://orpc.unnoq.com/) (RPC type-safe)                        |
+| **Banco de Dados** | [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3), [Drizzle ORM](https://orm.drizzle.team/)                  |
+| **Gráficos**       | [Nivo](https://nivo.rocks/) (Line, Bar, Pie)                                                                            |
+| **i18n**           | [react-i18next](https://react.i18next.com/)                                                                             |
+| **Testes**         | [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/)                                                    |
 
 ---
 

@@ -194,16 +194,16 @@ Model:         gemini-3-flash
 
 ## 🛠️ 技术栈
 
-| 分类 | 技术 |
-|------|------|
-| **核心** | Electron, React 19, TypeScript |
-| **构建** | Vite, Electron Forge |
-| **样式** | Tailwind CSS v4, Radix UI, Lucide Icons |
-| **状态** | TanStack Query, TanStack Router |
-| **后端** | NestJS (内部网关), ORPC (类型安全 RPC) |
-| **数据库** | Better-SQLite3, Drizzle ORM |
-| **图表** | Nivo (Line, Bar, Pie) |
-| **测试** | Vitest, Playwright |
+| 分类       | 技术                                    |
+| ---------- | --------------------------------------- |
+| **核心**   | Electron, React 19, TypeScript          |
+| **构建**   | Vite, Electron Forge                    |
+| **样式**   | Tailwind CSS v4, Radix UI, Lucide Icons |
+| **状态**   | TanStack Query, TanStack Router         |
+| **后端**   | NestJS (内部网关), ORPC (类型安全 RPC)  |
+| **数据库** | Better-SQLite3, Drizzle ORM             |
+| **图表**   | Nivo (Line, Bar, Pie)                   |
+| **测试**   | Vitest, Playwright                      |
 
 ---
 

@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
           'winston-daily-rotate-file',
           'moment',
           '@nestjs/microservices',
-          '@nestjs/websockets'
+          '@nestjs/websockets',
         ],
       },
     },

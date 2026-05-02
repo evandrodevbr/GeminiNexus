@@ -41,7 +41,9 @@ function color(code, text) {
 }
 
 function header(text) {
-  console.log(`\n${color(BOLD + MAGENTA, '══')} ${color(BOLD, text)} ${color(BOLD + MAGENTA, '══')}`);
+  console.log(
+    `\n${color(BOLD + MAGENTA, '══')} ${color(BOLD, text)} ${color(BOLD + MAGENTA, '══')}`,
+  );
 }
 
 function success(text) {
@@ -145,10 +147,13 @@ function checkWindows() {
 
     for (const vswhere of vswherePaths) {
       try {
-        const output = execSync(`"${vswhere}" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`, {
-          stdio: ['ignore', 'pipe', 'ignore'],
-          encoding: 'utf8',
-        }).trim();
+        const output = execSync(
+          `"${vswhere}" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`,
+          {
+            stdio: ['ignore', 'pipe', 'ignore'],
+            encoding: 'utf8',
+          },
+        ).trim();
 
         if (output) {
           vsFound = true;
@@ -163,10 +168,9 @@ function checkWindows() {
     // Check registry fallback
     if (!vsFound) {
       try {
-        execSync(
-          'reg query "HKLM\\SOFTWARE\\Microsoft\\VisualStudio\\SxS\\VS7" /v 17.0',
-          { stdio: 'ignore' },
-        );
+        execSync('reg query "HKLM\\SOFTWARE\\Microsoft\\VisualStudio\\SxS\\VS7" /v 17.0', {
+          stdio: 'ignore',
+        });
         vsFound = true;
         success('Visual Studio 2022 found (registry)');
       } catch {
@@ -198,7 +202,10 @@ function checkMacOS() {
   const results = { ok: true, missing: [] };
 
   try {
-    const xcodePath = execSync('xcode-select -p', { stdio: ['ignore', 'pipe', 'ignore'], encoding: 'utf8' }).trim();
+    const xcodePath = execSync('xcode-select -p', {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
     if (xcodePath) {
       success(`Xcode CLT found at: ${xcodePath}`);
     }
@@ -323,14 +330,26 @@ async function installWindows() {
   // Check if winget is available
   if (!commandExists('winget')) {
     console.log('');
-    console.log(color(RED, '  winget not found. Please install Visual Studio Build Tools manually:'));
-    console.log(color(CYAN, '  https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022'));
+    console.log(
+      color(RED, '  winget not found. Please install Visual Studio Build Tools manually:'),
+    );
+    console.log(
+      color(
+        CYAN,
+        '  https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022',
+      ),
+    );
     console.log('');
     console.log('  During installation, select:');
     console.log(color(BOLD, '    "Desktop development with C++" workload'));
     console.log('');
     console.log('  Or install via PowerShell (as Administrator):');
-    console.log(color(DIM, '    winget install Microsoft.VisualStudio.2022.BuildTools --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"'));
+    console.log(
+      color(
+        DIM,
+        '    winget install Microsoft.VisualStudio.2022.BuildTools --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"',
+      ),
+    );
     return false;
   }
 
@@ -398,7 +417,9 @@ async function installLinux() {
     }
 
     const status = await runCommand('sudo', [
-      'apt-get', 'install', '-y',
+      'apt-get',
+      'install',
+      '-y',
       'build-essential',
       'python3',
       'libsecret-1-dev',
@@ -421,7 +442,10 @@ async function installLinux() {
     }
 
     const status = await runCommand('sudo', [
-      'pacman', '-S', '--needed', '--noconfirm',
+      'pacman',
+      '-S',
+      '--needed',
+      '--noconfirm',
       'base-devel',
       'python',
       'libsecret',
@@ -443,7 +467,9 @@ async function installLinux() {
     }
 
     const status = await runCommand('sudo', [
-      'dnf', 'install', '-y',
+      'dnf',
+      'install',
+      '-y',
       'gcc-c++',
       'make',
       'python3',
@@ -471,7 +497,9 @@ async function installLinux() {
   console.log('    - libsecret development headers (for keytar)');
   console.log('    - pkg-config');
   console.log('');
-  console.log('  Install them using your distribution package manager, then run npm install again.');
+  console.log(
+    '  Install them using your distribution package manager, then run npm install again.',
+  );
   return false;
 }
 
@@ -520,7 +548,9 @@ async function main() {
 
   // ── Missing tools ──
   console.log('');
-  error('Some build tools are missing. Native modules like better-sqlite3 and keytar require compilation.');
+  error(
+    'Some build tools are missing. Native modules like better-sqlite3 and keytar require compilation.',
+  );
 
   if (checkOnly) {
     console.log('');
@@ -528,7 +558,9 @@ async function main() {
     warn('Run "npm run setup" to install them automatically, or install manually:');
     printManualInstructions(platform, results.missing);
     console.log('');
-    dim('npm install succeeded, but npm start / electron-rebuild will fail until build tools are installed.');
+    dim(
+      'npm install succeeded, but npm start / electron-rebuild will fail until build tools are installed.',
+    );
     // Don't exit with error - allow npm install to succeed (prebuilt binaries may work)
     return;
   }
@@ -572,13 +604,23 @@ function printManualInstructions(platform, missing) {
   switch (platform) {
     case 'win32':
       console.log('  1. Download Visual Studio 2022 Build Tools:');
-      console.log(color(CYAN, '     https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022'));
+      console.log(
+        color(
+          CYAN,
+          '     https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022',
+        ),
+      );
       console.log('');
       console.log('  2. Run the installer and select:');
       console.log(color(BOLD, '     "Desktop development with C++"'));
       console.log('');
       console.log('  3. Or install via PowerShell (as Administrator):');
-      console.log(color(DIM, '     winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"'));
+      console.log(
+        color(
+          DIM,
+          '     winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"',
+        ),
+      );
       console.log('');
       console.log('  4. Restart your terminal after installation.');
       break;
@@ -594,13 +636,22 @@ function printManualInstructions(platform, missing) {
       const distro = detectLinuxDistro();
       if (distro === 'debian') {
         console.log('  Run:');
-        console.log(color(DIM, '    sudo apt-get install -y build-essential python3 libsecret-1-dev pkg-config'));
+        console.log(
+          color(
+            DIM,
+            '    sudo apt-get install -y build-essential python3 libsecret-1-dev pkg-config',
+          ),
+        );
       } else if (distro === 'arch') {
         console.log('  Run:');
-        console.log(color(DIM, '    sudo pacman -S --needed base-devel python libsecret pkg-config'));
+        console.log(
+          color(DIM, '    sudo pacman -S --needed base-devel python libsecret pkg-config'),
+        );
       } else if (distro === 'fedora') {
         console.log('  Run:');
-        console.log(color(DIM, '    sudo dnf install -y gcc-c++ make python3 libsecret-devel pkg-config'));
+        console.log(
+          color(DIM, '    sudo dnf install -y gcc-c++ make python3 libsecret-devel pkg-config'),
+        );
       } else {
         console.log('  Install: C/C++ compiler, make, python3, libsecret-dev, pkg-config');
       }

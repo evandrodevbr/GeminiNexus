@@ -4,7 +4,9 @@
 > Date: 2026-04-22
 
 ## Current State
+
 `src/routes/proxy.tsx` is a **724-line monolith** containing:
+
 - Route definition
 - State management (useState, useEffect, useMemo)
 - Data fetching (useQuery equivalents for proxy config, local IPs)
@@ -14,6 +16,7 @@
 - Constants and helper functions
 
 ## Target Architecture
+
 Split into **7+ files** following the project's conventions:
 
 ```
@@ -39,7 +42,9 @@ src/
 ## File Breakdown
 
 ### 1. `src/hooks/useProxyConfig.ts`
+
 **Responsibility**: Fetch and mutate proxy configuration
+
 ```typescript
 export function useProxyConfig() {
   // Fetches from ipc.client.proxy.getConfig()
@@ -49,7 +54,9 @@ export function useProxyConfig() {
 ```
 
 ### 2. `src/hooks/useLocalIps.ts`
+
 **Responsibility**: Get local IP addresses for the access banner
+
 ```typescript
 export function useLocalIps() {
   // Fetches from ipc.client.system.getLocalIps()
@@ -58,7 +65,9 @@ export function useLocalIps() {
 ```
 
 ### 3. `src/hooks/useProxyExamples.ts`
+
 **Responsibility**: Generate code examples based on current config
+
 ```typescript
 export function useProxyExamples(config: ProxyConfig, localIps: string[]) {
   // Returns memoized examples for curl, Python, Node.js
@@ -67,7 +76,9 @@ export function useProxyExamples(config: ProxyConfig, localIps: string[]) {
 ```
 
 ### 4. `src/components/proxy/ProxyServiceCard.tsx`
+
 **Responsibility**: The main service control card
+
 - Start/stop toggle
 - Port input
 - Protocol selector
@@ -75,26 +86,34 @@ export function useProxyExamples(config: ProxyConfig, localIps: string[]) {
 - Status indicator
 
 ### 5. `src/components/proxy/ProxyModelMappingCard.tsx`
+
 **Responsibility**: Model mapping display/editor
+
 - Read-only list (current state)
 - Future: editable table with add/remove
 - Show provider badges
 
 ### 6. `src/components/proxy/ProxyUsageExamplesCard.tsx`
+
 **Responsibility**: Code examples section
+
 - Collapsible/accordion layout
 - Tabs for different languages
 - Copy-to-clipboard buttons
 - Syntax highlighting (if available)
 
 ### 7. `src/components/proxy/ProxyLocalAccessBanner.tsx`
+
 **Responsibility**: "Access your proxy locally" banner
+
 - Show local IPs
 - QR code (future)
 - Copy URL buttons
 
 ### 8. `src/constants/proxy.ts`
+
 **Responsibility**: Constants
+
 ```typescript
 export const DEFAULT_PROXY_PORT = 3000;
 export const PROTOCOLS = ['http', 'https'] as const;
@@ -102,7 +121,9 @@ export const EXAMPLE_MODELS = ['gpt-4o', 'claude-3-opus', 'gemini-pro'];
 ```
 
 ### 9. `src/utils/proxy.ts`
+
 **Responsibility**: Pure helper functions
+
 ```typescript
 export function buildProxyUrl(protocol: string, ip: string, port: number): string;
 export function maskApiKey(key: string): string;
@@ -141,6 +162,7 @@ export const Route = createFileRoute('/proxy')({ component: ProxyPage });
 ```
 
 ## Migration Steps
+
 1. Create new files (hooks, components, constants, utils)
 2. Move code from `proxy.tsx` to appropriate files
 3. Update imports in `proxy.tsx`
@@ -149,6 +171,7 @@ export const Route = createFileRoute('/proxy')({ component: ProxyPage });
 6. Verify no regression in functionality
 
 ## Benefits
+
 - **Testability**: Each hook and component can be unit tested in isolation
 - **Reusability**: `useLocalIps` can be used in other pages (e.g., settings)
 - **Maintainability**: 50-line route file vs. 724-line monolith

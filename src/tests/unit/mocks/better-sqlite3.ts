@@ -30,17 +30,13 @@ export class MockDatabase {
         const values = params.length === 1 && typeof params[0] === 'object' ? params[0] : params;
         const rows = this.data.get(table) || [];
         if (!values || (Array.isArray(values) && values.length === 0)) return rows[0] ?? null;
-        return rows.find((row) =>
-          Object.keys(values).every((key) => row[key] === values[key]),
-        );
+        return rows.find((row) => Object.keys(values).every((key) => row[key] === values[key]));
       }),
       all: vi.fn().mockImplementation((...params: any[]) => {
         const values = params.length === 1 && typeof params[0] === 'object' ? params[0] : params;
         const rows = this.data.get(table) || [];
         if (!values || (Array.isArray(values) && values.length === 0)) return rows;
-        return rows.filter((row) =>
-          Object.keys(values).every((key) => row[key] === values[key]),
-        );
+        return rows.filter((row) => Object.keys(values).every((key) => row[key] === values[key]));
       }),
     };
   });

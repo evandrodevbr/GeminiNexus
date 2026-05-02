@@ -63,17 +63,17 @@ npm start
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start the app in development mode (Electron + Vite HMR) |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Check formatting with Prettier |
-| `npm run format:write` | Auto-format code with Prettier |
-| `npm run type-check` | Run TypeScript type check |
-| `npm test` | Run unit tests with Vitest |
-| `npm run test:e2e` | Run E2E tests with Playwright |
-| `npm run test:all` | Run all tests (unit + E2E) |
-| `npm run make` | Build production installers |
+| Command                | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
+| `npm start`            | Start the app in development mode (Electron + Vite HMR) |
+| `npm run lint`         | Run ESLint                                              |
+| `npm run format`       | Check formatting with Prettier                          |
+| `npm run format:write` | Auto-format code with Prettier                          |
+| `npm run type-check`   | Run TypeScript type check                               |
+| `npm test`             | Run unit tests with Vitest                              |
+| `npm run test:e2e`     | Run E2E tests with Playwright                           |
+| `npm run test:all`     | Run all tests (unit + E2E)                              |
+| `npm run make`         | Build production installers                             |
 
 ### Project Structure
 
@@ -135,17 +135,17 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Commits 
 
 ### Types
 
-| Type | Description | Release |
-|------|-------------|---------|
-| `feat` | A new feature | **minor** |
-| `fix` | A bug fix | **patch** |
-| `perf` | Performance improvement | **patch** |
-| `refactor` | Code change (no bug fix or feature) | **patch** |
-| `docs` | Documentation only | no release |
-| `style` | Formatting, whitespace | no release |
-| `test` | Adding or fixing tests | no release |
-| `chore` | Build process, tooling | no release |
-| `ci` | CI/CD changes | no release |
+| Type       | Description                         | Release    |
+| ---------- | ----------------------------------- | ---------- |
+| `feat`     | A new feature                       | **minor**  |
+| `fix`      | A bug fix                           | **patch**  |
+| `perf`     | Performance improvement             | **patch**  |
+| `refactor` | Code change (no bug fix or feature) | **patch**  |
+| `docs`     | Documentation only                  | no release |
+| `style`    | Formatting, whitespace              | no release |
+| `test`     | Adding or fixing tests              | no release |
+| `chore`    | Build process, tooling              | no release |
+| `ci`       | CI/CD changes                       | no release |
 
 ### Breaking Changes
 

@@ -98,7 +98,7 @@ export const CapabilitiesTab: React.FC = () => {
           <h3 className="text-base font-semibold">
             {t('proxy.advanced.capabilities.title', 'Model Capabilities')}
           </h3>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-muted-foreground text-[13px]">
             {t('proxy.advanced.capabilities.description', 'Discover what each model can do')}
           </p>
         </div>
@@ -113,7 +113,7 @@ export const CapabilitiesTab: React.FC = () => {
       {/* Content */}
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
         </div>
       ) : (
         <div className="space-y-8">
@@ -121,11 +121,11 @@ export const CapabilitiesTab: React.FC = () => {
             <div key={provider} className="space-y-3">
               {/* Provider header */}
               <div className="flex items-center gap-3">
-                <h4 className="text-[13px] font-semibold tracking-wide uppercase text-muted-foreground">
+                <h4 className="text-muted-foreground text-[13px] font-semibold tracking-wide uppercase">
                   {provider}
                 </h4>
                 <div className="h-px flex-1 bg-white/[0.06]" />
-                <span className="text-[11px] text-muted-foreground/60 tabular-nums">
+                <span className="text-muted-foreground/60 text-[11px] tabular-nums">
                   {groupedModels[provider].length}
                 </span>
               </div>
@@ -140,23 +140,23 @@ export const CapabilitiesTab: React.FC = () => {
                   return (
                     <div
                       key={model.id}
-                      className="group flex flex-col rounded-xl border border-white/[0.06] bg-card p-4 transition-all hover:border-white/[0.12] hover:bg-white/[0.02]"
+                      className="group bg-card flex flex-col rounded-xl border border-white/[0.06] p-4 transition-all hover:border-white/[0.12] hover:bg-white/[0.02]"
                     >
                       {/* Model header */}
                       <div className="mb-3 space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <h5
-                            className="text-[13px] font-semibold leading-tight truncate"
+                            className="truncate text-[13px] leading-tight font-semibold"
                             title={model.displayName || model.id}
                           >
                             {model.displayName || model.id}
                           </h5>
-                          <span className="shrink-0 text-[10px] font-medium text-muted-foreground/60 rounded-md bg-white/[0.04] px-1.5 py-0.5">
+                          <span className="text-muted-foreground/60 shrink-0 rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium">
                             {enabledCount}/{totalCount}
                           </span>
                         </div>
                         <p
-                          className="font-mono text-[11px] text-muted-foreground truncate"
+                          className="text-muted-foreground truncate font-mono text-[11px]"
                           title={model.id}
                         >
                           {model.id}
@@ -164,7 +164,7 @@ export const CapabilitiesTab: React.FC = () => {
                       </div>
 
                       {/* Capability pills */}
-                      <div className="flex flex-wrap gap-1.5 mb-3">
+                      <div className="mb-3 flex flex-wrap gap-1.5">
                         {Object.entries(model.capabilities).map(([key, supported]) => {
                           const iconKey = key as keyof typeof CAPABILITY_ICONS;
                           const Icon = CAPABILITY_ICONS[iconKey];
@@ -174,8 +174,8 @@ export const CapabilitiesTab: React.FC = () => {
                               key={key}
                               className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
                                 supported
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15'
-                                  : 'bg-white/[0.02] text-muted-foreground/50 border border-white/[0.04]'
+                                  ? 'border border-emerald-500/15 bg-emerald-500/10 text-emerald-400'
+                                  : 'text-muted-foreground/50 border border-white/[0.04] bg-white/[0.02]'
                               }`}
                               title={label}
                             >
@@ -190,17 +190,17 @@ export const CapabilitiesTab: React.FC = () => {
                       {hasLimits && (
                         <div className="mt-auto flex flex-wrap gap-1.5 border-t border-white/[0.04] pt-3">
                           {model.limits.maxTokens != null && (
-                            <span className="inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                            <span className="text-muted-foreground inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px]">
                               CTX {formatTokenCount(model.limits.maxTokens)}
                             </span>
                           )}
                           {model.limits.maxOutputTokens != null && (
-                            <span className="inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                            <span className="text-muted-foreground inline-flex items-center rounded-md bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px]">
                               OUT {formatTokenCount(model.limits.maxOutputTokens)}
                             </span>
                           )}
                           {model.limits.thinkingBudget != null && (
-                            <span className="inline-flex items-center rounded-md bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 font-mono text-[10px] text-blue-300">
+                            <span className="inline-flex items-center rounded-md border border-blue-500/15 bg-blue-500/10 px-1.5 py-0.5 font-mono text-[10px] text-blue-300">
                               THINK {formatTokenCount(model.limits.thinkingBudget)}
                             </span>
                           )}
@@ -215,12 +215,10 @@ export const CapabilitiesTab: React.FC = () => {
 
           {models.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/[0.1] py-16 text-center">
-              <Layers className="h-8 w-8 text-muted-foreground/30" />
+              <Layers className="text-muted-foreground/30 h-8 w-8" />
               <div className="space-y-1">
                 <p className="text-[13px] font-medium">No models found</p>
-                <p className="text-xs text-muted-foreground">
-                  Check your provider configurations
-                </p>
+                <p className="text-muted-foreground text-xs">Check your provider configurations</p>
               </div>
             </div>
           )}

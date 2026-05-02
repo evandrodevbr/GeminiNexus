@@ -25,16 +25,8 @@ vi.mock('../../ipc/config/manager', () => ({
 }));
 
 // Import after mocks are set up
-import {
-  isProcessRunning,
-  closeGeminiNexus,
-  startGeminiNexus,
-} from '../../ipc/process/handler';
-import {
-  isNestServerRunning,
-  stopNestServer,
-  bootstrapNestServer,
-} from '../../server/main';
+import { isProcessRunning, closeGeminiNexus, startGeminiNexus } from '../../ipc/process/handler';
+import { isNestServerRunning, stopNestServer, bootstrapNestServer } from '../../server/main';
 import { ConfigManager } from '../../ipc/config/manager';
 
 describe('Process Handler', () => {

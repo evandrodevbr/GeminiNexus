@@ -15,54 +15,40 @@ describe('StatCard', () => {
     vi.restoreAllMocks();
   });
   it('renders label and value', () => {
-    renderWithProviders(
-      <StatCard label="Total Tokens" value={12345} icon={Activity} />,
-    );
+    renderWithProviders(<StatCard label="Total Tokens" value={12345} icon={Activity} />);
     expect(screen.getByText('Total Tokens')).toBeInTheDocument();
     expect(screen.getByText('12,345')).toBeInTheDocument();
   });
 
   it('renders string values correctly', () => {
-    renderWithProviders(
-      <StatCard label="Status" value="Active" icon={Zap} />,
-    );
+    renderWithProviders(<StatCard label="Status" value="Active" icon={Zap} />);
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
   it('formats number values with locale string', () => {
-    renderWithProviders(
-      <StatCard label="Requests" value={1000000} icon={TrendingUp} />,
-    );
+    renderWithProviders(<StatCard label="Requests" value={1000000} icon={TrendingUp} />);
     expect(screen.getByText('1,000,000')).toBeInTheDocument();
   });
 
   it('shows skeleton when isLoading is true', () => {
-    renderWithProviders(
-      <StatCard label="Loading" value={0} icon={Users} isLoading />,
-    );
+    renderWithProviders(<StatCard label="Loading" value={0} icon={Users} isLoading />);
     expect(screen.queryByText('0')).not.toBeInTheDocument();
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('does not show skeleton when isLoading is false', () => {
-    renderWithProviders(
-      <StatCard label="Loaded" value={42} icon={Activity} isLoading={false} />,
-    );
+    renderWithProviders(<StatCard label="Loaded" value={42} icon={Activity} isLoading={false} />);
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(document.querySelector('.animate-pulse')).not.toBeInTheDocument();
   });
 
   it('renders icon element', () => {
-    renderWithProviders(
-      <StatCard label="With Icon" value={100} icon={Zap} />,
-    );
+    renderWithProviders(<StatCard label="With Icon" value={100} icon={Zap} />);
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('applies custom className', () => {
-    renderWithProviders(
-      <StatCard label="Styled" value={1} icon={Activity} className="my-stat" />,
-    );
+    renderWithProviders(<StatCard label="Styled" value={1} icon={Activity} className="my-stat" />);
     // The wrapper div uses rounded-xl, find it by that selector
     const wrapper = screen.getByText('Styled').closest('.rounded-xl');
     expect(wrapper).toHaveClass('my-stat');
@@ -109,17 +95,13 @@ describe('StatCard', () => {
   });
 
   it('has uppercase label styling', () => {
-    renderWithProviders(
-      <StatCard label="Uppercase Test" value={1} icon={Activity} />,
-    );
+    renderWithProviders(<StatCard label="Uppercase Test" value={1} icon={Activity} />);
     const label = screen.getByText('Uppercase Test');
     expect(label).toHaveClass('uppercase');
   });
 
   it('has mono font for value', () => {
-    renderWithProviders(
-      <StatCard label="Mono" value={999} icon={Activity} />,
-    );
+    renderWithProviders(<StatCard label="Mono" value={999} icon={Activity} />);
     const value = screen.getByText('999');
     expect(value).toHaveClass('font-mono');
   });

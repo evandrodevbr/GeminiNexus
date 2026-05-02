@@ -92,7 +92,7 @@ function SettingsPage() {
 
         {/* --- GENERAL TAB --- */}
         <TabsContent value="general" className="space-y-5">
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.appearance.title')}</CardTitle>
               <CardDescription>{t('settings.appearance.description')}</CardDescription>
@@ -139,7 +139,7 @@ function SettingsPage() {
           </Card>
 
           {/* Account Settings Card */}
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.account.title')}</CardTitle>
               <CardDescription>{t('settings.account.description')}</CardDescription>
@@ -149,7 +149,9 @@ function SettingsPage() {
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-1">
                   <Label>{t('settings.account.auto_refresh')}</Label>
-                  <p className="text-muted-foreground text-xs">{t('settings.account.auto_refresh_desc')}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {t('settings.account.auto_refresh_desc')}
+                  </p>
                 </div>
                 <Switch
                   checked={config?.auto_refresh || false}
@@ -165,7 +167,9 @@ function SettingsPage() {
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-1">
                   <Label>{t('settings.account.auto_sync')}</Label>
-                  <p className="text-muted-foreground text-xs">{t('settings.account.auto_sync_desc')}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {t('settings.account.auto_sync_desc')}
+                  </p>
                 </div>
                 <Switch
                   checked={config?.auto_sync || false}
@@ -180,7 +184,7 @@ function SettingsPage() {
           </Card>
 
           {isAutoStartSupported && (
-            <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+            <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
               <CardHeader className="px-0 pt-4">
                 <CardTitle>{t('settings.startup.title')}</CardTitle>
                 <CardDescription>{t('settings.startup.description')}</CardDescription>
@@ -211,7 +215,7 @@ function SettingsPage() {
             </Card>
           )}
 
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.about.title')}</CardTitle>
               <CardDescription>{t('settings.about.description')}</CardDescription>
@@ -230,7 +234,7 @@ function SettingsPage() {
                 <div className="text-muted-foreground">{t('action.openLogs')}</div>
                 <button
                   onClick={() => openLogDirectory()}
-                  className="flex items-center gap-2 font-medium text-accent hover:text-accent/80 transition-colors"
+                  className="text-accent hover:text-accent/80 flex items-center gap-2 font-medium transition-colors"
                 >
                   <FolderOpen className="h-4 w-4" />
                   <span>{t('settings.openLogDir')}</span>
@@ -240,7 +244,7 @@ function SettingsPage() {
           </Card>
 
           {/* Privacy & Error Reporting Card */}
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.privacy.title')}</CardTitle>
               <CardDescription>{t('settings.privacy.description')}</CardDescription>
@@ -267,7 +271,7 @@ function SettingsPage() {
           </Card>
 
           {/* Notifications Card */}
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.notifications.title')}</CardTitle>
               <CardDescription>{t('settings.notifications.description')}</CardDescription>
@@ -327,7 +331,7 @@ function SettingsPage() {
                         }
                       }
                     }}
-                    className="w-16 rounded-lg border border-white/[0.08] bg-muted/50 px-2 py-1 text-center text-[13px] text-foreground focus:outline-none focus:border-accent/50"
+                    className="bg-muted/50 text-foreground focus:border-accent/50 w-16 rounded-lg border border-white/[0.08] px-2 py-1 text-center text-[13px] focus:outline-none"
                   />
                   <span className="text-muted-foreground text-sm">%</span>
                 </div>
@@ -343,7 +347,7 @@ function SettingsPage() {
 
         {/* --- PROXY TAB (Upstream Proxy Config Only) --- */}
         <TabsContent value="proxy" className="space-y-5">
-          <Card className="bg-transparent border-0 shadow-none rounded-none border-b border-white/5 last:border-0 pb-6">
+          <Card className="rounded-none border-0 border-b border-white/5 bg-transparent pb-6 shadow-none last:border-0">
             <CardHeader className="px-0 pt-4">
               <CardTitle>{t('settings.proxy.title')}</CardTitle>
               <CardDescription>{t('settings.proxy.description')}</CardDescription>

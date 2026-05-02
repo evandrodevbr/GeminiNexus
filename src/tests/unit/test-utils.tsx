@@ -10,11 +10,7 @@ export function createProviderWrapper() {
   const queryClient = createTestQueryClient();
 
   return function AllProviders({ children }: { children: React.ReactNode }) {
-    return React.createElement(
-      QueryClientProvider,
-      { client: queryClient },
-      children,
-    );
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
   };
 }
 
@@ -32,17 +28,19 @@ export function renderWithProviders(
 /**
  * Factory for creating mock cloud accounts.
  */
-export function createMockAccount(overrides?: Partial<{
-  id: string;
-  email: string;
-  name: string;
-  avatar: string;
-  status: string;
-  quota: number;
-  quotaUsed: number;
-  provider: string;
-  isActive: boolean;
-}>) {
+export function createMockAccount(
+  overrides?: Partial<{
+    id: string;
+    email: string;
+    name: string;
+    avatar: string;
+    status: string;
+    quota: number;
+    quotaUsed: number;
+    provider: string;
+    isActive: boolean;
+  }>,
+) {
   return {
     id: 'acc-1',
     email: 'test@example.com',
@@ -60,15 +58,17 @@ export function createMockAccount(overrides?: Partial<{
 /**
  * Factory for creating mock usage records.
  */
-export function createMockUsage(overrides?: Partial<{
-  id: number;
-  accountId: string;
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  timestamp: Date;
-}>) {
+export function createMockUsage(
+  overrides?: Partial<{
+    id: number;
+    accountId: string;
+    model: string;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    timestamp: Date;
+  }>,
+) {
   return {
     id: 1,
     accountId: 'acc-1',
@@ -84,14 +84,16 @@ export function createMockUsage(overrides?: Partial<{
 /**
  * Factory for creating mock proxy metrics.
  */
-export function createMockProxyMetrics(overrides?: Partial<{
-  id: number;
-  endpoint: string;
-  method: string;
-  statusCode: number;
-  latencyMs: number;
-  timestamp: Date;
-}>) {
+export function createMockProxyMetrics(
+  overrides?: Partial<{
+    id: number;
+    endpoint: string;
+    method: string;
+    statusCode: number;
+    latencyMs: number;
+    timestamp: Date;
+  }>,
+) {
   return {
     id: 1,
     endpoint: '/v1/chat/completions',
@@ -106,13 +108,15 @@ export function createMockProxyMetrics(overrides?: Partial<{
 /**
  * Factory for creating mock app config.
  */
-export function createMockConfig(overrides?: Partial<{
-  proxyPort: number;
-  proxyTimeout: number;
-  theme: string;
-  language: string;
-  autoSwitch: boolean;
-}>) {
+export function createMockConfig(
+  overrides?: Partial<{
+    proxyPort: number;
+    proxyTimeout: number;
+    theme: string;
+    language: string;
+    autoSwitch: boolean;
+  }>,
+) {
   return {
     proxyPort: 3000,
     proxyTimeout: 30000,

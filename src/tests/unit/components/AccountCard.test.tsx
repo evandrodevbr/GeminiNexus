@@ -22,7 +22,13 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuTrigger: ({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) => {
+  DropdownMenuTrigger: ({
+    children,
+    asChild,
+  }: {
+    children: React.ReactNode;
+    asChild?: boolean;
+  }) => {
     if (asChild) {
       return <>{children}</>;
     }
@@ -40,12 +46,7 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
     onClick?: (e: React.MouseEvent) => void;
     disabled?: boolean;
   }) => (
-    <button
-      data-testid="dropdown-item"
-      onClick={onClick}
-      disabled={disabled}
-      type="button"
-    >
+    <button data-testid="dropdown-item" onClick={onClick} disabled={disabled} type="button">
       {children}
     </button>
   ),
@@ -101,10 +102,7 @@ describe('AccountCard', () => {
 
   it('shows avatar fallback with initials when avatar_url is missing', () => {
     renderWithProviders(
-      <AccountCard
-        {...defaultProps}
-        account={createMockAccount({ avatar_url: undefined })}
-      />,
+      <AccountCard {...defaultProps} account={createMockAccount({ avatar_url: undefined })} />,
     );
     expect(screen.getByText('TU')).toBeInTheDocument();
   });
@@ -154,9 +152,7 @@ describe('AccountCard', () => {
 
   it('does not trigger switch when isCurrent is true', () => {
     const onSwitch = vi.fn();
-    renderWithProviders(
-      <AccountCard {...defaultProps} isCurrent={true} onSwitch={onSwitch} />,
-    );
+    renderWithProviders(<AccountCard {...defaultProps} isCurrent={true} onSwitch={onSwitch} />);
 
     const card = document.querySelector('[class*="cursor-pointer"]');
     expect(card).not.toBeInTheDocument();
@@ -165,9 +161,7 @@ describe('AccountCard', () => {
 
   it('does not trigger switch when isSwitching is true', () => {
     const onSwitch = vi.fn();
-    renderWithProviders(
-      <AccountCard {...defaultProps} isSwitching={true} onSwitch={onSwitch} />,
-    );
+    renderWithProviders(<AccountCard {...defaultProps} isSwitching={true} onSwitch={onSwitch} />);
 
     const card = document.querySelector('[class*="pointer-events-none"]');
     expect(card).toBeInTheDocument();
@@ -175,34 +169,26 @@ describe('AccountCard', () => {
 
   it('does not trigger switch when isDeleting is true', () => {
     const onSwitch = vi.fn();
-    renderWithProviders(
-      <AccountCard {...defaultProps} isDeleting={true} onSwitch={onSwitch} />,
-    );
+    renderWithProviders(<AccountCard {...defaultProps} isDeleting={true} onSwitch={onSwitch} />);
 
     const card = document.querySelector('[class*="pointer-events-none"]');
     expect(card).toBeInTheDocument();
   });
 
   it('applies reduced opacity and pointer-events-none when switching', () => {
-    const { container } = renderWithProviders(
-      <AccountCard {...defaultProps} isSwitching={true} />,
-    );
+    const { container } = renderWithProviders(<AccountCard {...defaultProps} isSwitching={true} />);
     const card = container.querySelector('[class*="opacity-60"]');
     expect(card).toBeInTheDocument();
   });
 
   it('applies reduced opacity and pointer-events-none when deleting', () => {
-    const { container } = renderWithProviders(
-      <AccountCard {...defaultProps} isDeleting={true} />,
-    );
+    const { container } = renderWithProviders(<AccountCard {...defaultProps} isDeleting={true} />);
     const card = container.querySelector('[class*="opacity-60"]');
     expect(card).toBeInTheDocument();
   });
 
   it('applies primary border styling when isCurrent is true', () => {
-    const { container } = renderWithProviders(
-      <AccountCard {...defaultProps} isCurrent={true} />,
-    );
+    const { container } = renderWithProviders(<AccountCard {...defaultProps} isCurrent={true} />);
     const card = container.querySelector('[class*="border-primary/50"]');
     expect(card).toBeInTheDocument();
   });

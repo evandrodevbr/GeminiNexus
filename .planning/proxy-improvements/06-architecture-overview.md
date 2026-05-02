@@ -6,41 +6,45 @@
 ## File Map
 
 ### Frontend
-| File | Lines | Role |
-|------|-------|------|
-| `src/routes/proxy.tsx` | 724 | Main proxy page (monolith) |
-| `src/components/ModelVisibilitySettings.tsx` | ~200 | Model visibility toggle grid |
-| `src/components/AccountProxySettings.tsx` | ~180 | Per-account proxy configuration |
-| `src/hooks/useCloudAccounts.ts` | ~50 | Fetches cloud accounts for proxy routing |
+
+| File                                         | Lines | Role                                     |
+| -------------------------------------------- | ----- | ---------------------------------------- |
+| `src/routes/proxy.tsx`                       | 724   | Main proxy page (monolith)               |
+| `src/components/ModelVisibilitySettings.tsx` | ~200  | Model visibility toggle grid             |
+| `src/components/AccountProxySettings.tsx`    | ~180  | Per-account proxy configuration          |
+| `src/hooks/useCloudAccounts.ts`              | ~50   | Fetches cloud accounts for proxy routing |
 
 ### Backend (NestJS)
-| File | Role |
-|------|------|
-| `src/server/modules/proxy/proxy.module.ts` | NestJS module definition |
-| `src/server/modules/proxy/proxy.service.ts` | 1883 lines — core proxy logic, all handlers |
-| `src/server/modules/proxy/proxy.controller.ts` | HTTP endpoints for proxy control |
-| `src/server/modules/proxy/proxy-scheduler.service.ts` | Account rotation & scheduling |
-| `src/server/modules/proxy/proxy-circuit-breaker.service.ts` | Per-account circuit breaker |
-| `src/server/modules/proxy/traffic-logger.service.ts` | Request/response logging |
-| `src/server/modules/proxy/proxy-metrics.service.ts` | Prometheus metrics |
-| `src/server/modules/proxy/proxy-model-mapper.service.ts` | Model name resolution |
-| `src/server/modules/proxy/proxy-parity.service.ts` | Parity testing |
-| `src/server/modules/proxy/proxy-replay.service.ts` | Request replay |
-| `src/server/modules/proxy/proxy-config.service.ts` | Config management |
-| `src/server/modules/proxy/proxy-upstream.service.ts` | Upstream proxy support |
+
+| File                                                        | Role                                        |
+| ----------------------------------------------------------- | ------------------------------------------- |
+| `src/server/modules/proxy/proxy.module.ts`                  | NestJS module definition                    |
+| `src/server/modules/proxy/proxy.service.ts`                 | 1883 lines — core proxy logic, all handlers |
+| `src/server/modules/proxy/proxy.controller.ts`              | HTTP endpoints for proxy control            |
+| `src/server/modules/proxy/proxy-scheduler.service.ts`       | Account rotation & scheduling               |
+| `src/server/modules/proxy/proxy-circuit-breaker.service.ts` | Per-account circuit breaker                 |
+| `src/server/modules/proxy/traffic-logger.service.ts`        | Request/response logging                    |
+| `src/server/modules/proxy/proxy-metrics.service.ts`         | Prometheus metrics                          |
+| `src/server/modules/proxy/proxy-model-mapper.service.ts`    | Model name resolution                       |
+| `src/server/modules/proxy/proxy-parity.service.ts`          | Parity testing                              |
+| `src/server/modules/proxy/proxy-replay.service.ts`          | Request replay                              |
+| `src/server/modules/proxy/proxy-config.service.ts`          | Config management                           |
+| `src/server/modules/proxy/proxy-upstream.service.ts`        | Upstream proxy support                      |
 
 ### IPC Layer
-| File | Role |
-|------|------|
-| `src/ipc/router.ts` | Main IPC router composition |
+
+| File                      | Role                         |
+| ------------------------- | ---------------------------- |
+| `src/ipc/router.ts`       | Main IPC router composition  |
 | `src/ipc/proxy/router.ts` | Proxy-specific IPC endpoints |
-| `src/ipc/manager.ts` | IPC client initialization |
+| `src/ipc/manager.ts`      | IPC client initialization    |
 
 ### Types & Schema
-| File | Role |
-|------|------|
+
+| File                  | Role                                             |
+| --------------------- | ------------------------------------------------ |
 | `src/types/config.ts` | `ProxyConfig` Zod schema — reveals hidden fields |
-| `src/types/proxy.ts` | Request/response types |
+| `src/types/proxy.ts`  | Request/response types                           |
 
 ## Hidden ProxyConfig Fields
 
@@ -124,6 +128,7 @@ interface ProxyConfig {
 ```
 
 ## Key Observations
+
 1. **Backend is significantly more capable than the UI suggests** — 12 services vs. 1 page
 2. **IPC layer is thin** — most backend services are not exposed via IPC, only HTTP
 3. **ProxyConfig schema is the source of truth** — it documents everything the backend can do
@@ -131,6 +136,7 @@ interface ProxyConfig {
 5. **Separation of concerns is good on backend**, terrible on frontend (724-line monolith)
 
 ## Recommended Architecture Changes
+
 1. Extend `src/ipc/proxy/router.ts` to expose all `ProxyConfig` fields
 2. Add IPC endpoints for:
    - `proxy.getTrafficLogs()`

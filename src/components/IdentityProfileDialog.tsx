@@ -134,7 +134,10 @@ export function IdentityProfileDialog({ account, open, onOpenChange }: IdentityP
     if (!open) {
       return;
     }
-    setTimeout(() => { void refreshProfiles(); }, 0); }, [open, refreshProfiles]);
+    setTimeout(() => {
+      void refreshProfiles();
+    }, 0);
+  }, [open, refreshProfiles]);
 
   const runAction = async (key: string, action: () => Promise<void>) => {
     if (actionLockRef.current) {
@@ -343,7 +346,10 @@ export function IdentityProfileDialog({ account, open, onOpenChange }: IdentityP
 
                   {!showLoadingPlaceholder
                     ? history.map((version) => (
-                        <div key={version.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                        <div
+                          key={version.id}
+                          className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                        >
                           <div className="mb-2 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <div className="truncate text-sm font-medium">{version.label}</div>

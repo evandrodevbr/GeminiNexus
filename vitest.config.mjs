@@ -6,14 +6,23 @@ export default defineConfig({
   plugins: [viteTsconfigPaths()],
   resolve: {
     alias: [
-      { find: 'keytar', replacement: path.resolve(process.cwd(), './src/tests/unit/mocks/keytar.ts') },
-      { find: 'better-sqlite3', replacement: path.resolve(process.cwd(), './src/tests/unit/mocks/better-sqlite3.ts') },
+      {
+        find: 'keytar',
+        replacement: path.resolve(process.cwd(), './src/tests/unit/mocks/keytar.ts'),
+      },
+      {
+        find: 'better-sqlite3',
+        replacement: path.resolve(process.cwd(), './src/tests/unit/mocks/better-sqlite3.ts'),
+      },
     ],
   },
   test: {
     globals: true,
     environment: 'happy-dom',
-    include: ['src/tests/unit/**/*.{test,spec}.{ts,tsx}', 'src/tests/integration/**/*.{test,spec}.{ts,tsx}'],
+    include: [
+      'src/tests/unit/**/*.{test,spec}.{ts,tsx}',
+      'src/tests/integration/**/*.{test,spec}.{ts,tsx}',
+    ],
     exclude: ['src/tests/e2e/**/*'],
     setupFiles: ['src/tests/unit/setup.ts'],
     coverage: {
