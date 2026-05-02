@@ -48,14 +48,19 @@ vi.mock('../../../ipc/proxy-advanced/service-registry', () => {
   function getServiceOrThrow(key: string) {
     const service = (proxyAdvancedRegistry as Record<string, unknown>)[key];
     if (!service) {
-      throw new Error(`${key} is not registered`);
+      throw new Error(`ProxyAdvanced service '${key}' is not registered`);
     }
     return service;
+  }
+
+  function getServiceOptional(key: string) {
+    return (proxyAdvancedRegistry as Record<string, unknown>)[key];
   }
 
   return {
     proxyAdvancedRegistry,
     getServiceOrThrow,
+    getServiceOptional,
   };
 });
 
@@ -176,10 +181,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getParityCounters', () => {
-    it('should return error when tokenManager is null', async () => {
+    it('should return empty counters when tokenManager is null', async () => {
       const result = await getParityCounters();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Proxy advanced service not initialized');
+      expect(result.success).toBe(true);
+      expect(result.data?.totalRequests).toBe(0);
     });
 
     it('should return counters from tokenManager', async () => {
@@ -200,10 +205,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getCircuitBreakerStatus', () => {
-    it('should return error when tokenManager is null', async () => {
+    it('should return empty status when tokenManager is null', async () => {
       const result = await getCircuitBreakerStatus();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Proxy advanced service not initialized');
+      expect(result.success).toBe(true);
+      expect(result.data?.states).toEqual({});
     });
 
     it('should return mapped status from tokenManager', async () => {
@@ -222,10 +227,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getProxyMetrics', () => {
-    it('should return error when proxyMetrics is null', async () => {
+    it('should return zero metrics when proxyMetrics is null', async () => {
       const result = await getProxyMetrics();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Proxy advanced service not initialized');
+      expect(result.success).toBe(true);
+      expect(result.data?.totalRequests).toBe(0);
     });
 
     it('should return metrics from proxyMetrics service', async () => {
@@ -249,10 +254,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('getRecentRequests', () => {
-    it('should return error when proxyReplay is null', async () => {
+    it('should return empty array when proxyReplay is null', async () => {
       const result = await getRecentRequests();
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Proxy advanced service not initialized');
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([]);
     });
 
     it('should return recent requests from proxyReplay', async () => {
@@ -410,10 +415,10 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('generateIdeConfig', () => {
-    it('should return error when proxyIdeConfig is null', async () => {
+    it('should generate fallback config when proxyIdeConfig is null', async () => {
       const result = await generateIdeConfig('vscode');
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Proxy advanced service not initialized');
+      expect(result.success).toBe(true);
+      expect(result.data?.name).toBe('VS Code');
     });
 
     it('should return error for unsupported IDE', async () => {
@@ -428,7 +433,8 @@ describe('Proxy Advanced Handler', () => {
       vi.mocked(proxyAdvancedRegistry).proxyIdeConfig = {
         generateConfigForCurrentServer: vi.fn().mockReturnValue({
           ide: 'vscode',
-          content: null,
+          format: 'json',
+          content: { 'openai.url': 'http://localhost:8045/v1', 'openai.apiKey': 'key' },
         }),
       } as any;
 
@@ -443,7 +449,8 @@ describe('Proxy Advanced Handler', () => {
       vi.mocked(proxyAdvancedRegistry).proxyIdeConfig = {
         generateConfigForCurrentServer: vi.fn().mockReturnValue({
           ide: 'cursor',
-          content: null,
+          format: 'json',
+          content: { OPENAI_BASE_URL: 'http://localhost:8045/v1', OPENAI_API_KEY: 'key' },
         }),
       } as any;
 
@@ -451,17 +458,6 @@ describe('Proxy Advanced Handler', () => {
       expect(result.success).toBe(true);
       expect(result.data?.name).toBe('Cursor');
       expect(result.data?.proxySetting).toBe('OPENAI_BASE_URL');
-      vi.mocked(proxyAdvancedRegistry).proxyIdeConfig = null;
-    });
-
-    it('should handle null result from config generator', async () => {
-      vi.mocked(proxyAdvancedRegistry).proxyIdeConfig = {
-        generateConfigForCurrentServer: vi.fn().mockReturnValue(null),
-      } as any;
-
-      const result = await generateIdeConfig('vscode');
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to generate IDE config: server not configured');
       vi.mocked(proxyAdvancedRegistry).proxyIdeConfig = null;
     });
   });
