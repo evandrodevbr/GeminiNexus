@@ -41,6 +41,12 @@ export const AppConfigSchema = z.object({
   model_visibility: z.record(z.string(), z.boolean()).default({}), // Model visibility preferences
   provider_groupings_enabled: z.boolean().default(false), // Enable provider groupings UI
   grid_layout: z.enum(['auto', '2-col', '3-col', 'list', 'compact']).default('auto'), // Account card grid layout
+  custom_model_pricing: z
+    .record(
+      z.string(),
+      z.object({ input: z.number(), output: z.number(), source: z.string().optional() }),
+    )
+    .default({}),
   account_sort: z
     .enum(['recently-used', 'quota-overall', 'quota-claude', 'quota-pro3', 'quota-flash'])
     .default('recently-used'),
@@ -67,6 +73,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   model_visibility: {}, // Model visibility preferences
   provider_groupings_enabled: false, // Enable provider groupings UI
   grid_layout: 'auto' as const, // Account card grid layout
+  custom_model_pricing: {},
   account_sort: 'recently-used' as const,
   quota_alert_enabled: false,
   quota_alert_threshold: 20,
