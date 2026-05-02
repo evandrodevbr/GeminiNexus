@@ -6,7 +6,7 @@
  * instead of Gitmoji (since the project history doesn't use emojis).
  */
 
-const REPO_URL = 'https://github.com/Draculabo/AntigravityManager';
+const REPO_URL = 'https://github.com/evandrodevbr/GeminiNexus';
 const GITHUB_BASE_URL = 'https://github.com';
 const FULL_CHANGELOG_URL = `${REPO_URL}/blob/main/CHANGELOG.md`;
 
@@ -244,7 +244,7 @@ const releaseConfig = {
     [
       '@semantic-release/git',
       {
-        assets: ['CHANGELOG.md', 'package.json', 'package-lock.json', 'npm-shrinkwrap.json'],
+        assets: ['CHANGELOG.md', 'package.json', 'pnpm-lock.yaml'],
         message: 'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}',
       },
     ],

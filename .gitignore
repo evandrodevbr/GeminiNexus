@@ -126,3 +126,31 @@ accounts_backup.json
 
 # Bun lock file
 bun.lock
+
+# Build tools (installed via CI)
+tools/
+*.zip
+
+# AI agent session data
+thoughts/
+.impeccable.md
+CLAUDE.md
+
+# One-shot scripts (already applied)
+fix-ts.js
+patch-proxy.js
+patch-settings.js
+rename-deep.js
+test-process.ts
+
+# Legacy CLI launchers
+agm.bat
+run_cli.bat
+
+# Nix (not used)
+flake.nix
+flake.lock
+
+# Planning/spec data
+.planning/
+openspec/

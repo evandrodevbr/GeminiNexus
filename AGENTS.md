@@ -12,7 +12,7 @@ This document is a user-level guide for AI assistants working in this repository
 
 - **Runtime**: Node.js (Electron environment)
 - **Node**: Recommended Node.js 20+
-- **Package manager**: `npm` (this project includes `package-lock.json`; use npm only)
+- **Package manager**: `pnpm` (this project includes `pnpm-lock.yaml`; use pnpm only)
 - **Build tools**: Electron Forge + Vite
 - **Terminal**: Windows (PowerShell) / VSCode MCP tools can be used safely
 
@@ -75,32 +75,32 @@ This document is a user-level guide for AI assistants working in this repository
 
 ## 📦 Common Scripts
 
-Use `npm` for all commands:
+Use `pnpm` for all commands:
 
 - **Development (Dev)**:
-  - `npm start` - Start Electron dev environment (Electron Forge)
-  - `npm run lint` - Run ESLint checks
-  - `npm run format` - Run Prettier check
-  - `npm run format:write` - Auto-format with Prettier
-  - `npm run type-check` - Run TypeScript type check
+  - `pnpm start` - Start Electron dev environment (Electron Forge)
+  - `pnpm run lint` - Run ESLint checks
+  - `pnpm run format` - Run Prettier check
+  - `pnpm run format:write` - Auto-format with Prettier
+  - `pnpm run type-check` - Run TypeScript type check
 
 - **Build**:
-  - `npm run package` - Package app (application bundle only)
-  - `npm run make` - Build and generate distributable installers
-  - `npm run publish` - Publish app
+  - `pnpm run package` - Package app (application bundle only)
+  - `pnpm run make` - Build and generate distributable installers
+  - `pnpm run publish` - Publish app
 
 - **Testing**:
-  - `npm test` - Run Vitest tests
-  - `npm run test:watch` - Run Vitest in watch mode
-  - `npm run test:unit` - Same as above for unit-focused runs
-  - `npm run test:e2e` - Run Playwright E2E tests
-  - `npm run test:all` - Run all tests
+  - `pnpm test` - Run Vitest tests
+  - `pnpm run test:watch` - Run Vitest in watch mode
+  - `pnpm run test:unit` - Same as above for unit-focused runs
+  - `pnpm run test:e2e` - Run Playwright E2E tests
+  - `pnpm run test:all` - Run all tests
 
 ### Running a Single Test
 
-- Unit test: `npm run test:unit path/to/test.test.ts`
-- E2E test: `npm run test:e2e path/to/test.spec.ts`
-- Type check: `npm run type-check`
+- Unit test: `pnpm run test:unit path/to/test.test.ts`
+- E2E test: `pnpm run test:e2e path/to/test.spec.ts`
+- Type check: `pnpm run type-check`
 
 ## 🧪 Development Notes
 
@@ -171,7 +171,7 @@ export const Component: React.FC<ComponentProps> = ({ prop1 }) => {
 };
 ```
 
-> Before commit, run `npm run lint` and `npm run format`.
+> Before commit, run `pnpm run lint` and `pnpm run format`.
 
 ## 📝 Terminal Output and References
 
@@ -330,7 +330,7 @@ Summary / output:
 
 Packages and scripts:
 
-- `npm install` (or `npm i`)
+- `pnpm install` (or `pnpm i`)
 
 Shell:
 

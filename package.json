@@ -5,6 +5,7 @@
   "description": "Gemini Nexus - Electron App",
   "main": ".vite/build/main.js",
   "private": true,
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
     "start": "cross-env DEBUG=electron-forge:* electron-forge start",
     "dev": "cross-env DEBUG=electron-forge:* electron-forge start",
