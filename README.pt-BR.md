@@ -341,21 +341,25 @@ Contribuições são bem-vindas! Leia o `CONTRIBUTING.md` para mais detalhes.
 
 ## 📄 Licença
 
-[CC BY-NC-SA 4.0](LICENSE)
+Este projeto utiliza uma estrutura de licença dual:
 
----
+- **Código original** do [AntigravityManager](https://github.com/Draculabo/AntigravityManager) por [Draculabo](https://github.com/Draculabo): Licenciado sob [CC BY-NC-SA 4.0](LICENSE).
+- **Todo o código novo, funcionalidades e arquitetura** por [evandrodevbr](https://github.com/evandrodevbr): Licenciado sob a [Licença MIT](LICENSE-MIT).
 
-## ⚠️ Aviso Legal
-
-> [!WARNING]
-> **Apenas para Fins Educacionais**
->
-> Este projeto destina-se exclusivamente a fins de pesquisa e educação. Ele é fornecido "como está" sem qualquer garantia. **O uso comercial é estritamente proibido.**
->
-> Ao usar este software, você concorda que não o utilizará para quaisquer fins comerciais, e que é o único responsável por garantir que seu uso esteja em conformidade com todas as leis e regulamentações aplicáveis. Os autores e contribuidores não se responsabilizam por qualquer uso indevido ou danos decorrentes do uso deste software.
+> 🔄 **Aviso de Migração:** Este projeto está sendo ativamente migrado para uma licença totalmente open-source (MIT). À medida que o código original restante é progressivamente reescrito, todo o projeto será transicionado para MIT. Estamos comprometidos em tornar o Gemini Nexus 100% open-source.
 
 ---
 
 ## 🙏 Créditos
 
-**Gemini Nexus** é uma versão significativamente aprimorada e expandida do projeto original [AntigravityManager](https://github.com/Draculabo/AntigravityManager) criado por [Draculabo](https://github.com/Draculabo). Toda a arquitetura fundamental e design foram criados pelo autor original.
+Este projeto foi originalmente um fork de [AntigravityManager](https://github.com/Draculabo/AntigravityManager) criado por [Draculabo](https://github.com/Draculabo). O conceito inicial de proxy e a estrutura base do Electron foram baseados em seu trabalho.
+
+Desde o fork, **a grande maioria do código base foi reescrita, redesenhada e expandida** por [evandrodevbr](https://github.com/evandrodevbr), incluindo mas não se limitando a:
+
+- Redesign completo de UI/UX (navegação, contas, analytics de uso, gerenciamento de proxy)
+- Dashboard de Analytics de Uso com rastreamento de custos, médias de tokens e integração com OpenRouter
+- Monitor de tráfego com inspeção de tokens/custos por requisição
+- Isolamento de ambiente (dev/prod), pipeline CI/CD e infraestrutura de testes
+- Configuração Rápida para IDEs (OpenCode, Cursor, VS Code, Claude Code)
+- Configuração personalizada de preços de modelos
+- Toda a documentação e internacionalização (EN, PT-BR, ES, ZH-CN)

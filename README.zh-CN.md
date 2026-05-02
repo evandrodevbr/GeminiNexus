@@ -320,21 +320,25 @@ npm test
 
 ## 📄 许可证
 
-[CC BY-NC-SA 4.0](LICENSE)
+本项目采用双重许可结构：
 
----
+- **原始代码**来自 [Draculabo](https://github.com/Draculabo) 的 [AntigravityManager](https://github.com/Draculabo/AntigravityManager)：采用 [CC BY-NC-SA 4.0](LICENSE) 许可。
+- **所有新代码、功能和架构**由 [evandrodevbr](https://github.com/evandrodevbr) 开发：采用 [MIT 许可证](LICENSE-MIT)。
 
-## ⚠️ 免责声明
-
-> [!WARNING]
-> **仅供教育目的**
->
-> 本项目仅供教育和研究目的使用。按"原样"提供，不提供任何担保。**严禁商业用途。**
->
-> 使用本软件即表示您同意不会将其用于任何商业目的，并且您全权负责确保您的使用符合所有适用的法律和法规。作者和贡献者对因使用本软件而引起的任何滥用或损害不承担任何责任。
+> 🔄 **迁移通知：** 本项目正在积极迁移到完全开源许可证（MIT）。随着剩余原始代码的逐步重写，整个项目将过渡到 MIT。我们致力于将 Gemini Nexus 打造为 100% 开源项目。
 
 ---
 
 ## 🙏 致谢
 
-**Gemini Nexus** 基于 [Draculabo](https://github.com/Draculabo) 创建的原始项目 [AntigravityManager](https://github.com/Draculabo/AntigravityManager) 大幅增强和扩展。所有基础架构和设计均由原作者完成。
+本项目最初是从 [Draculabo](https://github.com/Draculabo) 创建的 [AntigravityManager](https://github.com/Draculabo/AntigravityManager) 分支而来的。最初的代理概念和早期的 Electron 框架基于他的工作。
+
+自从分支以来，[evandrodevbr](https://github.com/evandrodevbr) **重写、重新设计并扩展了绝大部分代码库**，包括但不限于：
+
+- 完整的 UI/UX 重新设计（导航、账户、使用分析、代理管理）
+- 使用分析仪表板，包含成本跟踪、Token 平均值以及 OpenRouter 集成
+- 流量监视器，提供按请求查看的 Token/成本检查
+- 环境隔离（dev/prod）、CI/CD 流水线和测试基础设施
+- IDE 快速设置（OpenCode、Cursor、VS Code、Claude Code）
+- 自定义模型定价配置
+- 所有文档和国际化（EN, PT-BR, ES, ZH-CN）

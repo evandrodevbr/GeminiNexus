@@ -342,21 +342,25 @@ Contributions are welcome! Please read `CONTRIBUTING.md` for details.
 
 ## 📄 License
 
-[CC BY-NC-SA 4.0](LICENSE)
+This project uses a dual-license structure:
 
----
+- **Original code** from [AntigravityManager](https://github.com/Draculabo/AntigravityManager) by [Draculabo](https://github.com/Draculabo): Licensed under [CC BY-NC-SA 4.0](LICENSE).
+- **All new code, features, and architecture** by [evandrodevbr](https://github.com/evandrodevbr): Licensed under the [MIT License](LICENSE-MIT).
 
-## ⚠️ Disclaimer
-
-> [!WARNING]
-> **For Educational Purposes Only**
->
-> This project is intended solely for educational and research purposes. It is provided "as-is" without any warranty. **Commercial use is strictly prohibited.**
->
-> By using this software, you agree that you will not use it for any commercial purposes, and you are solely responsible for ensuring your use complies with all applicable laws and regulations. The authors and contributors are not responsible for any misuse or damages arising from the use of this software.
+> 🔄 **Migration Notice:** This project is actively being migrated to a fully open-source license (MIT). As the remaining original code is progressively rewritten, the entire project will transition to MIT. We are committed to making Gemini Nexus 100% open-source.
 
 ---
 
 ## 🙏 Credits
 
-**Gemini Nexus** is a significantly enhanced and expanded version of the original project [AntigravityManager](https://github.com/Draculabo/AntigravityManager) created by [Draculabo](https://github.com/Draculabo). All fundamental architecture and design were made by the original author.
+This project was originally forked from [AntigravityManager](https://github.com/Draculabo/AntigravityManager) created by [Draculabo](https://github.com/Draculabo). The initial proxy concept and early Electron scaffolding were based on his work.
+
+Since the fork, **the vast majority of the codebase has been rewritten, redesigned, and expanded** by [evandrodevbr](https://github.com/evandrodevbr), including but not limited to:
+
+- Complete UI/UX redesign (navigation, accounts, usage analytics, proxy management)
+- Usage Analytics dashboard with cost tracking, token averages, and OpenRouter integration
+- Traffic monitor with per-request token/cost inspection
+- Environment isolation (dev/prod), CI/CD pipeline, and test infrastructure
+- IDE Quick Setup (OpenCode, Cursor, VS Code, Claude Code)
+- Custom model pricing configuration
+- All documentation and internationalization (EN, PT-BR, ES, ZH-CN)

@@ -312,21 +312,25 @@ Sí, este es un aviso común para nuevas aplicaciones no firmadas. Haz clic en *
 
 ## 📄 Licencia
 
-[CC BY-NC-SA 4.0](LICENSE)
+Este proyecto utiliza una estructura de licencia dual:
 
----
+- **Código original** de [AntigravityManager](https://github.com/Draculabo/AntigravityManager) por [Draculabo](https://github.com/Draculabo): Licenciado bajo [CC BY-NC-SA 4.0](LICENSE).
+- **Todo el código nuevo, funcionalidades y arquitectura** por [evandrodevbr](https://github.com/evandrodevbr): Licenciado bajo la [Licencia MIT](LICENSE-MIT).
 
-## ⚠️ Aviso Legal
-
-> [!WARNING]
-> **Solo con Fines Educativos**
->
-> Este proyecto está destinado exclusivamente a fines educativos y de investigación. Se proporciona "tal cual" sin ninguna garantía. **El uso comercial está estrictamente prohibido.**
->
-> Al utilizar este software, aceptas que no lo usarás para ningún fin comercial y eres el único responsable de asegurar que tu uso cumpla con todas las leyes y regulaciones aplicables. Los autores y colaboradores no son responsables del mal uso o los daños derivados de la utilización de este software.
+> 🔄 **Aviso de Migración:** Este proyecto está siendo migrado activamente a una licencia completamente open-source (MIT). A medida que el código original restante se reescribe progresivamente, todo el proyecto hará la transición a MIT. Estamos comprometidos a hacer Gemini Nexus 100% open-source.
 
 ---
 
 ## 🙏 Créditos
 
-**Gemini Nexus** es una versión significativamente mejorada y expandida del proyecto original [AntigravityManager](https://github.com/Draculabo/AntigravityManager) creado por [Draculabo](https://github.com/Draculabo). Toda la arquitectura fundamental y diseño fueron realizados por el autor original.
+Este proyecto fue originalmente un fork de [AntigravityManager](https://github.com/Draculabo/AntigravityManager) creado por [Draculabo](https://github.com/Draculabo). El concepto inicial del proxy y la estructura base de Electron se basaron en su trabajo.
+
+Desde el fork, **la gran mayoría del código ha sido reescrito, rediseñado y expandido** por [evandrodevbr](https://github.com/evandrodevbr), incluyendo pero no limitado a:
+
+- Rediseño completo de UI/UX (navegación, cuentas, analíticas de uso, gestión del proxy)
+- Dashboard de Analíticas de Uso con seguimiento de costos, promedios de tokens e integración con OpenRouter
+- Monitor de tráfico con inspección de tokens/costos por solicitud
+- Aislamiento de entorno (dev/prod), pipeline CI/CD e infraestructura de pruebas
+- Configuración rápida para IDEs (OpenCode, Cursor, VS Code, Claude Code)
+- Configuración personalizada de precios de modelos
+- Toda la documentación e internacionalización (EN, PT-BR, ES, ZH-CN)
