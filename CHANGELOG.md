@@ -2,6 +2,22 @@
 
 # Changelog
 
+## [0.15.4](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.3...v0.15.4) (2026-09-14)
+
+### 📝 Documentation
+
+* establish dual license (CC-BY-NC-SA + MIT) and correct attribution ([42466c2](https://github.com/evandrodevbr/GeminiNexus/commit/42466c274b36b5dde2d7d33c9016b2fab05cf551))
+* refine READMEs and highlight Windows SmartScreen warning ([0dbae81](https://github.com/evandrodevbr/GeminiNexus/commit/0dbae81353c162b0b95d566493164ea6c02e2fa2))
+* rewrite the README with verified behavior and honest limitations ([acb8508](https://github.com/evandrodevbr/GeminiNexus/commit/acb8508bff2f6e32691f394d21d7c8193608cd5e))
+
+### 💄 Styles
+
+* clear the lint and prettier findings so the gates pass ([8ad3eef](https://github.com/evandrodevbr/GeminiNexus/commit/8ad3eef53d88d049a3a25cb54df590073a67b75b))
+
+### 🔧 Continuous Integration
+
+* upload release assets sequentially with retry ([b13f06c](https://github.com/evandrodevbr/GeminiNexus/commit/b13f06c0a3538ff962eae2f6fc07cfc81281bf02))
+
 ## [0.15.3](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.2...v0.15.3) (2026-05-02)
 
 ### 👷 Build System
