@@ -225,7 +225,7 @@ jobs:
           fi
 
           printf 'Uploading %s assets to %s\n' "${#files[@]}" "$RELEASE_TAG"
-          
+
           # Upload files sequentially with retries to prevent GitHub API rate limits and 404/502 errors
           for file in "${files[@]}"; do
             echo "Uploading $file..."
