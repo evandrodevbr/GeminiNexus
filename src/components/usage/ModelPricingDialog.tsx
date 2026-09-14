@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw, RotateCcw } from 'lucide-react';
 import { MODEL_PRICING } from '@/constants/pricing';
 
@@ -35,8 +34,16 @@ export const ModelPricingDialog: React.FC<ModelPricingDialogProps> = ({
     Record<string, { input: number; output: number; source: string }>
   >({});
   const [isFetching, setIsFetching] = useState(false);
+  const [pricingSource, setPricingSource] = useState<{
+    open: boolean;
+    customPricing: typeof customPricing;
+  }>({ open, customPricing });
 
-  useEffect(() => {
+  // Re-seed the editable copy when the dialog opens or the source pricing changes.
+  // Adjusting state during render replaces the previous synchronous setState inside
+  // an effect (https://react.dev/learn/you-might-not-need-an-effect).
+  if (pricingSource.open !== open || pricingSource.customPricing !== customPricing) {
+    setPricingSource({ open, customPricing });
     if (open) {
       // Initialize local state with custom pricing or empty if default
       const initial: Record<string, { input: number; output: number; source: string }> = {};
@@ -49,7 +56,7 @@ export const ModelPricingDialog: React.FC<ModelPricingDialogProps> = ({
       });
       setLocalPricing(initial);
     }
-  }, [open, customPricing]);
+  }
 
   const handlePriceChange = (model: string, type: 'input' | 'output', value: string) => {
     const numValue = parseFloat(value);

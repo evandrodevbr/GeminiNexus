@@ -104,8 +104,8 @@ vi.mock('electron', () => {
         session: {
           webRequest: {
             onBeforeSendHeaders: vi.fn(),
-          }
-        }
+          },
+        },
       },
       on: vi.fn(),
     })),

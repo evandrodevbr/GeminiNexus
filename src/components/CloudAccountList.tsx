@@ -417,7 +417,11 @@ export function CloudAccountList() {
   const setSelectionState = (id: string, selected: boolean) =>
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      selected ? next.add(id) : next.delete(id);
+      if (selected) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
       return next;
     });
   const toggleSelectAllAccounts = () =>

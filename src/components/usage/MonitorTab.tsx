@@ -58,9 +58,8 @@ export const MonitorTab: React.FC = () => {
         tokensPrompt: log.metadata?.tokensPrompt as number | undefined,
         tokensCompletion: log.metadata?.tokensCompletion as number | undefined,
         tokensTotal:
-          (((log.metadata?.tokensPrompt as number) || 0) +
-            ((log.metadata?.tokensCompletion as number) || 0)) ||
-          undefined,
+          ((log.metadata?.tokensPrompt as number) || 0) +
+            ((log.metadata?.tokensCompletion as number) || 0) || undefined,
       }))
     : [];
   const stats = statsData?.success ? statsData.data : undefined;

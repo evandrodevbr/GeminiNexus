@@ -1,9 +1,6 @@
 import { logger } from '../../utils/logger';
 import { getServiceOrThrow, getServiceOptional } from './service-registry';
-import type {
-  IdeConfigResult,
-  SupportedIde,
-} from '../../server/modules/proxy/proxy-ide-config.service';
+import type { IdeConfigResult } from '../../server/modules/proxy/proxy-ide-config.service';
 import { TrafficLogsRepo } from '../database/proxyMetricsHandler';
 import { CloudAccountRepo } from '../database/cloudHandler';
 import { ConfigManager } from '../config/manager';
@@ -257,9 +254,7 @@ export async function getRecentRequests(): Promise<{
   }
 }
 
-export async function replayRequest(
-  requestId: string,
-): Promise<{
+export async function replayRequest(requestId: string): Promise<{
   success: boolean;
   data?: { original: unknown; newResponse: unknown };
   error?: string;

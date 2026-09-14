@@ -10,3 +10,4 @@ openspec/
 .agent/
 .claude/
 .codex
+pnpm-lock.yaml

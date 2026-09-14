@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateCost } from '@/constants/pricing';
 
 export interface ModelCostEntry {
   model: string;

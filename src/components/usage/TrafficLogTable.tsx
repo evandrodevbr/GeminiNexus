@@ -26,7 +26,16 @@ interface TrafficLogTableProps {
   isLoading: boolean;
 }
 
-type SortKey = 'timestamp' | 'direction' | 'endpoint' | 'model' | 'method' | 'status' | 'tokens' | 'cost' | 'duration';
+type SortKey =
+  | 'timestamp'
+  | 'direction'
+  | 'endpoint'
+  | 'model'
+  | 'method'
+  | 'status'
+  | 'tokens'
+  | 'cost'
+  | 'duration';
 type SortDir = 'asc' | 'desc';
 
 function SortIcon({
@@ -79,13 +88,10 @@ function getBodyPreview(body: unknown): string | null {
 
   // Request body: extract first user message
   if (Array.isArray(obj.messages)) {
-    const userMsg = obj.messages.find(
-      (m: Record<string, unknown>) => m.role === 'user',
-    );
+    const userMsg = obj.messages.find((m: Record<string, unknown>) => m.role === 'user');
     if (userMsg) {
-      const content = typeof userMsg.content === 'string'
-        ? userMsg.content
-        : JSON.stringify(userMsg.content);
+      const content =
+        typeof userMsg.content === 'string' ? userMsg.content : JSON.stringify(userMsg.content);
       return content.length > 120 ? content.slice(0, 120) + '…' : content;
     }
   }
@@ -95,9 +101,7 @@ function getBodyPreview(body: unknown): string | null {
     const firstChoice = obj.choices[0] as Record<string, unknown> | undefined;
     const message = firstChoice?.message as Record<string, unknown> | undefined;
     if (message?.content && typeof message.content === 'string') {
-      return message.content.length > 120
-        ? message.content.slice(0, 120) + '…'
-        : message.content;
+      return message.content.length > 120 ? message.content.slice(0, 120) + '…' : message.content;
     }
   }
 
@@ -254,18 +258,16 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                     <React.Fragment key={logKey}>
                       <tr
                         className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${
-                          isExpanded
-                            ? 'bg-white/[0.03]'
-                            : 'hover:bg-white/[0.02]'
+                          isExpanded ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'
                         }`}
                         onClick={() => toggleExpand(logKey)}
                       >
                         {/* Expand chevron */}
                         <td className="py-2 pr-1">
                           {isExpanded ? (
-                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                            <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
                           ) : (
-                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                            <ChevronRight className="text-muted-foreground/50 h-3.5 w-3.5" />
                           )}
                         </td>
                         <td className="text-muted-foreground py-2 pr-4 font-mono text-xs">
@@ -300,11 +302,9 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                           )}
                         </td>
                         <td className="py-2 pr-4 text-xs">
-                          {log.tokensTotal ? (
-                            `${formatTokens(log.tokensPrompt)} / ${formatTokens(log.tokensCompletion)}`
-                          ) : (
-                            '—'
-                          )}
+                          {log.tokensTotal
+                            ? `${formatTokens(log.tokensPrompt)} / ${formatTokens(log.tokensCompletion)}`
+                            : '—'}
                         </td>
                         <td className="py-2 pr-4 text-xs">
                           {log.durationMs != null ? `${log.durationMs}ms` : '—'}
@@ -323,7 +323,7 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                             <div className="border-t border-white/[0.06] bg-white/[0.01] px-6 py-4">
                               {/* Preview line */}
                               {preview && (
-                                <div className="mb-3 rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-muted-foreground italic break-words">
+                                <div className="text-muted-foreground mb-3 rounded-lg bg-white/[0.03] px-3 py-2 text-xs break-words italic">
                                   "{preview}"
                                 </div>
                               )}
@@ -339,18 +339,32 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                                   </Badge>
                                 )}
                                 {log.tokensPrompt != null && (
-                                  <Badge variant="outline" className="border-blue-500/20 text-blue-400 text-[10px]">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-blue-500/20 text-[10px] text-blue-400"
+                                  >
                                     Input: {log.tokensPrompt.toLocaleString()} tokens
                                   </Badge>
                                 )}
                                 {log.tokensCompletion != null && (
-                                  <Badge variant="outline" className="border-emerald-500/20 text-emerald-400 text-[10px]">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-emerald-500/20 text-[10px] text-emerald-400"
+                                  >
                                     Output: {log.tokensCompletion.toLocaleString()} tokens
                                   </Badge>
                                 )}
                                 {log.tokensTotal != null && log.model && (
-                                  <Badge variant="outline" className="border-amber-500/20 text-amber-400 text-[10px]">
-                                    Cost: ${calculateCost(log.model, log.tokensPrompt || 0, log.tokensCompletion || 0).toFixed(6)}
+                                  <Badge
+                                    variant="outline"
+                                    className="border-amber-500/20 text-[10px] text-amber-400"
+                                  >
+                                    Cost: $
+                                    {calculateCost(
+                                      log.model,
+                                      log.tokensPrompt || 0,
+                                      log.tokensCompletion || 0,
+                                    ).toFixed(6)}
                                   </Badge>
                                 )}
                                 {log.durationMs != null && (
@@ -363,11 +377,15 @@ export const TrafficLogTable: React.FC<TrafficLogTableProps> = ({ logs, isLoadin
                               {/* Body content */}
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
-                                    {log.direction === 'inbound' ? 'Request Body' : log.direction === 'outbound' ? 'Response Body' : 'Payload'}
+                                  <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+                                    {log.direction === 'inbound'
+                                      ? 'Request Body'
+                                      : log.direction === 'outbound'
+                                        ? 'Response Body'
+                                        : 'Payload'}
                                   </span>
                                 </div>
-                                <pre className="custom-scrollbar max-h-[400px] overflow-auto rounded-lg bg-black/30 p-3 font-mono text-[11px] leading-relaxed text-foreground/80 whitespace-pre-wrap break-all">
+                                <pre className="custom-scrollbar text-foreground/80 max-h-[400px] overflow-auto rounded-lg bg-black/30 p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap">
                                   {formatBody(log.body)}
                                 </pre>
                               </div>

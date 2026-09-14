@@ -50,4 +50,11 @@ export default defineConfig([
       'prefer-const': 'off',
     },
   },
+  {
+    // Node maintenance scripts are CommonJS; require() is the native API there.
+    files: ['scripts/**/*.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 ]);
