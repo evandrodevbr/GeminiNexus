@@ -194,7 +194,7 @@
 
 您可以从我们的 [Releases 页面](https://github.com/evandrodevbr/GeminiNexus/releases) 下载适用于 Windows、macOS 和 Linux 的最新预编译版本。
 
-*(如果您使用的是 Windows 并在安装时遇到了 SmartScreen 提示，请参阅页面顶部的警告)。*
+_(如果您使用的是 Windows 并在安装时遇到了 SmartScreen 提示，请参阅页面顶部的警告)。_
 
 ### 🔌 配合 AI IDE 使用
 
@@ -274,6 +274,7 @@ npm test
 <summary><b>问：安装时出现 Windows SmartScreen 警告（"Windows 已保护你的电脑"）？</b></summary>
 
 是的，对于未签名的新应用，这是一个常见的警告。请点击 **"更多信息"** (More info)，然后点击 **"仍要运行"** (Run anyway)。详情请参阅 README 顶部的提示。
+
 </details>
 
 <details>

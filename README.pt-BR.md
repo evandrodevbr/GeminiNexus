@@ -194,7 +194,7 @@ O **Gemini Nexus** resolve tudo isso. É um aplicativo desktop profissional em E
 
 Você pode baixar os binários pré-compilados mais recentes para Windows, macOS e Linux na nossa [página de Releases](https://github.com/evandrodevbr/GeminiNexus/releases).
 
-*(Consulte o aviso no topo desta página se você estiver usando o Windows e encontrar o prompt do SmartScreen).*
+_(Consulte o aviso no topo desta página se você estiver usando o Windows e encontrar o prompt do SmartScreen)._
 
 ### 🔌 Usando com IDEs de IA
 
@@ -295,6 +295,7 @@ src/
 <summary><b>P: Aviso do Windows SmartScreen ("O Windows protegeu o seu computador") durante a instalação?</b></summary>
 
 Sim, este é um aviso comum para novos aplicativos não assinados. Clique em **"Mais informações"** e depois em **"Executar mesmo assim"**. Veja o aviso no topo do README para mais detalhes.
+
 </details>
 
 <details>

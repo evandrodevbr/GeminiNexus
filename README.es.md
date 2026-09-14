@@ -194,7 +194,7 @@ Al usar IDEs y herramientas de programación con IA, ¿te has encontrado con est
 
 Puedes descargar los binarios precompilados más recientes para Windows, macOS y Linux desde nuestra [página de Releases](https://github.com/evandrodevbr/GeminiNexus/releases).
 
-*(Consulta la advertencia en la parte superior de esta página si usas Windows y te encuentras con el aviso de SmartScreen).*
+_(Consulta la advertencia en la parte superior de esta página si usas Windows y te encuentras con el aviso de SmartScreen)._
 
 ### 🔌 Uso con IDEs de IA
 
@@ -274,6 +274,7 @@ npm test
 <summary><b>P: ¿Aviso de Windows SmartScreen ("Windows protegió su PC") durante la instalación?</b></summary>
 
 Sí, este es un aviso común para nuevas aplicaciones no firmadas. Haz clic en **"Más información"** y luego en **"Ejecutar de todas formas"**. Consulta la advertencia en la parte superior del README para más detalles.
+
 </details>
 
 <details>

@@ -5,7 +5,7 @@
 <h1 align="center">Gemini Nexus</h1>
 
 <p align="center">
-  <strong>🚀 Professional multi-account AI gateway for Google Gemini & Claude</strong>
+  <strong>Desktop gateway that pools several Google Gemini and Claude accounts behind a single local OpenAI- and Anthropic-compatible API.</strong>
 </p>
 
 <p align="center">
@@ -13,354 +13,238 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/v/release/evandrodevbr/GeminiNexus?style=flat-square" alt="Release" />
-  </a>
-  <a href="https://github.com/evandrodevbr/GeminiNexus/releases">
-    <img src="https://img.shields.io/github/downloads/evandrodevbr/GeminiNexus/total?style=flat-square&color=blue" alt="Downloads" />
-  </a>
-  <a href="https://github.com/evandrodevbr/GeminiNexus/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/evandrodevbr/GeminiNexus?style=flat-square" alt="License" />
-  </a>
+  <a href="https://github.com/evandrodevbr/GeminiNexus/releases"><img src="https://img.shields.io/github/v/release/evandrodevbr/GeminiNexus?style=flat-square" alt="Release" /></a>
+  <a href="https://github.com/evandrodevbr/GeminiNexus/actions/workflows/testing.yaml"><img src="https://github.com/evandrodevbr/GeminiNexus/actions/workflows/testing.yaml/badge.svg" alt="Tests" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational?style=flat-square" alt="Platform" />
-  <img src="https://img.shields.io/badge/electron-latest-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
+  <img src="https://img.shields.io/badge/electron-41-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron 41" />
+  <img src="https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/node-%3E%3D20.19-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node 20.19+" />
+  <img src="https://img.shields.io/badge/license-MIT%20%2B%20CC%20BY--NC--SA%204.0-blue?style=flat-square" alt="License" />
 </p>
 
-> [!IMPORTANT]
-> **Windows Users:** If you see a **"Windows protected your PC"** (SmartScreen) warning during installation, click **"More info"** and then **"Run anyway"**. This is an expected security prompt for new, unsigned applications.
+> **Windows users:** the installers are not code-signed, so SmartScreen may show "Windows protected your PC". Choose "More info" and then "Run anyway"; this is the expected prompt for an unsigned application.
 
----
+## About
 
-## 📖 Table of Contents
+AI coding tools assume a single account with a single quota. When that quota runs out, you have to switch accounts by hand, and you usually have no idea how many tokens you burned.
 
-- [✨ Why Gemini Nexus?](#-why-gemini-nexus)
-- [🎯 Features](#-features)
-- [📸 Screenshots](#-screenshots)
-- [⚡ Installation & Quick Start](#-installation--quick-start)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [💻 Development](#-development)
-- [❓ FAQ](#-faq)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+Gemini Nexus is an Electron desktop application that runs a local gateway (an embedded NestJS server) in front of a pool of Google Gemini and Claude accounts. Your IDE points at the local gateway once; the gateway picks an account, translates the protocol, retries on quota or rate-limit errors, and records usage.
 
----
+What it does:
 
-## ✨ Why Gemini Nexus?
+- Manages a pool of Google/Claude accounts with per-account status (active, rate limited, expired) and quota snapshots.
+- Serves an OpenAI-compatible surface (`/v1/chat/completions`, `/v1/models`, `/v1/completions`, `/v1/responses`, images and audio routes), an Anthropic-compatible surface (`/v1/messages`) and the Gemini-native surface (`/v1beta/models`, `countTokens`).
+- Streams responses over SSE and maps model names in both directions (for example `claude-sonnet-4-5` to the configured Gemini/Claude target).
+- Stores tokens and keys encrypted at rest (AES-256-GCM) with an OS keychain wrapper, falling back to a local key file.
+- Shows local analytics: token usage, cost estimates, model distribution, request traffic and request replay.
 
-When using AI-powered IDEs and coding tools, have you ever run into these problems?
+It is a personal desktop tool, not a hosted service: everything runs on your machine.
 
-- 😫 **Quota limits:** Single account quotas run out quickly, requiring frequent manual switching.
-- 🔄 **Account management:** Managing multiple Google/Claude accounts is cumbersome.
-- 📊 **Blind usage:** You don't know how much quota or how many tokens you've actually consumed.
-- 🔌 **Integration issues:** You need a reliable local API proxy that speaks OpenAI/Anthropic protocols natively.
-- 🔍 **Lack of transparency:** You can't see what's actually being sent or received by the proxy under the hood.
+## How it works
 
-**Gemini Nexus** solves all of these issues. It's a professional Electron desktop application that acts as an intelligent gateway between your development tools and Google Gemini / Claude AI.
-
-### Key Value Proposition
-
-- ✅ **Unlimited Account Pool** — Add any number of Google Gemini & Claude accounts.
-- ✅ **Smart Auto-Switching** — Automatically rotates to the next available account when quota is low or rate-limited.
-- ✅ **Real-time Usage Analytics** — SaaS-grade dashboard with area charts, trend indicators, and model distribution.
-- ✅ **Full Proxy Observability** — Live traffic monitor, request replay, and model capabilities inspector.
-- ✅ **OpenAI & Anthropic Compatible** — Drop-in replacement proxy for Cursor, Windsurf, OpenCode, and any OpenAI-compatible tool.
-- ✅ **Secure by Default** — AES-256-GCM encryption with OS-native credential management.
-
----
-
-## 🎯 Features
-
-<table>
-  <tr>
-    <td width="50%">
-      <h3>☁️ Cloud Account Pool</h3>
-      <ul>
-        <li>Add unlimited Google Gemini / Claude accounts via OAuth</li>
-        <li>Display avatar, email, status, and last used time</li>
-        <li>Real-time status monitoring (Active, Rate Limited, Expired)</li>
-        <li>Per-account proxy URL configuration</li>
-        <li>Device identity profile management with history</li>
-      </ul>
-    </td>
-    <td width="50%">
-      <h3>📊 Usage Analytics Dashboard</h3>
-      <ul>
-        <li>Real-time token consumption with 15s auto-refresh</li>
-        <li>Area charts for daily/hourly prompt & completion tokens</li>
-        <li>Trend indicators (% change vs previous period)</li>
-        <li>Inline sparklines on stat cards</li>
-        <li>Model distribution ranking with horizontal bar charts</li>
-        <li>Prompt/Completion ratio visualization</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>🔌 Local API Proxy (Gateway)</h3>
-      <ul>
-        <li>OpenAI <code>/v1/chat/completions</code> compatible endpoint</li>
-        <li>Anthropic <code>/v1/messages</code> compatible endpoint</li>
-        <li>Full SSE streaming support (tested with Cursor, Windsurf, OpenCode)</li>
-        <li>Model mapping (e.g. <code>claude-sonnet-4-6</code> → <code>gemini-3-flash</code>)</li>
-        <li>Configurable port, timeout, and API key</li>
-        <li>Model visibility control (show/hide specific models)</li>
-      </ul>
-    </td>
-    <td width="50%">
-      <h3>🔄 Intelligent Auto-Switching</h3>
-      <ul>
-        <li>Unlimited pool mode with smart backup selection</li>
-        <li>Auto-switch when quota < 5% or rate-limited</li>
-        <li>Background monitoring every 5 minutes</li>
-        <li>Graceful fallback with status reason tracking</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>🔍 Proxy Observability (Advanced)</h3>
-      <ul>
-        <li><strong>Traffic Monitor</strong> — Live request/response log with latency, status, and model info</li>
-        <li><strong>Request Replay</strong> — Replay any recorded request for debugging</li>
-        <li><strong>Model Capabilities</strong> — Inspect vision, thinking, streaming, JSON mode support per model</li>
-        <li><strong>Developer Tools</strong> — cURL & Python code generation, one-click copy</li>
-      </ul>
-    </td>
-    <td width="50%">
-      <h3>🔐 Security & Encryption</h3>
-      <ul>
-        <li>AES-256-GCM encryption for all sensitive data</li>
-        <li>OS native credential manager integration (Keytar + SafeStorage)</li>
-        <li>Auto migration of legacy plaintext data</li>
-        <li>Encrypted token & quota storage per account</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>⚙️ Settings & Customization</h3>
-      <ul>
-        <li>Dark / Light / System theme support</li>
-        <li>Multi-language: English & Português (Brasil)</li>
-        <li>Per-account proxy URL override</li>
-        <li>Model visibility toggles</li>
-        <li>Log directory access</li>
-      </ul>
-    </td>
-    <td width="50%">
-      <h3>🖥️ Desktop Experience</h3>
-      <ul>
-        <li>Native Electron app with system tray integration</li>
-        <li>Collapsible sidebar with persistent state</li>
-        <li>Responsive layouts across all views</li>
-        <li>Status bar with live proxy and connection indicators</li>
-        <li>Error boundaries with user-friendly fallbacks</li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
----
-
-## 📸 Screenshots
-
-
-<p align="center">
-  <img src="docs/assets/main.png" alt="Main Dashboard" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/2usage.png" alt="Usage Analytics" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/3proxy.png" alt="Proxy Monitor" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/4routing.png" alt="Routing Config" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/5docs.png" alt="Documentation" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/6connections.png" alt="Active Connections" width="80%" />
-</p>
-<p align="center">
-  <img src="docs/assets/7config.png" alt="Settings Configuration" width="80%" />
-</p>
-
----
-
-## ⚡ Installation & Quick Start
-
-### 📦 Download the App
-
-You can download the latest pre-compiled binaries for Windows, macOS, and Linux from our [Releases page](https://github.com/evandrodevbr/GeminiNexus/releases). 
-
-*(Refer to the warning at the top of this page if you are using Windows and encounter the SmartScreen prompt).*
-
-### 🔌 Using with AI IDEs
-
-Once the application is running and you have added at least one account, configure your preferred IDE (Cursor, Windsurf, OpenCode, etc.):
-
-```plaintext
-API Base URL:  http://localhost:10100/v1
-API Key:       (copy this from the Proxy page in the app)
-Model:         gemini-3-flash  (or any mapped model of your choice)
+```text
+ IDE / CLI (Cursor, Windsurf, OpenCode, Claude Code, custom scripts)
+        |  OpenAI /v1/chat/completions   Anthropic /v1/messages   Gemini /v1beta
+        v
+ Gemini Nexus (Electron app)
+   +-- Renderer: React 19 UI (accounts, usage, proxy, settings)
+   +-- Main process: IPC, SQLite storage, encryption, tray
+   +-- Gateway: NestJS + Fastify, bound to port 8045 (8046 in development)
+          |  1. authenticate the request (Bearer / x-api-key / x-goog-api-key)
+          |  2. choose an account from the pool (quota, rate limit, circuit breaker)
+          |  3. translate the protocol and call the upstream API
+          |  4. stream the answer back and persist usage metrics
+          v
+ Google Gemini API / Claude API (per-account OAuth credentials)
 ```
 
-### 🛠️ Build from Source
+- The gateway is started by the desktop app (Proxy page, or auto-start if enabled). It is a child process, so closing the app stops it.
+- Account selection honours a scheduling mode (`balance`, `cache-first`, `performance-first`), a preferred account, per-account upstream proxy URLs, and a circuit breaker with backoff steps.
+- Requests are recorded locally (SQLite) and can be replayed from the Proxy page for debugging.
 
-#### Prerequisites
+## Stack
 
-- **Node.js** v20 or higher
-- **npm** (this project uses `package-lock.json`)
+| Layer | Choice |
+|---|---|
+| Desktop shell | Electron 41, Electron Forge 7 (Vite plugin) |
+| UI | React 19, TypeScript 5.9, TanStack Router + Query, Tailwind CSS v4, Radix UI, Nivo charts |
+| Gateway | NestJS 11 on Fastify 5, RxJS, SSE streaming |
+| Storage | better-sqlite3 + Drizzle ORM / raw SQL, JSON config in the app data dir |
+| Secrets | Node crypto AES-256-GCM, `safeStorage` / `keytar` with file fallback |
+| Validation | Zod schemas, class-validator |
+| Internationalization | react-i18next (en, zh-CN, ru, vi) |
+| Tests | Vitest (unit), Testing Library, Playwright (E2E, local only) |
+| Package manager | pnpm 10.11.0 (`packageManager` field, Corepack) |
 
-#### Steps
+## Requirements
+
+- Node.js `^20.19.0 || >=22.12.0` (Vite 8 engine range). The repository pins 22.17.1 in `.nvmrc`; this audit ran on Node 24.20.0.
+- pnpm `10.11.0` (declared in `package.json`). With Corepack enabled, `pnpm` resolves to that version automatically.
+- Native build toolchain for `better-sqlite3` and `keytar`: on Linux, `base-devel`/`build-essential`, `python3` and `libsecret`; on macOS, Xcode Command Line Tools; on Windows, Visual Studio Build Tools with the C++ workload. `pnpm install` runs `scripts/setup-dev.js --check-only`, which reports what is missing.
+- A graphical session to run the desktop app itself (Electron).
+- For installers: `dpkg`/`rpmbuild` on Linux, WiX Toolset on Windows.
+
+## Quick start
 
 ```bash
-# Clone the repository
 git clone https://github.com/evandrodevbr/GeminiNexus.git
 cd GeminiNexus
 
-# Install dependencies
-npm install
+# 1. install dependencies (lockfile is pnpm; do not use npm install)
+corepack enable
+pnpm install --frozen-lockfile
 
-# Start the application in development mode
-npm start
-
-# Build for production (e.g., Windows installer)
-npm run make
+# 2. run the desktop app (Electron + Vite HMR); the gateway listens on 8046 in dev
+pnpm start
 ```
 
----
+Then, in the app:
 
-## 🛠️ Tech Stack
+1. Add at least one Google or Claude account on the Accounts page (OAuth flow).
+2. Open the Proxy page, enable the gateway and copy the generated API key.
+3. Point your IDE or CLI at the local endpoint.
 
-| Category | Technologies |
-|----------|-------------|
-| **Core** | [Electron](https://www.electronjs.org/), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/) |
-| **Build** | [Vite](https://vitejs.dev/), [Electron Forge](https://www.electronforge.io/) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev/) |
-| **State** | [TanStack Query](https://tanstack.com/query/latest), [TanStack Router](https://tanstack.com/router/latest) |
-| **Backend** | [NestJS](https://nestjs.com/) (internal gateway), [ORPC](https://orpc.unnoq.com/) (type-safe RPC) |
-| **Database** | [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3), [Drizzle ORM](https://orm.drizzle.team/) |
-| **Charts** | [Nivo](https://nivo.rocks/) (Line, Bar, Pie) |
-| **i18n** | [react-i18next](https://react.i18next.com/) |
-| **Testing** | [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/) |
+```text
+API base URL:  http://localhost:8045/v1
+API key:       copied from the Proxy page
+Model:         gemini-3-flash (or any model id returned by GET /v1/models)
+```
 
----
+## Usage
 
-## 💻 Development
+Daily commands, all driven by `pnpm`:
 
 ```bash
-# Start dev environment (Electron + Vite HMR)
-npm start
-
-# Run linting
-npm run lint
-
-# Type check
-npm run type-check
-
-# Format code
-npm run format:write
-
-# Run tests
-npm test
+pnpm start             # dev app + gateway (port 8046)
+pnpm run package       # unpack the app for the current platform (out/)
+pnpm run make          # build installers (needs the extra tooling listed above)
+pnpm test              # Vitest unit/integration suite
+pnpm run type-check    # tsc --noEmit
+pnpm run lint          # ESLint
+pnpm run format        # Prettier check (pnpm run format:write to fix)
+pnpm run test:e2e      # Playwright E2E, needs a graphical session
 ```
 
-### Project Structure
+Settings live in the app data directory (`%APPDATA%\Gemini Nexus` on Windows, `~/Library/Application Support/Gemini Nexus` on macOS, `~/.config/Gemini Nexus` on Linux; `${app}-dev` names in development). Account metadata is stored in `~/.geminiNexus-agent/geminiNexus_accounts.json`.
 
-```plaintext
+## Screenshots
+
+| | |
+|---|---|
+| ![Main dashboard](docs/assets/main.png) | ![Usage analytics](docs/assets/2usage.png) |
+| ![Proxy monitor](docs/assets/3proxy.png) | ![Routing config](docs/assets/4routing.png) |
+| ![Documentation](docs/assets/5docs.png) | ![Active connections](docs/assets/6connections.png) |
+| ![Settings](docs/assets/7config.png) | |
+
+## API
+
+Routes actually mapped by the gateway (read from the running server):
+
+| Route | Purpose |
+|---|---|
+| `GET /v1/models` | OpenAI-style model list built from the built-in mapping plus models collected from accounts. |
+| `GET /v1/models/capabilities` | Per-model flags: vision, streaming, JSON mode, audio, image generation. |
+| `GET /v1/status` | Gateway health, uptime, account counters and request metrics. |
+| `POST /v1/chat/completions` | OpenAI Chat Completions, streaming and non-streaming. |
+| `POST /v1/completions` | Legacy completions compatibility endpoint. |
+| `POST /v1/responses` | OpenAI Responses-style endpoint. |
+| `POST /v1/messages` | Anthropic Messages API. |
+| `POST /v1/messages/chat/completions` | Anthropic-shaped requests over the chat completions path. |
+| `POST /v1/batch/completions` | Batched chat completion requests. |
+| `POST /v1/images/generations`, `POST /v1/images/edits` | Image endpoints. |
+| `POST /v1/audio/transcriptions` | Audio transcription endpoint. |
+| `GET /v1/events` | Server-sent events stream of gateway activity. |
+| `GET /v1/replay/requests`, `POST /v1/replay/:requestId` | List recorded requests and replay one of them. |
+| `GET /v1beta/models`, `GET /v1beta/models/:model` | Gemini-native model listing. |
+| `POST /v1beta/models/:modelAction`, `POST /v1beta/models/:model/countTokens` | Gemini-native generate and token counting. |
+
+Authentication: the gateway accepts the API key as `Authorization: Bearer <key>`, `x-api-key: <key>` or `x-goog-api-key: <key>`. If the configured key is empty, the gateway runs open, which is only sensible while it is bound to localhost.
+
+## Build and release
+
+```bash
+pnpm run package   # app bundle in out/<product>-<platform>-<arch>
+pnpm run make      # installers (deb, rpm, AppImage, zip on Linux; dmg/zip on macOS; WiX installer on Windows)
+pnpm run make:win  # Windows helper script
+```
+
+The gateway is statically bundled into the Electron app; there is no separate server deployment.
+
+Release automation in `.github/workflows/`:
+
+- `format.yaml` and `lint.yaml` run Prettier and ESLint on pull requests to `main`.
+- `testing.yaml` runs the unit suite and `tsc --noEmit` on pushes and pull requests. E2E is intentionally excluded because it needs a graphical environment.
+- `release.yml` runs semantic-release on `main`, which tags the version, updates `CHANGELOG.md` and creates the GitHub release.
+- `publish.yaml` builds `win32`, `darwin` and `linux` for x64 and arm64 when the Release workflow succeeds, and uploads the installers to the release.
+
+## Project structure
+
+```text
 src/
-├── actions/           # App actions and flow orchestration
-├── components/        # React UI components
-│   ├── proxy/         # Proxy page components (advanced tabs)
-│   ├── usage/         # Usage analytics components (StatCard, ChartCard)
-│   └── ui/            # Base UI primitives (Radix-based)
-├── hooks/             # Custom React hooks
-├── ipc/               # Electron IPC + database handlers
-├── layouts/           # Layout components (MainLayout + sidebar)
-├── localization/      # i18n translation resources
-├── routes/            # TanStack Router pages (index, usage, proxy, settings)
-├── server/            # NestJS backend (proxy gateway service)
-├── services/          # Service layer
-├── types/             # TypeScript type definitions + Zod schemas
-└── utils/             # Utility functions
+├── main.ts, preload.ts, renderer.ts   Electron entry points
+├── routes/                            TanStack Router pages: index (accounts), usage, proxy, settings
+├── components/                        React UI (accounts, proxy/advanced, usage, ui primitives)
+├── server/                            Embedded gateway
+│   ├── main.ts                        NestJS bootstrap (port and process lifecycle)
+│   ├── modules/proxy/                 controllers, proxy service, token manager, SSE, replay, metrics
+│   └── modules/usage/                 token usage service
+├── ipc/                               Electron IPC handlers (accounts, config, database, proxy, tray, ...)
+├── lib/geminiNexus/                   protocol mappers, model mapping, retry and streaming helpers
+├── localization/                      i18n resources
+├── utils/                             paths, logging, encryption, traffic logger
+└── tests/                             unit, integration and e2e suites
+docs/                                  OpenCode integration, cloud features, Proxyman guides, brand notes
+scripts/                               dev environment setup, Windows build helper, asset generation
 ```
 
----
+## Verification
 
-## ❓ FAQ
+What exists and what was run on Linux x64 (Node 24.20.0, pnpm 10.11.0):
 
-<details>
-<summary><b>Q: "Windows protected your PC" (SmartScreen) warning during installation?</b></summary>
+| Command | Result |
+|---|---|
+| `pnpm install --frozen-lockfile` | exit 0 |
+| `pnpm test` | 54 test files, 499 tests, all passing |
+| `pnpm run type-check` | exit 0 |
+| `pnpm run lint` | exit 0 (327 warnings, no errors) |
+| `pnpm run format` | all files formatted |
+| `pnpm run package` | exit 0, `out/Gemini Nexus-linux-x64` |
+| `pnpm run test:e2e` | not run: Playwright drives Electron and needs a graphical session |
 
-Yes, this is a common warning for new unsigned applications. Click **"More info"** and then **"Run anyway"**. See the warning at the top of the README for more details.
-</details>
+The E2E suite is also excluded from CI for the same reason.
 
-<details>
-<summary><b>Q: The app won't start when building from source?</b></summary>
+## Current state and limitations
 
-1. Make sure all dependencies are installed: `npm install`
-2. Check if your Node.js version is >= 20.
-3. Try deleting `node_modules` and reinstalling.
-4. On Windows, ensure the WiX Toolset is available for `npm run make`.
-</details>
+- Upstream calls cannot be exercised without real Google/Claude accounts. With an empty pool the gateway starts, lists models and answers `429 No available accounts (all exhausted or rate limited)` on inference routes.
+- The app is desktop-only (Windows, macOS, Linux). There is no headless or container mode, because the gateway is a child process of the Electron app.
+- Accounts are added through the app UI and the OAuth flow; there is no CLI to import credentials.
+- UI languages are en, zh-CN, ru and vi. The default language in `DEFAULT_APP_CONFIG` is `zh-CN`.
+- Windows installers are unsigned (SmartScreen warning). macOS builds are unsigned and unnotarized.
+- The E2E suite does not run in CI.
+- The project is mid-migration to a single license: the code inherited from AntigravityManager is CC BY-NC-SA 4.0 (non-commercial), while the new code is MIT. See the license section.
+- `pnpm install` reports `Ignored build scripts: sharp`. `sharp` is only used by `scripts/generate-assets.ts` for icon generation, and its prebuilt binaries are installed through optional dependencies.
 
-<details>
-<summary><b>Q: Account login failed?</b></summary>
+## Documentation
 
-1. Ensure your network connection is working.
-2. Try clearing the app data and logging in again.
-3. Check if the account is restricted by Google/Claude.
-</details>
+| Document | Content |
+|---|---|
+| [`docs/OpencodeAPI.md`](docs/OpencodeAPI.md) | Wiring OpenCode to the local custom endpoint |
+| [`docs/cloud_features.md`](docs/cloud_features.md) | Cloud account management and switching behaviour |
+| [`docs/proxyman-debugging.md`](docs/proxyman-debugging.md) | Debugging upstream traffic with Proxyman |
+| [`docs/proxyman-install.md`](docs/proxyman-install.md) | Proxyman setup for contributors |
+| [`docs/brand-briefing.md`](docs/brand-briefing.md) | Naming, positioning and visual notes |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md), [`AGENTS.md`](AGENTS.md) | Contribution rules and repository conventions |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history |
 
-<details>
-<summary><b>Q: My IDE can't connect to the proxy?</b></summary>
+## License
 
-1. Make sure the proxy is actually running (look for the green indicator in the status bar).
-2. Verify the port matches your IDE config (default is `10100`).
-3. Copy the API key directly from the Proxy page and paste it into your IDE settings.
-4. Check that at least one account is active in the Accounts page.
-</details>
+Dual license:
 
-<details>
-<summary><b>Q: Token counts are showing zero?</b></summary>
+- Original code from [AntigravityManager](https://github.com/Draculabo/AntigravityManager) by [Draculabo](https://github.com/Draculabo): [CC BY-NC-SA 4.0](LICENSE).
+- All new code, features and architecture by [evandrodevbr](https://github.com/evandrodevbr): [MIT](LICENSE-MIT).
 
-1. This was a known bug in earlier versions — please update to the latest release.
-2. Token tracking now correctly handles streaming metadata and estimated counts.
-3. Usage data refreshes every 15 seconds on the Usage Analytics page.
-</details>
+The project is being migrated to MIT as the remaining original code is rewritten.
 
----
+## Credits
 
-## 🤝 Contributing
-
-Contributions are welcome! Please read `CONTRIBUTING.md` for details.
-
----
-
-## 📄 License
-
-This project uses a dual-license structure:
-
-- **Original code** from [AntigravityManager](https://github.com/Draculabo/AntigravityManager) by [Draculabo](https://github.com/Draculabo): Licensed under [CC BY-NC-SA 4.0](LICENSE).
-- **All new code, features, and architecture** by [evandrodevbr](https://github.com/evandrodevbr): Licensed under the [MIT License](LICENSE-MIT).
-
-> 🔄 **Migration Notice:** This project is actively being migrated to a fully open-source license (MIT). As the remaining original code is progressively rewritten, the entire project will transition to MIT. We are committed to making Gemini Nexus 100% open-source.
-
----
-
-## 🙏 Credits
-
-This project was originally forked from [AntigravityManager](https://github.com/Draculabo/AntigravityManager) created by [Draculabo](https://github.com/Draculabo). The initial proxy concept and early Electron scaffolding were based on his work.
-
-Since the fork, **the vast majority of the codebase has been rewritten, redesigned, and expanded** by [evandrodevbr](https://github.com/evandrodevbr), including but not limited to:
-
-- Complete UI/UX redesign (navigation, accounts, usage analytics, proxy management)
-- Usage Analytics dashboard with cost tracking, token averages, and OpenRouter integration
-- Traffic monitor with per-request token/cost inspection
-- Environment isolation (dev/prod), CI/CD pipeline, and test infrastructure
-- IDE Quick Setup (OpenCode, Cursor, VS Code, Claude Code)
-- Custom model pricing configuration
-- All documentation and internationalization (EN, PT-BR, ES, ZH-CN)
+Originally forked from [AntigravityManager](https://github.com/Draculabo/AntigravityManager). Since the fork the codebase has been largely rewritten by [evandrodevbr](https://github.com/evandrodevbr): UI/UX, usage analytics, traffic monitor, environment isolation, CI/CD, test infrastructure and documentation.
