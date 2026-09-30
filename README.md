@@ -199,7 +199,7 @@ scripts/                               dev environment setup, Windows build help
 
 ## Verification
 
-What exists and what was run on Linux x64 (Node 24.20.0, pnpm 10.11.0):
+Previously recorded Linux x64 checks (Node 24.20.0, pnpm 10.11.0), before the review below:
 
 | Command | Result |
 |---|---|
@@ -248,3 +248,11 @@ The project is being migrated to MIT as the remaining original code is rewritten
 ## Credits
 
 Originally forked from [AntigravityManager](https://github.com/Draculabo/AntigravityManager). Since the fork the codebase has been largely rewritten by [evandrodevbr](https://github.com/evandrodevbr): UI/UX, usage analytics, traffic monitor, environment isolation, CI/CD, test infrastructure and documentation.
+
+## Review checks (2026-09-30)
+
+Retry durations are parsed as complete values: `500ms` is milliseconds, and fractional components are rounded after summation. Invalid trailing text is rejected. Account and model lockouts honor the later expiration. IDE fallback configuration remains available at loopback when the OS denies network-interface enumeration.
+
+Focused checks: `pnpm exec vitest run src/tests/unit/rate-limit-tracker.test.ts src/tests/unit/ipc/proxy-advanced-handler.test.ts`. Run `pnpm test`, `pnpm type-check`, `pnpm lint` and `pnpm format` for the full non-E2E gates. Native SQLite/keytar are mocked by the unit-test configuration; Electron packaging, real account switching and E2E still require separate validation.
+
+This review passes all 508 tests across 54 files, type checking, lint (327 existing warnings, no errors) and formatting with Node 24.19.0 and pnpm 10.11.0. The original lockfile is retained: its audit still reports two critical findings, in `tar` and `seroval`, requiring a separately validated dependency update.

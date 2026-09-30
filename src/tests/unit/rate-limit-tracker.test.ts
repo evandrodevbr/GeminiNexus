@@ -1,7 +1,57 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { RateLimitReason, RateLimitTracker } from '../../server/modules/proxy/rate-limit-tracker';
 
 describe('RateLimitTracker parity replay', () => {
+  it.each([
+    ['500ms', 2],
+    ['2500ms', 3],
+    ['2.2s100ms', 3],
+    ['1h2m3s', 3723],
+    [' 30s ', 30],
+    ['30seconds', 5],
+    ['invalid30s', 5],
+  ])(
+    'parses complete retry duration %s without confusing minutes and milliseconds',
+    (duration, expected) => {
+      const tracker = new RateLimitTracker();
+      const info = tracker.parseAndMarkFromError({
+        accountId: 'acc-duration',
+        status: 503,
+        body: JSON.stringify({
+          error: { details: [{ reason: 'MODEL_CAPACITY_EXHAUSTED', retryDelay: duration }] },
+        }),
+        backoffSteps: [60],
+      });
+      expect(info?.retryAfterSec).toBe(expected);
+    },
+  );
+
+  it('waits for the longer of the account and model lockouts', () => {
+    const now = Date.parse('2026-01-01T00:00:00Z');
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      const tracker = new RateLimitTracker();
+      tracker.setLockoutUntilIso(
+        'acc-overlap',
+        new Date(now + 5000).toISOString(),
+        RateLimitReason.RateLimitExceeded,
+      );
+      tracker.setLockoutUntilIso(
+        'acc-overlap',
+        new Date(now + 60000).toISOString(),
+        RateLimitReason.QuotaExhausted,
+        'model-a',
+      );
+      expect(tracker.getRemainingWaitSeconds('acc-overlap', 'model-a')).toBe(60);
+      expect(tracker.getRemainingWaitSeconds('acc-overlap', 'model-b')).toBe(5);
+      clock.mockReturnValue(now + 10000);
+      expect(tracker.getRemainingWaitSeconds('acc-overlap', 'model-a')).toBe(50);
+      expect(tracker.getRemainingWaitSeconds('acc-overlap', 'model-b')).toBe(0);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   it('uses Retry-After header before body/default', () => {
     const tracker = new RateLimitTracker();
     const info = tracker.parseAndMarkFromError({

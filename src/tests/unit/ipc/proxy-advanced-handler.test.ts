@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { networkInterfaces } from 'os';
 import {
   getRecentTrafficLogs,
   getTrafficLogStats,
@@ -13,6 +14,11 @@ import {
 } from '../../../ipc/proxy-advanced/handler';
 import { TrafficLogsRepo } from '../../../ipc/database/proxyMetricsHandler';
 import { proxyAdvancedRegistry } from '../../../ipc/proxy-advanced/service-registry';
+
+vi.mock('os', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('os')>()),
+  networkInterfaces: vi.fn().mockReturnValue({}),
+}));
 
 vi.mock('../../../utils/logger', () => ({
   logger: {
@@ -415,9 +421,18 @@ describe('Proxy Advanced Handler', () => {
   });
 
   describe('generateIdeConfig', () => {
+    it('uses loopback when network enumeration fails', async () => {
+      vi.mocked(networkInterfaces).mockImplementationOnce(() => {
+        throw new Error('network enumeration denied');
+      });
+      const result = await generateIdeConfig('vscode');
+      expect(result.success, result.error).toBe(true);
+      expect(result.data?.content).toMatchObject({ 'openai.url': 'http://127.0.0.1:8045/v1' });
+    });
+
     it('should generate fallback config when proxyIdeConfig is null', async () => {
       const result = await generateIdeConfig('vscode');
-      expect(result.success).toBe(true);
+      expect(result.success, result.error).toBe(true);
       expect(result.data?.name).toBe('VS Code');
     });
 

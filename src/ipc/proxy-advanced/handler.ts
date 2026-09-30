@@ -453,16 +453,21 @@ export async function generateIdeConfig(
     const apiKey = config?.api_key || 'YOUR_API_KEY';
 
     let localIp = '127.0.0.1';
-    const interfaces = networkInterfaces();
-    for (const iface of Object.values(interfaces)) {
-      if (iface) {
-        for (const entry of iface) {
-          if (entry.family === 'IPv4' && !entry.internal) {
-            localIp = entry.address;
-            break;
+    try {
+      const interfaces = networkInterfaces();
+      for (const iface of Object.values(interfaces)) {
+        if (iface) {
+          for (const entry of iface) {
+            if (entry.family === 'IPv4' && !entry.internal) {
+              localIp = entry.address;
+              break;
+            }
           }
         }
       }
+    } catch (error) {
+      // Local proxy configuration remains usable when LAN enumeration is restricted.
+      logger.warn('Could not enumerate network interfaces; using loopback', error);
     }
 
     // Fallback generator mimicking the proxyIdeConfig.service
