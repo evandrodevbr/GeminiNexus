@@ -255,4 +255,4 @@ Retry durations are parsed as complete values: `500ms` is milliseconds, and frac
 
 Focused checks: `pnpm exec vitest run src/tests/unit/rate-limit-tracker.test.ts src/tests/unit/ipc/proxy-advanced-handler.test.ts`. Run `pnpm test`, `pnpm type-check`, `pnpm lint` and `pnpm format` for the full non-E2E gates. Native SQLite/keytar are mocked by the unit-test configuration; Electron packaging, real account switching and E2E still require separate validation.
 
-This review passes all 508 tests across 54 files, type checking, lint (327 existing warnings, no errors) and formatting with Node 24.19.0 and pnpm 10.11.0. The original lockfile is retained: its audit still reports two critical findings, in `tar` and `seroval`, requiring a separately validated dependency update.
+This review passes all 509 tests across 54 files, type checking, lint (327 existing warnings, no errors) and formatting with Node 24.19.0 and pnpm 10.11.0. The original lockfile is retained: its audit still reports two critical findings, in `tar` and `seroval`, requiring a separately validated dependency update.

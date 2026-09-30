@@ -15,10 +15,15 @@ import {
 import { TrafficLogsRepo } from '../../../ipc/database/proxyMetricsHandler';
 import { proxyAdvancedRegistry } from '../../../ipc/proxy-advanced/service-registry';
 
-vi.mock('os', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('os')>()),
-  networkInterfaces: vi.fn().mockReturnValue({}),
-}));
+vi.mock('os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('os')>();
+  const mockedNetworkInterfaces = vi.fn().mockReturnValue({});
+  return {
+    ...actual,
+    default: { ...actual, networkInterfaces: mockedNetworkInterfaces },
+    networkInterfaces: mockedNetworkInterfaces,
+  };
+});
 
 vi.mock('../../../utils/logger', () => ({
   logger: {
@@ -73,6 +78,7 @@ vi.mock('../../../ipc/proxy-advanced/service-registry', () => {
 describe('Proxy Advanced Handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(networkInterfaces).mockReset().mockReturnValue({});
   });
 
   describe('getRecentTrafficLogs', () => {
@@ -426,8 +432,28 @@ describe('Proxy Advanced Handler', () => {
         throw new Error('network enumeration denied');
       });
       const result = await generateIdeConfig('vscode');
+      expect(networkInterfaces).toHaveBeenCalledOnce();
       expect(result.success, result.error).toBe(true);
       expect(result.data?.content).toMatchObject({ 'openai.url': 'http://127.0.0.1:8045/v1' });
+    });
+
+    it('uses the discovered LAN address when enumeration succeeds', async () => {
+      vi.mocked(networkInterfaces).mockReturnValueOnce({
+        eth0: [
+          {
+            address: '192.0.2.10',
+            netmask: '255.255.255.0',
+            family: 'IPv4',
+            mac: '00:11:22:33:44:55',
+            internal: false,
+            cidr: '192.0.2.10/24',
+          },
+        ],
+      });
+      const result = await generateIdeConfig('vscode');
+      expect(networkInterfaces).toHaveBeenCalledOnce();
+      expect(result.success, result.error).toBe(true);
+      expect(result.data?.content).toMatchObject({ 'openai.url': 'http://192.0.2.10:8045/v1' });
     });
 
     it('should generate fallback config when proxyIdeConfig is null', async () => {
