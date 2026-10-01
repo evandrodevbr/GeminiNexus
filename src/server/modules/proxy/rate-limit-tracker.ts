@@ -44,7 +44,9 @@ function toLowerText(value: string | undefined): string {
 }
 
 function parseDurationToSeconds(text: string): number | null {
-  const match = text.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?(?:(\d+(?:\.\d+)?)ms)?/i);
+  const match = text
+    .trim()
+    .match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?(?:(\d+(?:\.\d+)?)ms)?$/i);
   if (!match) {
     return null;
   }
@@ -54,9 +56,8 @@ function parseDurationToSeconds(text: string): number | null {
   const seconds = Number(match[3] ?? 0);
   const milliseconds = Number(match[4] ?? 0);
 
-  const totalSeconds =
-    hours * 3600 + minutes * 60 + Math.ceil(seconds) + Math.ceil(milliseconds / 1000);
-  if (totalSeconds <= 0) {
+  const totalSeconds = Math.ceil(hours * 3600 + minutes * 60 + seconds + milliseconds / 1000);
+  if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return null;
   }
   return totalSeconds;
@@ -108,19 +109,16 @@ export class RateLimitTracker {
     const now = Date.now();
 
     const globalLock = this.lockoutByKey.get(accountId);
-    if (globalLock && globalLock.resetTimeMs > now) {
-      return Math.max(0, Math.ceil((globalLock.resetTimeMs - now) / 1000));
-    }
+    let resetTimeMs = globalLock?.resetTimeMs ?? now;
 
     if (model) {
       const modelKey = this.buildLockoutKey(accountId, model);
       const modelLock = this.lockoutByKey.get(modelKey);
-      if (modelLock && modelLock.resetTimeMs > now) {
-        return Math.max(0, Math.ceil((modelLock.resetTimeMs - now) / 1000));
-      }
+      resetTimeMs = Math.max(resetTimeMs, modelLock?.resetTimeMs ?? now);
     }
 
-    return 0;
+    // Both scopes apply; retrying before either lock expires still fails upstream.
+    return Math.max(0, Math.ceil((resetTimeMs - now) / 1000));
   }
 
   getRemainingWaitSec(accountId: string, model?: string): number {
