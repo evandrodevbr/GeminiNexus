@@ -2,6 +2,16 @@
 
 # Changelog
 
+## [0.15.5](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.4...v0.15.5) (2026-10-01)
+
+### 🐛 Bug Fixes
+
+* parse complete retry durations and preserve local IDE configuration ([b193bee](https://github.com/evandrodevbr/GeminiNexus/commit/b193bee03f1aaea5f7173e53ec6cdb787717067c))
+
+### ✅ Tests
+
+* mock OS exports consistently and verify LAN discovery ([fa39fb3](https://github.com/evandrodevbr/GeminiNexus/commit/fa39fb34fef662c11cd8780b562fa8008b982823))
+
 ## [0.15.4](https://github.com/evandrodevbr/GeminiNexus/compare/v0.15.3...v0.15.4) (2026-09-14)
 
 ### 📝 Documentation
